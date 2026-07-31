@@ -370,12 +370,30 @@ td.pts{color:var(--dorado);font-weight:900}
     <div id="reg-otp-step" style="display:none">
       <div style="text-align:center;font-size:3rem">📧</div>
       <h1 style="text-align:center">REVISA TU CORREO</h1>
-      <p class="lead">Enviamos un código de 6 dígitos a<br><strong id="otp-email-shown" style="color:var(--dorado)"></strong></p>
-      <label>CÓDIGO DE VERIFICACIÓN</label>
-      <input type="text" id="reg-otp" placeholder="123456" maxlength="6" inputmode="numeric"
-             style="letter-spacing:6px;font-size:1.4rem;text-align:center"/>
-      <button class="btn-primary" id="otp-btn">✅ VERIFICAR CÓDIGO</button>
-      <button onclick="volverRegistro()" style="width:100%;margin-top:.6rem;opacity:.65;font-size:.85rem;padding:.5rem;border-radius:6px;background:transparent;border:1px solid #333">
+      <p class="lead">Te enviamos un enlace de acceso a<br><strong id="otp-email-shown" style="color:var(--dorado)"></strong></p>
+
+      <div style="background:rgba(255,182,18,.08);border:1px solid var(--dorado);border-radius:10px;padding:1rem;text-align:center;margin-top:.4rem">
+        <div style="font-size:2rem;line-height:1">👆</div>
+        <p style="font-weight:800;color:var(--dorado);letter-spacing:1px;margin-top:.3rem">HAZ CLIC EN EL ENLACE</p>
+        <p style="font-size:.8rem;opacity:.85;margin-top:.4rem;line-height:1.5">
+          Abre el correo y toca el botón de confirmación.<br>Regresas aquí ya adentro.
+        </p>
+      </div>
+
+      <p style="font-size:.72rem;opacity:.6;margin-top:.9rem;text-align:center;line-height:1.5">
+        ¿No llega? Revisa spam o correo no deseado.<br>Puede tardar un par de minutos.
+      </p>
+
+      <details style="margin-top:.9rem">
+        <summary style="font-size:.75rem;opacity:.7;cursor:pointer;text-align:center">
+          ¿Te llegó un código de 6 dígitos?
+        </summary>
+        <input type="text" id="reg-otp" placeholder="123456" maxlength="6" inputmode="numeric"
+               style="letter-spacing:6px;font-size:1.4rem;text-align:center;margin-top:.5rem"/>
+        <button class="btn-primary" id="otp-btn" style="margin-top:.6rem">✅ VERIFICAR CÓDIGO</button>
+      </details>
+
+      <button onclick="volverRegistro()" style="width:100%;margin-top:.9rem;opacity:.65;font-size:.85rem;padding:.5rem;border-radius:6px;background:transparent;border:1px solid #333">
         ← Cambiar correo
       </button>
     </div>
@@ -847,10 +865,24 @@ async function initApp(){
   if(session){
     sbUser = session.user;
     await loadProfile();
+
     if(!sbProfile){
-      // Sesión válida pero sin fila en profiles. Pasa si alguien verificó su
-      // correo y el guardado de perfil no llegó a completarse. Antes esto
-      // dejaba la app a medias; ahora se pide completar el perfil.
+      // Llegamos aquí sobre todo al volver del ENLACE del correo: la sesión
+      // ya es válida pero el perfil todavía no existe. Si guardamos los datos
+      // antes de mandar el correo, se crea solo y el usuario no nota nada.
+      const pend = leerPendiente();
+      if(pend && pend.nombre && pend.tel &&
+         pend.email === (sbUser.email||'').toLowerCase()){
+        const {error:upErr} = await sb.from('profiles').upsert({
+          id:sbUser.id, nombre:pend.nombre, email:sbUser.email, tel:pend.tel
+        },{onConflict:'id'});
+        if(!upErr){ limpiarPendiente(); await loadProfile(); }
+      }
+    }
+
+    if(!sbProfile){
+      // Sin datos guardados (p.ej. abrió el enlace en otro dispositivo):
+      // se piden nombre y teléfono en vez de dejar la app a medias.
       await loadUnderdog();
       renderDivisiones(); renderCalendario(); renderHistorial(); renderPremios();
       pedirPerfil();
@@ -883,6 +915,15 @@ async function initApp(){
 /* ---------- Registro / Inicio de sesión / OTP ---------- */
 let _regNombre='', _regEmail='', _regTel='', _regModo='login';
 
+// Al entrar por el ENLACE del correo, el usuario sale de la página y vuelve
+// con la pestaña recargada: todo lo capturado en memoria se pierde. Por eso
+// nombre y teléfono se guardan antes de mandar el correo, y al regresar se
+// crea el perfil solo, sin volver a preguntar.
+const PEND_KEY = 'quiniela-nfl:registro-pendiente';
+function guardarPendiente(o){ try{ localStorage.setItem(PEND_KEY, JSON.stringify(o)); }catch(_){} }
+function leerPendiente(){ try{ return JSON.parse(localStorage.getItem(PEND_KEY)||'null'); }catch(_){ return null; } }
+function limpiarPendiente(){ try{ localStorage.removeItem(PEND_KEY); }catch(_){} }
+
 function setModo(modo){
   _regModo = modo;
   const nuevo = modo==='registro';
@@ -913,8 +954,14 @@ document.getElementById('reg-btn').onclick = async ()=>{
   // En modo "ya tengo cuenta" NO se crea usuario: si el correo no existe,
   // Supabase devuelve error y se le dice que se registre, en vez de crearle
   // una cuenta fantasma en silencio.
-  const {error} = await sb.auth.signInWithOtp({email:e, options:{shouldCreateUser:nuevo}});
+  // emailRedirectTo hace que el enlace del correo regrese a esta misma app.
+  const {error} = await sb.auth.signInWithOtp({
+    email: e,
+    options: { shouldCreateUser: nuevo, emailRedirectTo: window.location.origin }
+  });
   btn.disabled=false; btn.textContent=textoOriginal;
+
+  if(!error && nuevo) guardarPendiente({email:e, nombre:n, tel:t});
 
   if(error){
     const noExiste = /signup|not found|disabled|no account/i.test(error.message);
@@ -954,6 +1001,7 @@ document.getElementById('otp-btn').onclick = async ()=>{
 
   await loadProfile();
   if(!sbProfile){ pedirPerfil(); return; }   // verificó pero aún no tiene perfil
+  limpiarPendiente();
   await entrarALaApp();
 };
 
@@ -964,10 +1012,11 @@ function pedirPerfil(){
   document.getElementById('reg-otp-step').style.display='none';
   document.getElementById('reg-perfil-step').style.display='block';
   document.getElementById('perfil-email-shown').textContent = sbUser?.email || '';
+  const pend = leerPendiente() || {};
   const n = document.getElementById('perfil-nombre');
-  if(!n.value) n.value = _regNombre || '';
+  if(!n.value) n.value = _regNombre || pend.nombre || '';
   const t = document.getElementById('perfil-tel');
-  if(!t.value) t.value = _regTel || '';
+  if(!t.value) t.value = _regTel || pend.tel || '';
   n.focus();
 }
 
@@ -984,6 +1033,7 @@ document.getElementById('perfil-btn').onclick = async ()=>{
   if(error){toast('Error guardando perfil: '+error.message,'err');return}
   await loadProfile();
   if(!sbProfile){toast('No se pudo crear el perfil','err');return}
+  limpiarPendiente();
   toast('¡Listo! Bienvenido');
   await entrarALaApp();
 };
@@ -1003,7 +1053,10 @@ function volverRegistro(){
 function mostrarApp(){
   document.getElementById('registro').classList.add('hidden');
   document.getElementById('user-pill').style.display='flex';
-  document.getElementById('user-name').textContent = sbProfile?.nombre || sbUser?.email || '';
+  const badge = {admin:' <span class="chip gold">ADMIN</span>',
+                 manager:' <span class="chip">MANAGER</span>'}[sbProfile?.role] || '';
+  document.getElementById('user-name').innerHTML =
+    esc(sbProfile?.nombre || sbUser?.email || '') + badge;
   renderAll();
 }
 async function cerrarSesion(sinPreguntar){
