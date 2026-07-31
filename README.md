@@ -1,5 +1,9 @@
 # 🏈 QUINIELA NFL EN LA CORTE · Temporada 2026-27
 
+> 👉 **¿Vas a operar la quiniela y no eres programador?** Empieza por
+> **[EMPIEZA-AQUI.md](EMPIEZA-AQUI.md)** — accesos, rutina semanal y cómo pedirle
+> cambios a Claude Code. Este README es la referencia técnica a detalle.
+
 App de una sola página respaldada por Supabase. Pensada para ~200 participantes de la
 comunidad de La Corte, con ranking en tiempo real.
 
