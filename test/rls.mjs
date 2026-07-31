@@ -8,13 +8,15 @@ const db = await new PGlite({ extensions: { pgcrypto } });
 await db.exec(SHIM);
 await db.exec(SQL);
 
-// Supabase concede estos privilegios por default a los roles del proyecto.
-// Los replicamos para que RLS sea lo unico que decida.
-await db.exec(`
-  GRANT USAGE ON SCHEMA public TO authenticated, anon;
-  GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated, anon;
-  GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated, anon;
-`);
+// NO se conceden privilegios aqui a proposito.
+//
+// Antes este arnes hacia GRANT ALL "porque Supabase lo hace por default".
+// Esa suposicion era falsa y el atajo TAPO un bug real: 001_init.sql no
+// traia sus propios GRANT, la API devolvia "permission denied for table"
+// en produccion, y aun asi las 33 pruebas pasaban.
+//
+// Ahora los permisos tienen que venir de la migracion misma. Si alguien
+// agrega una tabla y olvida su GRANT, estas pruebas lo cachan.
 
 let pass=0, fail=0;
 const q   = async (s,p) => (await db.query(s,p)).rows;

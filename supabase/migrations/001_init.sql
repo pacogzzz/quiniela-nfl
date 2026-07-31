@@ -896,7 +896,43 @@ SELECT gs, TRUE, 20 FROM generate_series(1,22) gs
 ON CONFLICT (week) DO NOTHING;
 
 -- =====================================================================
--- 12. REALTIME
+-- 12. PERMISOS DE TABLA (GRANT)
+--
+-- Postgres tiene dos candados independientes y hacen falta LOS DOS:
+--   GRANT → ¿este rol puede tocar la tabla?
+--   RLS   → ¿cuáles filas de esa tabla?
+-- Sin los GRANT, la API responde "permission denied for table" aunque
+-- las políticas RLS estén perfectas.
+-- =====================================================================
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+
+-- Lectura pública: calendario, equipos, premios e historial sin registrarse
+GRANT SELECT ON teams          TO anon, authenticated;
+GRANT SELECT ON games          TO anon, authenticated;
+GRANT SELECT ON config         TO anon, authenticated;
+GRANT SELECT ON historial      TO anon, authenticated;
+GRANT SELECT ON underdog_weeks TO anon, authenticated;
+
+-- Con sesión: amplio a nivel tabla, RLS decide las filas
+GRANT SELECT, INSERT, UPDATE, DELETE ON profiles       TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON picks          TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON underdog_picks TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON folios         TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON games          TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON underdog_weeks TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON historial      TO authenticated;
+GRANT SELECT, UPDATE                 ON config         TO authenticated;
+GRANT SELECT                         ON week_snapshots TO authenticated;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT ON TABLES TO anon;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT USAGE, SELECT ON SEQUENCES TO anon, authenticated;
+
+-- =====================================================================
+-- 13. REALTIME
 -- =====================================================================
 DO $rt$
 BEGIN
