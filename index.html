@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QUINIELA NFL EN LA CORTE · 2026-27</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+/* ========= RESET & BASE ========= */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+:root{
+  --azul:#013369;
+  --azul-claro:#0a5bb5;
+  --azul-osc:#00172f;
+  --rojo:#D50A0A;
+  --rojo-claro:#ff3838;
+  --dorado:#FFB612;
+  --dorado-osc:#c98a00;
+  --plata:#c0c0c0;
+  --bronce:#cd7f32;
+  --verde:#1a8c3c;
+  --acero:#0b1218;
+  --acero2:#111c26;
+  --linea:#1e3247;
+}
+body{
+  font-family:'Oswald','Bebas Neue','Arial Narrow',system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(circle at 15% 5%, rgba(255,182,18,.07), transparent 42%),
+    radial-gradient(circle at 85% 95%, rgba(213,10,10,.09), transparent 42%),
+    linear-gradient(180deg,#070d12 0%, #0d1c2b 100%);
+  color:#eef3f7;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit}
+a{color:inherit;text-decoration:none}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#24384d;border-radius:9px}
+
+/* ========= HEADER ========= */
+#header{
+  position:sticky;top:0;z-index:100;
+  background:linear-gradient(90deg,var(--azul-osc) 0%, var(--azul) 55%, var(--rojo) 100%);
+  border-bottom:4px solid var(--dorado);
+  box-shadow:0 4px 20px rgba(0,0,0,.6);
+  padding:.6rem 1rem;
+}
+#header-inner{
+  max-width:1200px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+}
+.logo{display:flex;align-items:center;gap:.6rem}
+.logo-ball{font-size:2rem;display:inline-block;animation:wobble 4s ease-in-out infinite}
+@keyframes wobble{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}}
+.logo-title{font-weight:900;letter-spacing:1px;font-size:1.15rem;line-height:1;text-shadow:2px 2px 0 #000}
+.logo-title span{color:var(--dorado)}
+.logo-sub{font-size:.7rem;opacity:.85;letter-spacing:3px}
+.user-pill{
+  background:rgba(0,0,0,.4);border:1px solid var(--dorado);
+  padding:.35rem .8rem;border-radius:99px;font-size:.85rem;
+  display:flex;align-items:center;gap:.4rem;
+}
+.user-pill button{color:#ff9d9d;font-size:.75rem;margin-left:.3rem}
+
+/* ========= NAV ========= */
+#nav{background:#05090d;border-bottom:2px solid var(--dorado);position:sticky;top:63px;z-index:99;overflow-x:auto}
+#nav-inner{max-width:1200px;margin:0 auto;display:flex}
+.tab{
+  flex:1;min-width:96px;padding:.75rem .4rem;text-align:center;font-weight:700;
+  font-size:.8rem;letter-spacing:1px;border-bottom:3px solid transparent;
+  transition:all .25s;white-space:nowrap;
+}
+.tab:hover{background:#0e1720;color:var(--dorado)}
+.tab.active{background:linear-gradient(180deg, rgba(255,182,18,.14), transparent);color:var(--dorado);border-bottom-color:var(--dorado)}
+.tab .ico{display:block;font-size:1.15rem;margin-bottom:.2rem}
+
+/* ========= LAYOUT ========= */
+main{max-width:1200px;margin:0 auto;padding:1rem;padding-bottom:4rem}
+.module{display:none;animation:fadeUp .45s ease}
+.module.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+h1,h2,h3{font-weight:900;letter-spacing:1px}
+h1{font-size:1.6rem;margin-bottom:1rem;color:var(--dorado);text-shadow:2px 2px 0 #000}
+h2{font-size:1.15rem;margin:1rem 0 .6rem;color:#fff}
+h3{font-size:1rem;color:var(--dorado)}
+.muted{opacity:.7}
+.small{font-size:.8rem}
+
+/* ========= REGISTRO ========= */
+#registro{
+  position:fixed;inset:0;z-index:1000;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.92), rgba(0,0,0,.75)),
+    repeating-linear-gradient(90deg, #0d2137 0 58px, #10293f 58px 116px);
+  display:flex;align-items:center;justify-content:center;padding:1rem;
+}
+#registro.hidden{display:none}
+.reg-card{
+  background:#08131e;border:3px solid var(--dorado);
+  border-radius:14px;max-width:420px;width:100%;
+  padding:1.6rem;box-shadow:0 10px 40px rgba(0,0,0,.85);
+}
+.reg-card h1{text-align:center;margin-bottom:.3rem}
+.reg-card p.lead{text-align:center;font-size:.85rem;opacity:.8;margin-bottom:1.2rem}
+.reg-card label{display:block;font-size:.75rem;letter-spacing:2px;margin-top:.8rem;margin-bottom:.3rem;color:var(--dorado)}
+.reg-card input{width:100%;padding:.7rem .8rem;border-radius:8px;background:#020a12;border:1px solid #24486e;color:#fff;font-size:1rem}
+.reg-card input:focus{outline:2px solid var(--dorado);border-color:var(--dorado)}
+.btn-primary{
+  width:100%;margin-top:1.2rem;
+  background:linear-gradient(90deg,var(--rojo) 0%, #ff3a3a 50%, var(--rojo) 100%);
+  color:#fff;font-weight:900;letter-spacing:2px;padding:.9rem;border-radius:8px;font-size:1rem;
+  box-shadow:0 4px 0 #7a0808;transition:transform .1s;
+}
+.btn-primary:hover{transform:translateY(-2px)}
+.btn-primary:active{transform:translateY(2px);box-shadow:0 2px 0 #7a0808}
+.btn-gold{background:linear-gradient(90deg,var(--dorado-osc),var(--dorado),var(--dorado-osc));color:#000;font-weight:900}
+
+/* ========= CARDS ========= */
+.card{
+  background:linear-gradient(180deg,#0f1c28 0%, #0a1420 100%);
+  border:1px solid var(--linea);border-left:4px solid var(--dorado);
+  border-radius:10px;padding:1rem;margin-bottom:.8rem;
+  box-shadow:0 2px 10px rgba(0,0,0,.45);
+}
+.grid{display:grid;gap:.8rem}
+.grid-2{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(165px,1fr))}
+.chip{display:inline-block;background:var(--azul);padding:.12rem .5rem;border-radius:99px;font-size:.65rem;letter-spacing:1px}
+.chip.gold{background:var(--dorado);color:#000;font-weight:900}
+.chip.red{background:var(--rojo)}
+.chip.grey{background:#2b3a49}
+
+/* ========= GRUPOS / DIVISIONES ========= */
+.conf-toggle{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.conf-toggle button{background:#0c1620;border:1px solid #24384d;padding:.5rem 1rem;border-radius:6px;color:#93a7ba;font-weight:700;letter-spacing:1px;font-size:.8rem}
+.conf-toggle button.active{background:var(--azul);color:#fff;border-color:var(--dorado)}
+.div-card{background:linear-gradient(180deg,#0b1926,#060e16);border:1px solid var(--linea);border-top:5px solid var(--dorado);border-radius:8px;padding:.8rem}
+.div-title{background:var(--azul);color:#fff;padding:.35rem .8rem;border-radius:4px;font-weight:900;letter-spacing:2px;font-size:.85rem;margin-bottom:.6rem;display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th,td{padding:.35rem .3rem;text-align:center}
+th{background:#000;color:var(--dorado);font-weight:700;letter-spacing:1px;font-size:.68rem}
+tr:nth-child(even) td{background:rgba(255,255,255,.03)}
+td.team{text-align:left;font-weight:700;white-space:nowrap}
+td.pts{color:var(--dorado);font-weight:900}
+.dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:.4rem;vertical-align:middle}
+
+/* ========= CALENDARIO ========= */
+.filters{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;background:#0a141d;padding:.6rem;border-radius:8px;border:1px solid var(--linea)}
+.filters select,.filters input{background:#020a12;border:1px solid #24486e;color:#fff;padding:.4rem .6rem;border-radius:6px;font-size:.85rem}
+.match-card{display:grid;grid-template-columns:auto 1fr auto;gap:.8rem;align-items:center}
+.match-date{text-align:center;background:#000;padding:.4rem .6rem;border-radius:6px;min-width:82px;border:1px solid var(--dorado)}
+.match-date .d{font-size:1.4rem;font-weight:900;color:var(--dorado);line-height:1}
+.match-date .m{font-size:.68rem;letter-spacing:1px;opacity:.8}
+.match-date .t{font-size:.72rem;color:#8fc3ff;margin-top:.2rem;border-top:1px solid #333;padding-top:.2rem}
+.match-teams{font-size:1.02rem;font-weight:700}
+.match-meta{font-size:.72rem;opacity:.72;margin-top:.25rem}
+.btn-reserve{
+  background:linear-gradient(90deg,var(--verde),#25c257);color:#fff;padding:.5rem .8rem;border-radius:6px;
+  font-weight:800;font-size:.75rem;letter-spacing:1px;white-space:nowrap;box-shadow:0 3px 0 #0d5a25;transition:transform .15s;
+}
+.btn-reserve:hover{transform:scale(1.05)}
+
+/* Modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:500;padding:1rem;animation:fadeUp .3s}
+.modal-backdrop.hidden{display:none}
+.modal{position:relative;background:linear-gradient(180deg,#08131e,#03080d);border:3px solid var(--dorado);border-radius:14px;padding:1.6rem;max-width:430px;width:100%;text-align:center;box-shadow:0 0 60px rgba(255,182,18,.3);max-height:88vh;overflow-y:auto}
+.modal h2{color:var(--dorado);margin-bottom:.3rem}
+.modal .phone-big{display:block;font-size:2rem;font-weight:900;color:var(--dorado);padding:.8rem;background:#000;border-radius:8px;margin:1rem 0;letter-spacing:2px}
+.modal-close{position:absolute;top:.8rem;right:.8rem;background:#000;border:1px solid #444;width:30px;height:30px;border-radius:50%;color:#fff}
+
+/* ========= QUINIELA ========= */
+#quiniela{
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.6), rgba(0,0,0,.78)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 78px, rgba(255,255,255,.05) 78px 80px),
+    linear-gradient(160deg, #0d3b1e 0%, #082514 100%);
+  background-attachment:fixed;
+  padding:1rem;border-radius:10px;margin:-1rem;padding-bottom:3rem;position:relative;
+}
+#quiniela > *{position:relative;z-index:1}
+.week-bar{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;background:rgba(0,0,0,.6);border:1px solid var(--dorado);border-radius:10px;padding:.6rem;margin-bottom:1rem}
+.week-bar select{flex:1;min-width:150px;background:#000;color:var(--dorado);border:1px solid var(--dorado);border-radius:6px;padding:.5rem;font-weight:900;font-size:1rem;letter-spacing:1px}
+.week-bar button{background:#0d1c2b;border:1px solid #2a4761;color:#fff;padding:.5rem .8rem;border-radius:6px;font-weight:900}
+.week-bar button:disabled{opacity:.3;cursor:not-allowed}
+.lock-banner{border-radius:8px;padding:.6rem .8rem;margin-bottom:1rem;font-weight:700;font-size:.85rem;text-align:center;letter-spacing:1px}
+.lock-banner.open{background:rgba(26,140,60,.25);border:1px solid var(--verde);color:#8ff0ac}
+.lock-banner.shut{background:rgba(213,10,10,.2);border:1px solid var(--rojo);color:#ffb0b0}
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:.5rem;margin-bottom:1rem}
+.stat{background:rgba(0,0,0,.6);border:1px solid var(--linea);border-radius:8px;padding:.6rem;text-align:center}
+.stat .v{font-size:1.5rem;font-weight:900;color:var(--dorado);line-height:1}
+.stat .l{font-size:.65rem;letter-spacing:1px;opacity:.75;margin-top:.25rem}
+.points-table{background:rgba(0,0,0,.6);border:1px solid var(--dorado);border-radius:8px;padding:.8rem;margin-bottom:1rem}
+.points-table td{text-align:left;font-size:.82rem}
+.points-table td:last-child{text-align:right;color:var(--dorado);font-weight:900;white-space:nowrap}
+
+.qgame{background:rgba(0,0,0,.68);border:1px solid #2a4761;border-radius:10px;padding:.85rem;margin-bottom:.7rem}
+.qgame.special{border-color:var(--dorado);box-shadow:0 0 14px rgba(255,182,18,.18)}
+.qgame.hit{border-color:var(--verde)}
+.qgame.miss{border-color:#5b2020}
+.qgame.locked{opacity:.7}
+.qg-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem;font-size:.7rem;opacity:.85;margin-bottom:.55rem;padding-bottom:.4rem;border-bottom:1px dashed #2a4761}
+.qg-versus{display:grid;grid-template-columns:1fr auto 1fr;gap:.4rem;align-items:stretch}
+.team-btn{
+  background:#050d15;border:2px solid #24384d;color:#fff;border-radius:8px;padding:.55rem .4rem;
+  font-weight:800;font-size:.85rem;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:.15rem;
+}
+.team-btn small{font-size:.62rem;opacity:.65;font-weight:400;letter-spacing:1px}
+.team-btn:hover:not(:disabled){border-color:var(--dorado)}
+.team-btn.sel{background:linear-gradient(180deg,var(--azul),#012247);border-color:var(--dorado);color:var(--dorado);box-shadow:inset 0 0 12px rgba(255,182,18,.2)}
+.team-btn:disabled{cursor:not-allowed}
+.vs{display:flex;align-items:center;font-size:.7rem;opacity:.45;font-weight:900}
+.conf-row{display:flex;align-items:center;gap:.5rem;margin-top:.6rem;flex-wrap:wrap}
+.conf-row label{font-size:.7rem;letter-spacing:1px;color:var(--dorado);font-weight:700}
+.conf-row select{background:#000;color:var(--dorado);border:2px solid var(--dorado);border-radius:6px;padding:.35rem .5rem;font-weight:900;font-size:1rem;min-width:74px}
+.conf-row select.dup{border-color:var(--rojo);color:var(--rojo-claro);animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.anot-row{margin-top:.6rem;padding-top:.55rem;border-top:1px dashed #2a4761}
+.anot-row .lbl{font-size:.7rem;letter-spacing:1px;color:var(--dorado);font-weight:700;display:block;margin-bottom:.35rem}
+.mini-group{display:flex;gap:.4rem;flex-wrap:wrap}
+.mini-btn{flex:1;min-width:90px;background:#050d15;border:2px solid #24384d;color:#fff;padding:.4rem;border-radius:6px;font-weight:700;font-size:.75rem}
+.mini-btn.sel{background:var(--rojo);border-color:var(--dorado);color:#fff}
+.mini-btn:disabled{cursor:not-allowed;opacity:.75}
+.earned{margin-top:.55rem;text-align:center;padding:.35rem;border-radius:6px;background:linear-gradient(90deg,transparent,rgba(255,182,18,.2),transparent);border:1px solid var(--dorado);color:var(--dorado);font-weight:900;letter-spacing:1px;font-size:.8rem}
+.earned.zero{background:none;border-color:#4a2020;color:#c98a8a}
+.save-bar{position:sticky;bottom:0;z-index:20;background:linear-gradient(180deg,rgba(0,0,0,.2),rgba(0,0,0,.9));padding:.7rem 0;margin-top:.5rem}
+.btn-save{width:100%;background:var(--dorado);color:#000;font-weight:900;padding:.8rem;border-radius:8px;letter-spacing:2px;box-shadow:0 3px 0 var(--dorado-osc);font-size:.95rem}
+.btn-save:disabled{background:#3a4652;color:#8a97a3;box-shadow:none;cursor:not-allowed}
+
+/* Underdog */
+.underdog-box{background:linear-gradient(135deg,#2a0f3d,#12061c);border:2px solid #a05cff;border-radius:12px;padding:1rem;margin-bottom:1rem;box-shadow:0 0 22px rgba(160,92,255,.22)}
+.underdog-box h3{color:#d8b3ff}
+.ud-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-top:.7rem}
+.ud-opt{background:#0d0616;border:2px solid #4a2a6b;border-radius:8px;padding:.7rem;text-align:center;font-weight:800;transition:all .2s}
+.ud-opt:hover:not(:disabled){border-color:#a05cff}
+.ud-opt.sel{background:linear-gradient(180deg,#6b2fa8,#3a1560);border-color:#d8b3ff;color:#fff;box-shadow:0 0 14px rgba(216,179,255,.35)}
+.ud-opt small{display:block;font-size:.62rem;opacity:.7;font-weight:400;margin-top:.2rem}
+.ud-locked{background:rgba(0,0,0,.4);border:1px dashed #4a2a6b;border-radius:8px;padding:.8rem;font-size:.85rem;text-align:center;opacity:.9}
+
+/* Folio */
+.folio-box{background:rgba(0,0,0,.68);border:2px dashed var(--dorado);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.folio-box .row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
+.folio-box input{flex:1;min-width:170px;padding:.6rem;border-radius:6px;background:#000;color:var(--dorado);border:1px solid var(--dorado);font-weight:900;letter-spacing:2px;text-transform:uppercase;font-size:1rem}
+.folio-box button{background:var(--rojo);color:#fff;padding:.6rem 1.1rem;border-radius:6px;font-weight:900;letter-spacing:1px}
+.folio-list{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.6rem}
+.folio-tag{background:#04121f;border:1px solid var(--verde);color:#8ff0ac;border-radius:99px;padding:.2rem .6rem;font-size:.7rem}
+
+/* ========= RANKING ========= */
+.rank-row{display:grid;grid-template-columns:52px 1fr auto;gap:.8rem;align-items:center;padding:.7rem;border-radius:8px;margin-bottom:.5rem;background:#0b1926;border:1px solid var(--linea);transition:transform .2s}
+.rank-row:hover{transform:translateX(4px)}
+.rank-row.me{background:linear-gradient(90deg,rgba(255,182,18,.16),rgba(0,0,0,.2));border-color:var(--dorado)}
+.rank-row.gold{background:linear-gradient(90deg,rgba(255,182,18,.22),rgba(0,0,0,.2));border-left:4px solid var(--dorado)}
+.rank-row.silver{background:linear-gradient(90deg,rgba(192,192,192,.18),rgba(0,0,0,.2));border-left:4px solid var(--plata)}
+.rank-row.bronze{background:linear-gradient(90deg,rgba(205,127,50,.2),rgba(0,0,0,.2));border-left:4px solid var(--bronce)}
+.rank-row.prize{border-left:4px solid var(--azul-claro)}
+.rank-pos{font-size:1.5rem;font-weight:900;text-align:center}
+.rank-name{font-weight:700}
+.rank-breakdown{font-size:.68rem;opacity:.72;margin-top:.15rem}
+.rank-points{font-size:1.45rem;font-weight:900;color:var(--dorado);background:#000;padding:.3rem .6rem;border-radius:6px;min-width:72px;text-align:center}
+.cutline{display:flex;align-items:center;gap:.6rem;margin:.9rem 0;color:#a05cff;font-size:.7rem;letter-spacing:2px;font-weight:900}
+.cutline::before,.cutline::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,#a05cff,transparent)}
+
+/* ========= HISTORIAL ========= */
+.hist-card{background:linear-gradient(180deg,#0f1c28,#070f18);border:1px solid var(--linea);border-radius:12px;padding:1.1rem;position:relative;overflow:hidden}
+.hist-card::after{content:"";position:absolute;top:-30px;right:-30px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(255,182,18,.14),transparent 70%)}
+.hist-emoji{font-size:2.4rem}
+.hist-win{font-size:.78rem;margin-top:.5rem;padding-top:.5rem;border-top:1px dashed #2a4761}
+
+/* ========= PREMIOS ========= */
+.prizes-hero{text-align:center;padding:2rem 1rem;background:radial-gradient(ellipse at center, rgba(255,182,18,.1), transparent 70%),linear-gradient(180deg,#000,#0b1c2c);border-radius:14px;margin-bottom:1.5rem;border:2px solid var(--dorado)}
+.prizes-hero h1{font-size:2.1rem;margin-bottom:.5rem}
+.prize-card{position:relative;padding:1.6rem 1rem;border-radius:14px;text-align:center;overflow:hidden;transform:translateY(18px);opacity:0;animation:reveal .8s forwards}
+@keyframes reveal{to{transform:none;opacity:1}}
+.prize-card.gold{background:radial-gradient(circle at 50% 28%, #ffd766, #9c6f00 72%, #000);border:3px solid var(--dorado);color:#000;box-shadow:0 0 30px rgba(255,182,18,.5)}
+.prize-card.silver{background:radial-gradient(circle at 50% 28%, #ededed, #7a7a7a 72%, #000);border:3px solid var(--plata);color:#000;box-shadow:0 0 26px rgba(192,192,192,.4)}
+.prize-card.bronze{background:radial-gradient(circle at 50% 28%, #eaa46c, #7a4a22 72%, #000);border:3px solid var(--bronce);color:#000;box-shadow:0 0 26px rgba(205,127,50,.4)}
+.prize-card.plain{background:linear-gradient(180deg,#0f1c28,#070f18);border:1px solid var(--linea);color:#eef3f7}
+.prize-icon{font-size:3.4rem;display:block;margin-bottom:.4rem;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5))}
+.prize-card.gold .prize-icon,.prize-card.silver .prize-icon,.prize-card.bronze .prize-icon{font-size:4.4rem}
+.prize-medal{font-size:1.4rem;font-weight:900;letter-spacing:2px}
+.prize-desc{font-size:1rem;font-weight:700;margin-top:.4rem}
+.prize-sub{font-size:.75rem;margin-top:.25rem;opacity:.82}
+
+/* ========= ADMIN ========= */
+.admin-panel{background:#160b0b;border:2px solid var(--rojo);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.admin-panel h1{color:var(--rojo)}
+.admin-section{border-top:1px dashed #522;padding-top:.8rem;margin-top:1rem}
+.admin-section input,.admin-section select,.admin-section textarea{background:#000;color:#fff;border:1px solid #444;padding:.35rem .5rem;border-radius:4px;font-size:.82rem}
+.admin-section textarea{width:100%;min-height:130px;font-family:ui-monospace,Consolas,monospace;font-size:.75rem}
+.admin-game-row{display:grid;grid-template-columns:74px 1fr 1fr 56px 12px 56px 1fr 34px;gap:.3rem;align-items:center;margin-bottom:.35rem;font-size:.75rem;padding:.3rem;background:rgba(0,0,0,.35);border-radius:4px}
+.admin-game-row input[type=number]{width:100%}
+.btn-danger{background:var(--rojo);color:#fff;padding:.4rem .8rem;border-radius:4px;font-weight:700;font-size:.8rem}
+.btn-ok{background:var(--verde);color:#fff;padding:.4rem .8rem;border-radius:4px;font-weight:700;font-size:.8rem}
+.btn-blue{background:var(--azul-claro);color:#fff;padding:.4rem .8rem;border-radius:4px;font-weight:700;font-size:.8rem}
+.cfg-row{display:grid;grid-template-columns:1fr 120px;gap:.5rem;align-items:center;margin-bottom:.4rem;font-size:.8rem}
+#codes-out{font-family:ui-monospace,Consolas,monospace;font-size:.72rem;background:#000;border:1px solid #444;border-radius:6px;padding:.6rem;max-height:180px;overflow:auto;margin-top:.5rem;white-space:pre-wrap;word-break:break-all}
+
+/* ========= TOAST ========= */
+#toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%) translateY(120px);background:var(--verde);color:#fff;padding:.8rem 1.4rem;border-radius:99px;font-weight:700;z-index:2000;opacity:0;transition:all .35s;border:2px solid var(--dorado);box-shadow:0 4px 20px rgba(0,0,0,.6);max-width:92vw;text-align:center}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.err{background:var(--rojo)}
+
+/* ========= RESPONSIVE ========= */
+@media (max-width:640px){
+  .logo-title{font-size:.95rem}
+  .logo-sub{display:none}
+  .tab .ico{font-size:1rem}
+  .tab{font-size:.66rem;padding:.6rem .25rem;min-width:74px}
+  .match-card{grid-template-columns:auto 1fr;gap:.5rem}
+  .btn-reserve{grid-column:1/-1;justify-self:stretch}
+  h1{font-size:1.25rem}
+  #nav{top:58px}
+  .admin-game-row{grid-template-columns:1fr 1fr;font-size:.7rem}
+  .rank-row{grid-template-columns:42px 1fr auto;gap:.5rem}
+  .rank-points{font-size:1.2rem;min-width:60px}
+}
+</style>
+</head>
+<body>
+
+<!-- ========== REGISTRO ========== -->
+<div id="registro">
+  <div class="reg-card">
+    <div id="reg-form-step">
+      <div style="text-align:center;font-size:3rem">🏈🏆</div>
+      <h1 style="text-align:center">QUINIELA <span style="color:#fff">NFL</span><br><span style="color:#fff;font-size:1rem">EN LA CORTE</span></h1>
+      <p class="lead">Temporada 2026-27 · Regístrate para participar</p>
+      <label>NOMBRE COMPLETO</label>
+      <input type="text" id="reg-nombre" placeholder="Juan Pérez" />
+      <label>CORREO ELECTRÓNICO</label>
+      <input type="email" id="reg-email" placeholder="juan@correo.com" />
+      <label>TELÉFONO</label>
+      <input type="tel" id="reg-tel" placeholder="834 123 4567" />
+      <button class="btn-primary" id="reg-btn">🏈 ENTRAR A LA QUINIELA</button>
+      <p style="text-align:center;font-size:.7rem;opacity:.6;margin-top:1rem">
+        Al registrarte aceptas participar en la Quiniela NFL 2026-27 de La Corte
+      </p>
+    </div>
+    <div id="reg-otp-step" style="display:none">
+      <div style="text-align:center;font-size:3rem">📧</div>
+      <h1 style="text-align:center">REVISA TU CORREO</h1>
+      <p class="lead">Enviamos un código de 6 dígitos a<br><strong id="otp-email-shown" style="color:var(--dorado)"></strong></p>
+      <label>CÓDIGO DE VERIFICACIÓN</label>
+      <input type="text" id="reg-otp" placeholder="123456" maxlength="6" inputmode="numeric"
+             style="letter-spacing:6px;font-size:1.4rem;text-align:center"/>
+      <button class="btn-primary" id="otp-btn">✅ VERIFICAR CÓDIGO</button>
+      <button onclick="volverRegistro()" style="width:100%;margin-top:.6rem;opacity:.65;font-size:.85rem;padding:.5rem;border-radius:6px;background:transparent;border:1px solid #333">
+        ← Cambiar correo
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== HEADER ========== -->
+<header id="header">
+  <div id="header-inner">
+    <div class="logo">
+      <span class="logo-ball">🏈</span>
+      <div>
+        <div class="logo-title">QUINIELA <span>NFL</span></div>
+        <div class="logo-sub">EN LA CORTE · 2026-27</div>
+      </div>
+    </div>
+    <div class="user-pill" id="user-pill" style="display:none">
+      <span>👤</span>
+      <span id="user-name">Usuario</span>
+      <button onclick="cerrarSesion()">salir</button>
+    </div>
+  </div>
+</header>
+
+<!-- ========== NAV ========== -->
+<nav id="nav">
+  <div id="nav-inner">
+    <button class="tab active" data-tab="grupos"><span class="ico">🏟️</span>GRUPOS</button>
+    <button class="tab" data-tab="calendario"><span class="ico">📅</span>CALENDARIO</button>
+    <button class="tab" data-tab="quiniela"><span class="ico">🎯</span>QUINIELA</button>
+    <button class="tab" data-tab="ranking"><span class="ico">🏆</span>RANKING</button>
+    <button class="tab" data-tab="historial"><span class="ico">📜</span>HISTORIAL</button>
+    <button class="tab" data-tab="premios"><span class="ico">🎁</span>PREMIOS</button>
+    <button class="tab" data-tab="admin" id="tab-admin" style="display:none"><span class="ico">⚙️</span>ADMIN</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ========== GRUPOS ========== -->
+  <section class="module active" id="m-grupos">
+    <h1>🏟️ CONFERENCIAS Y DIVISIONES</h1>
+    <p class="muted" style="margin-bottom:1rem">32 equipos · 2 conferencias · 8 divisiones · Récord actualizado con los resultados cargados</p>
+    <div class="conf-toggle">
+      <button class="active" data-conf="AFC">AFC</button>
+      <button data-conf="NFC">NFC</button>
+      <button data-conf="ALL">TODOS</button>
+    </div>
+    <div id="div-view" class="grid grid-2"></div>
+  </section>
+
+  <!-- ========== CALENDARIO ========== -->
+  <section class="module" id="m-calendario">
+    <h1>📅 CALENDARIO NFL 2026-27</h1>
+    <div class="filters">
+      <select id="f-week"><option value="">Todas las semanas</option></select>
+      <select id="f-team"><option value="">Todos los equipos</option></select>
+      <select id="f-slot">
+        <option value="">Todos los horarios</option>
+        <option value="TNF">Thursday Night</option>
+        <option value="SUN">Domingo temprano</option>
+        <option value="SUN_LATE">Domingo tarde</option>
+        <option value="SNF">Sunday Night</option>
+        <option value="MNF">Monday Night</option>
+        <option value="ESPECIAL">Extraordinarios</option>
+      </select>
+      <input type="date" id="f-date" />
+      <button class="btn-ok" onclick="renderCalendario()">Filtrar</button>
+      <button class="btn-blue" onclick="limpiarFiltros()">Limpiar</button>
+    </div>
+    <div id="cal-list"></div>
+  </section>
+
+  <!-- ========== QUINIELA ========== -->
+  <section class="module" id="m-quiniela">
+    <div id="quiniela">
+      <h1>🎯 MI QUINIELA</h1>
+
+      <div class="stat-row" id="mis-stats"></div>
+
+      <div class="points-table">
+        <h3 style="margin-bottom:.5rem">📊 CÓMO SE GANAN PUNTOS</h3>
+        <table id="tabla-puntos"></table>
+      </div>
+
+      <div class="folio-box">
+        <h3>🍔 FOLIO DE CONSUMO</h3>
+        <p class="small muted" style="margin-top:.3rem">Cada vez que consumas en La Corte pide tu folio y captúralo aquí. Uno por día de juego.</p>
+        <div class="row">
+          <input type="text" id="folio-input" placeholder="LC0913-A1B2C" maxlength="16" />
+          <button onclick="canjearFolio()">CANJEAR</button>
+        </div>
+        <div class="folio-list" id="mis-folios"></div>
+      </div>
+
+      <div class="week-bar">
+        <button id="wk-prev" onclick="cambiarSemana(-1)">◀</button>
+        <select id="wk-select" onchange="setSemana(parseInt(this.value))"></select>
+        <button id="wk-next" onclick="cambiarSemana(1)">▶</button>
+      </div>
+
+      <div id="lock-banner"></div>
+      <div id="underdog-slot"></div>
+      <div id="quiniela-list"></div>
+      <div class="save-bar" id="save-bar" style="display:none">
+        <button class="btn-save" id="btn-guardar" onclick="guardarSemana()">💾 GUARDAR MI SEMANA</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== RANKING ========== -->
+  <section class="module" id="m-ranking">
+    <h1>🏆 RANKING GENERAL</h1>
+    <p class="muted" style="margin-bottom:1rem">Clasificación en tiempo real · Del #1 hacia abajo</p>
+    <div id="rank-list"></div>
+  </section>
+
+  <!-- ========== HISTORIAL ========== -->
+  <section class="module" id="m-historial">
+    <h1>📜 HISTORIAL DE QUINIELAS</h1>
+    <p class="muted" style="margin-bottom:1rem">Todas las quinielas que ha organizado La Corte</p>
+    <div id="hist-list" class="grid grid-2"></div>
+  </section>
+
+  <!-- ========== PREMIOS ========== -->
+  <section class="module" id="m-premios">
+    <div class="prizes-hero">
+      <h1>🎁 LOS 10 GRANDES PREMIOS</h1>
+      <p class="muted">Temporada NFL 2026-27 · La Corte</p>
+      <p style="margin-top:.6rem;color:var(--dorado);font-weight:900" id="mi-pos-actual">Cargando posición...</p>
+    </div>
+    <div class="grid grid-3" id="premios-top"></div>
+    <h2 style="margin-top:1.5rem">🎖️ DEL 4° AL 10° LUGAR</h2>
+    <div class="grid grid-4" id="premios-resto"></div>
+    <div style="text-align:center;margin-top:2rem;padding:1.5rem;background:rgba(0,0,0,.5);border-radius:10px;border:1px dashed var(--dorado)">
+      <h2 style="color:var(--dorado)">🔥 ¡TODOS PUEDEN GANAR!</h2>
+      <p style="margin-top:.5rem;opacity:.9">Reparte tus puntos de confianza cada semana, acierta el primer anotador de los partidos estelares, canjea tus folios de consumo y — si vienes abajo del top 10 — aprovecha el multiplicador Underdog.</p>
+    </div>
+  </section>
+
+  <!-- ========== ADMIN ========== -->
+  <section class="module" id="m-admin">
+    <div class="admin-panel">
+      <h1>⚙️ PANEL DE ADMINISTRADOR</h1>
+
+      <div class="admin-section">
+        <h3>🏈 PARTIDOS Y RESULTADOS</h3>
+        <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin:.5rem 0">
+          <select id="adm-week" onchange="renderAdminGames()"></select>
+          <span class="small muted">Equipos · marcador · primer anotador</span>
+        </div>
+        <div style="max-height:440px;overflow-y:auto" id="admin-games"></div>
+      </div>
+
+      <div class="admin-section">
+        <h3>📥 IMPORTAR CALENDARIO OFICIAL</h3>
+        <p class="small muted">Una línea por partido:
+          <code>semana,AAAA-MM-DD,HH:MM,VISITANTE,LOCAL,SLOT,estadio</code><br>
+          SLOT = TNF · SUN · SUN_LATE · SNF · MNF · ESPECIAL. Ejemplo:<br>
+          <code>1,2026-09-10,19:15,DAL,PHI,TNF,Lincoln Financial Field</code><br>
+          <b>Reemplaza por completo</b> las semanas que aparezcan en el texto.</p>
+        <textarea id="imp-text" placeholder="1,2026-09-10,19:15,DAL,PHI,TNF,Lincoln Financial Field"></textarea>
+        <button class="btn-ok" onclick="importarCalendario()" style="margin-top:.4rem">📥 IMPORTAR</button>
+      </div>
+
+      <div class="admin-section">
+        <h3>🎟️ FOLIOS DE CONSUMO</h3>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin:.5rem 0">
+          <input type="date" id="fol-fecha" />
+          <input type="number" id="fol-cant" value="30" min="1" max="500" style="width:80px" />
+          <button class="btn-ok" onclick="generarFolios()">Generar folios</button>
+          <span class="small muted" id="fol-hint"></span>
+        </div>
+        <div id="codes-out" style="display:none"></div>
+        <div id="folios-stats" class="small muted" style="margin-top:.5rem"></div>
+      </div>
+
+      <div class="admin-section">
+        <h3>🦄 UNDERDOG DE LA SEMANA</h3>
+        <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin:.5rem 0">
+          <select id="ud-week" onchange="renderAdminUnderdog()"></select>
+          <input type="number" id="ud-pts" min="1" style="width:80px" placeholder="pts" />
+          <label class="small"><input type="checkbox" id="ud-abierto" /> Abierto</label>
+        </div>
+        <div id="ud-config"></div>
+        <button class="btn-ok" onclick="guardarUnderdog()" style="margin-top:.5rem">💾 Guardar underdog</button>
+      </div>
+
+      <div class="admin-section">
+        <h3>🔒 CIERRE DE SEMANA</h3>
+        <p class="small muted">Congela la tabla del lunes. De este corte sale quién puede jugar el Underdog la semana siguiente.</p>
+        <div style="display:flex;gap:.4rem;align-items:center;margin-top:.5rem;flex-wrap:wrap">
+          <select id="cs-week"></select>
+          <button class="btn-blue" onclick="cerrarSemanaAdmin()">🔒 Cerrar semana</button>
+        </div>
+        <div id="cs-info" class="small muted" style="margin-top:.5rem"></div>
+      </div>
+
+      <div class="admin-section">
+        <h3>⚖️ CONFIGURACIÓN DE PUNTAJE</h3>
+        <div id="cfg-list"></div>
+        <button class="btn-ok" onclick="guardarConfig()" style="margin-top:.5rem">💾 Guardar configuración</button>
+      </div>
+
+      <div class="admin-section">
+        <h3>📜 HISTORIAL DE QUINIELAS</h3>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin:.5rem 0">
+          <input type="text" id="h-titulo" placeholder="Título" />
+          <input type="text" id="h-temp" placeholder="Temporada" style="width:110px" />
+          <input type="text" id="h-emoji" placeholder="🏆" style="width:60px" />
+          <input type="text" id="h-url" placeholder="URL (opcional)" />
+        </div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem">
+          <input type="text" id="h-desc" placeholder="Descripción" style="flex:1;min-width:220px" />
+          <input type="text" id="h-g1" placeholder="🥇 Ganador" />
+          <input type="text" id="h-g2" placeholder="🥈 2°" />
+          <input type="text" id="h-g3" placeholder="🥉 3°" />
+          <button class="btn-ok" onclick="crearHistorial()">Agregar</button>
+        </div>
+        <div id="hist-admin" class="small"></div>
+      </div>
+
+      <div class="admin-section">
+        <h3>⚠️ ZONA DE PELIGRO</h3>
+        <button class="btn-danger" onclick="resetGeneral()">🔥 RESET GENERAL</button>
+        <button class="btn-danger" onclick="salirAdmin()" style="margin-left:.5rem">Salir del panel</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Modal reserva -->
+<div class="modal-backdrop hidden" id="modal-reserva">
+  <div class="modal">
+    <button class="modal-close" onclick="cerrarModal()">✕</button>
+    <div style="font-size:3rem">🍻</div>
+    <h2>¡RESERVA TU MESA!</h2>
+    <p id="modal-match" style="margin:.5rem 0;font-weight:700"></p>
+    <p class="small muted">Vive este partido con el mejor ambiente en La Corte. Aparta tu lugar:</p>
+    <a href="#" id="tel-link" class="phone-big">834 314 4848</a>
+    <a href="#" id="wa-link" target="_blank" rel="noopener" class="btn-primary btn-gold" style="display:block;margin-bottom:.6rem">💬 RESERVAR POR WHATSAPP</a>
+    <a href="#" id="tel-btn" class="btn-primary" style="display:block">📞 LLAMAR AHORA</a>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* =====================================================
+   SUPABASE CONFIG — reemplaza con los datos de TU proyecto
+   (usa un proyecto NUEVO, distinto al de la quiniela mundial)
+   ===================================================== */
+const SUPABASE_URL      = 'https://YOUR_PROJECT_REF.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* =====================================================
+   ESTADO
+   ===================================================== */
+let sbUser = null, sbProfile = null;
+let TEAMS = {};                 // code → {ciudad,nombre,conf,div,color}
+let CFG = {};                   // clave → valor (string)
+let games = [];                 // todos los partidos
+let myPicks = {};               // game_id → {ganador,confianza,primero}
+let udWeeks = {};               // week → fila underdog_weeks
+let myUD = {};                  // week → opcion
+let misFolios = [];
+let rankRows = [];
+let currentWeek = 1;
+let misCortes = {};             // week → mi posición en el corte de esa semana
+let semanasCerradas = new Set();// semanas que ya tienen corte hecho
+let dirty = false;
+
+const PREMIOS = [
+  {p:1,  icon:'🏖️', t:'VIAJE A CANCÚN',      s:'2 personas · hotel todo incluido'},
+  {p:2,  icon:'📱', t:'iPHONE 18',           s:'Último modelo, nuevo de paquete'},
+  {p:3,  icon:'⌚', t:'APPLE WATCH SERIES 12',s:'Para no perderte ni un down'},
+  {p:4,  icon:'👕', t:'JERSEY OFICIAL',      s:'Del equipo que tú elijas'},
+  {p:5,  icon:'🏈', t:'BALÓN DE AMERICANO',  s:'Balón oficial'},
+  {p:6,  icon:'🍽️', t:'CENA PARA 4',         s:'En La Corte'},
+  {p:7,  icon:'🍴', t:'CENA PARA 2',         s:'En La Corte'},
+  {p:8,  icon:'💵', t:'CONSUMO $1,500',      s:'Para gastar en La Corte'},
+  {p:9,  icon:'💵', t:'CONSUMO $1,000',      s:'Para gastar en La Corte'},
+  {p:10, icon:'💵', t:'CONSUMO $750',        s:'Para gastar en La Corte'}
+];
+
+/* =====================================================
+   HELPERS
+   ===================================================== */
+const TZ = 'America/Mexico_City';
+const cfgInt  = (k,d)=> { const v = parseInt(CFG[k]); return isNaN(v) ? d : v; };
+const cfgText = (k,d)=> CFG[k] ?? d;
+
+function weekLabel(w){
+  if(w<=18) return 'Semana '+w;
+  return {19:'Comodines',20:'Ronda Divisional',21:'Final de Conferencia',22:'SUPER BOWL LXI'}[w] || 'Semana '+w;
+}
+function slotLabel(s){
+  return {TNF:'Thursday Night',SUN:'Domingo',SUN_LATE:'Domingo tarde',SNF:'Sunday Night',MNF:'Monday Night',ESPECIAL:'Extraordinario'}[s]||s;
+}
+function fecha(iso, opts){
+  return new Date(iso).toLocaleDateString('es-MX', Object.assign({timeZone:TZ}, opts));
+}
+function hora(iso){
+  return new Date(iso).toLocaleTimeString('es-MX',{timeZone:TZ,hour:'2-digit',minute:'2-digit'});
+}
+function fechaLarga(iso){
+  return fecha(iso,{weekday:'long',day:'2-digit',month:'long'});
+}
+function isoDay(iso){
+  return new Date(iso).toLocaleDateString('en-CA',{timeZone:TZ}); // AAAA-MM-DD
+}
+function tname(code){
+  const t = TEAMS[code];
+  return t ? (t.ciudad+' '+t.nombre) : (code || 'Por definir');
+}
+function tshort(code){
+  const t = TEAMS[code];
+  return t ? t.nombre : (code || 'TBD');
+}
+function esc(s){
+  return String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function gamesOf(w){
+  return games.filter(g=>g.week===w).sort((a,b)=> new Date(a.kickoff)-new Date(b.kickoff) || a.id.localeCompare(b.id));
+}
+function inicioSemana(w){
+  const gs = gamesOf(w);
+  return gs.length ? new Date(gs[0].kickoff) : null;
+}
+function semanaCerrada(w){
+  if(cfgText('lock_mode','semana')==='partido') return false; // se evalúa por partido
+  const ini = inicioSemana(w);
+  return ini ? Date.now() >= ini.getTime() : false;
+}
+function partidoCerrado(g){
+  if(cfgText('lock_mode','semana')==='partido') return Date.now() >= new Date(g.kickoff).getTime();
+  return semanaCerrada(g.week);
+}
+function ganadorReal(g){
+  if(g.score_a===null || g.score_a===undefined) return null;
+  if(g.score_a===g.score_b) return 'E';
+  return g.score_a > g.score_b ? 'A' : 'B';
+}
+function ptsBase(g){
+  return g.is_special ? cfgInt('pts_win_especial',15) : cfgInt('pts_win_normal',5);
+}
+function ptsDeAcierto(g, pick){
+  const mode = cfgText('conf_mode','additive');
+  if(mode==='flat') return ptsBase(g);
+  if(mode==='solo') return pick.confianza || 0;
+  return ptsBase(g) + (pick.confianza || 0);
+}
+function semanaActual(){
+  const now = Date.now();
+  const weeks = [...new Set(games.map(g=>g.week))].sort((a,b)=>a-b);
+  for(const w of weeks){
+    const gs = gamesOf(w);
+    const fin = new Date(gs[gs.length-1].kickoff).getTime() + 4*3600*1000;
+    if(now < fin) return w;
+  }
+  return weeks[weeks.length-1] || 1;
+}
+
+/* =====================================================
+   CARGA DE DATOS
+   ===================================================== */
+async function loadConfig(){
+  const {data} = await sb.from('config').select('*');
+  CFG = {}; (data||[]).forEach(r=> CFG[r.clave]=r.valor);
+}
+async function loadTeams(){
+  const {data} = await sb.from('teams').select('*');
+  TEAMS = {}; (data||[]).forEach(t=> TEAMS[t.code]=t);
+}
+async function loadGames(){
+  const {data,error} = await sb.from('games').select('*').order('kickoff');
+  if(error){toast('Error cargando partidos','err');return}
+  games = data||[];
+}
+async function loadUnderdog(){
+  const {data} = await sb.from('underdog_weeks').select('*');
+  udWeeks = {}; (data||[]).forEach(r=> udWeeks[r.week]=r);
+  if(!sbUser) return;
+  const {data:mine} = await sb.from('underdog_picks').select('*').eq('user_id', sbUser.id);
+  myUD = {}; (mine||[]).forEach(r=> myUD[r.week]=r.opcion);
+}
+async function loadMyPicks(){
+  if(!sbUser) return;
+  const {data} = await sb.from('picks').select('*').eq('user_id', sbUser.id);
+  myPicks = {};
+  (data||[]).forEach(r=> myPicks[r.game_id]={ganador:r.ganador, confianza:r.confianza, primero:r.primero});
+}
+async function loadMisFolios(){
+  if(!sbUser) return;
+  const {data} = await sb.from('folios').select('*').eq('por_user_id', sbUser.id).order('fecha');
+  misFolios = data||[];
+}
+async function loadProfile(){
+  if(!sbUser) return;
+  const {data} = await sb.from('profiles').select('*').eq('id',sbUser.id).single();
+  sbProfile = data;
+  if(sbProfile && (sbProfile.role==='admin'||sbProfile.role==='manager')){
+    document.getElementById('tab-admin').style.display='';
+  }
+}
+// Espeja exactamente a underdog_elegible() del servidor: se necesitan tanto
+// las posiciones propias como saber qué semanas tienen corte hecho.
+async function loadElegibilidad(){
+  misCortes = {}; semanasCerradas = new Set();
+  const {data:all} = await sb.from('week_snapshots').select('week');
+  (all||[]).forEach(r=> semanasCerradas.add(r.week));
+  if(!sbUser) return;
+  const {data} = await sb.from('week_snapshots').select('week,posicion').eq('user_id', sbUser.id);
+  (data||[]).forEach(r=> misCortes[r.week]=r.posicion);
+}
+function miPosPrevia(w){ return misCortes[w-1] ?? null; }
+function puedoUnderdog(w){
+  const topN = cfgInt('underdog_top_n',10);
+  if(!semanasCerradas.has(w-1)) return true;   // no hay corte de la semana anterior
+  const pos = misCortes[w-1];
+  if(pos===undefined) return true;             // no aparecía en la tabla → puede
+  return pos > topN;
+}
+
+/* =====================================================
+   REALTIME
+   ===================================================== */
+function initRealtime(){
+  sb.channel('rt-games')
+    .on('postgres_changes',{event:'*',schema:'public',table:'games'}, async payload=>{
+      if(payload.eventType==='DELETE'){
+        games = games.filter(g=>g.id!==payload.old.id);
+      } else {
+        const i = games.findIndex(g=>g.id===payload.new.id);
+        if(i>=0) games[i]=payload.new; else games.push(payload.new);
+      }
+      renderDivisiones(); renderCalendario();
+      if(sbProfile && !dirty) renderQuiniela();
+      await renderRanking();
+    }).subscribe();
+
+  sb.channel('rt-picks')
+    .on('postgres_changes',{event:'*',schema:'public',table:'picks'}, ()=> renderRanking())
+    .subscribe();
+
+  sb.channel('rt-folios')
+    .on('postgres_changes',{event:'*',schema:'public',table:'folios'}, ()=> renderRanking())
+    .subscribe();
+
+  sb.channel('rt-ud')
+    .on('postgres_changes',{event:'*',schema:'public',table:'underdog_picks'}, ()=> renderRanking())
+    .subscribe();
+}
+
+/* =====================================================
+   AUTH & INIT
+   ===================================================== */
+async function initApp(){
+  if(SUPABASE_URL.includes('YOUR_PROJECT')){
+    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;color:#FFB612;background:#070d12;text-align:center;padding:2rem"><div><h2>⚙️ Configuración pendiente</h2><p style="margin-top:1rem;opacity:.85;line-height:1.7">Abre <code>index.html</code> y reemplaza<br><code>SUPABASE_URL</code> y <code>SUPABASE_ANON_KEY</code><br>con los valores de tu proyecto Supabase.<br><br>Ver <code>README.md</code> para instrucciones.</p></div></div>';
+    return;
+  }
+  await Promise.all([loadConfig(), loadTeams(), loadGames()]);
+  currentWeek = semanaActual();
+
+  const {data:{session}} = await sb.auth.getSession();
+  if(session){
+    sbUser = session.user;
+    await loadProfile();
+    await Promise.all([loadMyPicks(), loadUnderdog(), loadMisFolios(), loadElegibilidad()]);
+    mostrarApp();
+    initRealtime();
+  } else {
+    await loadUnderdog();
+    document.getElementById('registro').classList.remove('hidden');
+    renderDivisiones(); renderCalendario(); renderHistorial(); renderPremios();
+  }
+
+  sb.auth.onAuthStateChange(async (event)=>{
+    if(event==='SIGNED_OUT'){
+      sbUser=null; sbProfile=null; myPicks={}; myUD={}; misFolios=[];
+      document.getElementById('user-pill').style.display='none';
+      document.getElementById('tab-admin').style.display='none';
+      document.getElementById('registro').classList.remove('hidden');
+      volverRegistro();
+    }
+  });
+
+  window.addEventListener('beforeunload', e=>{
+    if(dirty){ e.preventDefault(); e.returnValue=''; }
+  });
+}
+
+/* ---------- Registro / OTP ---------- */
+let _regNombre='', _regEmail='', _regTel='';
+
+document.getElementById('reg-btn').onclick = async ()=>{
+  const n = document.getElementById('reg-nombre').value.trim();
+  const e = document.getElementById('reg-email').value.trim().toLowerCase();
+  const t = document.getElementById('reg-tel').value.trim();
+  if(!n||!e||!t){toast('Completa todos los campos','err');return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){toast('Correo inválido','err');return}
+  _regNombre=n; _regEmail=e; _regTel=t;
+  const btn = document.getElementById('reg-btn');
+  btn.disabled=true; btn.textContent='Enviando...';
+  const {error} = await sb.auth.signInWithOtp({email:e, options:{shouldCreateUser:true}});
+  btn.disabled=false; btn.textContent='🏈 ENTRAR A LA QUINIELA';
+  if(error){toast(error.message,'err');return}
+  document.getElementById('otp-email-shown').textContent = e;
+  document.getElementById('reg-form-step').style.display='none';
+  document.getElementById('reg-otp-step').style.display='block';
+  document.getElementById('reg-otp').focus();
+  toast('Código enviado — revisa tu correo');
+};
+
+document.getElementById('otp-btn').onclick = async ()=>{
+  const token = document.getElementById('reg-otp').value.trim();
+  if(token.length!==6){toast('El código tiene 6 dígitos','err');return}
+  const btn = document.getElementById('otp-btn');
+  btn.disabled=true; btn.textContent='Verificando...';
+  const {data,error} = await sb.auth.verifyOtp({email:_regEmail, token, type:'email'});
+  btn.disabled=false; btn.textContent='✅ VERIFICAR CÓDIGO';
+  if(error){toast('Código incorrecto o expirado','err');return}
+
+  sbUser = data.user;
+  const {error:upErr} = await sb.from('profiles').upsert({
+    id:sbUser.id, nombre:_regNombre, email:_regEmail, tel:_regTel
+  },{onConflict:'id'});
+  if(upErr){toast('Error guardando perfil: '+upErr.message,'err');return}
+
+  await loadProfile();
+  await Promise.all([loadMyPicks(), loadUnderdog(), loadMisFolios(), loadElegibilidad()]);
+  mostrarApp();
+  initRealtime();
+};
+
+function volverRegistro(){
+  document.getElementById('reg-otp-step').style.display='none';
+  document.getElementById('reg-form-step').style.display='block';
+  document.getElementById('reg-otp').value='';
+}
+function mostrarApp(){
+  document.getElementById('registro').classList.add('hidden');
+  document.getElementById('user-pill').style.display='flex';
+  document.getElementById('user-name').textContent = sbProfile?.nombre || sbUser?.email || '';
+  renderAll();
+}
+async function cerrarSesion(){
+  if(dirty && !confirm('Tienes cambios sin guardar. ¿Salir de todos modos?')) return;
+  if(!confirm('¿Cerrar sesión?')) return;
+  await sb.auth.signOut();
+}
+
+/* ---------- Navegación ---------- */
+document.querySelectorAll('.tab').forEach(b=>{
+  b.onclick = ()=>{
+    const tab = b.dataset.tab;
+    if(tab==='admin' && !isAdminOrManager()) return;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.module').forEach(m=>m.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('m-'+tab)?.classList.add('active');
+    if(tab==='admin') renderAdmin();
+    if(tab==='ranking') renderRanking();
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+});
+document.querySelectorAll('.conf-toggle button').forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll('.conf-toggle button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    renderDivisiones();
+  };
+});
+
+/* =====================================================
+   RENDER: DIVISIONES (GRUPOS)
+   ===================================================== */
+function calcularRecords(){
+  const rec = {};
+  Object.keys(TEAMS).forEach(c=> rec[c]={g:0,p:0,e:0,pf:0,pc:0});
+  games.forEach(g=>{
+    if(g.score_a===null || g.score_a===undefined) return;
+    if(!g.team_a || !g.team_b || !rec[g.team_a] || !rec[g.team_b]) return;
+    rec[g.team_a].pf+=g.score_a; rec[g.team_a].pc+=g.score_b;
+    rec[g.team_b].pf+=g.score_b; rec[g.team_b].pc+=g.score_a;
+    if(g.score_a===g.score_b){ rec[g.team_a].e++; rec[g.team_b].e++; }
+    else if(g.score_a>g.score_b){ rec[g.team_a].g++; rec[g.team_b].p++; }
+    else { rec[g.team_b].g++; rec[g.team_a].p++; }
+  });
+  return rec;
+}
+
+function renderDivisiones(){
+  const cont = document.getElementById('div-view');
+  if(!cont) return;
+  const sel = document.querySelector('.conf-toggle button.active')?.dataset.conf || 'AFC';
+  const rec = calcularRecords();
+  const confs = sel==='ALL' ? ['AFC','NFC'] : [sel];
+  const divs = ['Este','Norte','Sur','Oeste'];
+  cont.innerHTML='';
+  confs.forEach(cf=>{
+    divs.forEach(dv=>{
+      const list = Object.values(TEAMS).filter(t=>t.conf===cf && t.div===dv);
+      if(!list.length) return;
+      list.sort((a,b)=>{
+        const A=rec[a.code], B=rec[b.code];
+        const pctA = (A.g+A.e*0.5)/Math.max(1,A.g+A.p+A.e);
+        const pctB = (B.g+B.e*0.5)/Math.max(1,B.g+B.p+B.e);
+        return pctB-pctA || (B.pf-B.pc)-(A.pf-A.pc) || a.nombre.localeCompare(b.nombre);
+      });
+      const box = document.createElement('div');
+      box.className='div-card';
+      box.innerHTML = `
+        <div class="div-title">${cf} ${dv.toUpperCase()}</div>
+        <table>
+          <tr><th style="text-align:left">EQUIPO</th><th>G</th><th>P</th><th>E</th><th>PF</th><th>PC</th><th>DIF</th></tr>
+          ${list.map(t=>{
+            const r=rec[t.code];
+            const dif=r.pf-r.pc;
+            return `<tr>
+              <td class="team"><span class="dot" style="background:${esc(t.color)}"></span>${esc(t.nombre)}</td>
+              <td class="pts">${r.g}</td><td>${r.p}</td><td>${r.e}</td>
+              <td>${r.pf}</td><td>${r.pc}</td>
+              <td style="color:${dif>0?'#8ff0ac':dif<0?'#ffb0b0':'#aaa'}">${dif>0?'+':''}${dif}</td>
+            </tr>`;
+          }).join('')}
+        </table>`;
+      cont.appendChild(box);
+    });
+  });
+}
+
+/* =====================================================
+   RENDER: CALENDARIO
+   ===================================================== */
+function limpiarFiltros(){
+  ['f-week','f-team','f-slot','f-date'].forEach(id=>document.getElementById(id).value='');
+  renderCalendario();
+}
+
+function renderCalendario(){
+  const list = document.getElementById('cal-list');
+  if(!list) return;
+
+  const wSel = document.getElementById('f-week');
+  if(wSel.options.length<=1){
+    [...new Set(games.map(g=>g.week))].sort((a,b)=>a-b).forEach(w=>{
+      const o=document.createElement('option'); o.value=w; o.textContent=weekLabel(w); wSel.appendChild(o);
+    });
+    if(!wSel.value) wSel.value = currentWeek;
+  }
+  const tSel = document.getElementById('f-team');
+  if(tSel.options.length<=1){
+    Object.values(TEAMS).sort((a,b)=>a.nombre.localeCompare(b.nombre)).forEach(t=>{
+      const o=document.createElement('option'); o.value=t.code; o.textContent=t.ciudad+' '+t.nombre; tSel.appendChild(o);
+    });
+  }
+
+  const fw=wSel.value, ft=tSel.value,
+        fs=document.getElementById('f-slot').value,
+        fd=document.getElementById('f-date').value;
+
+  list.innerHTML='';
+  let ultimaFecha='';
+  const sorted = [...games].sort((a,b)=> new Date(a.kickoff)-new Date(b.kickoff) || a.id.localeCompare(b.id));
+
+  sorted.forEach(g=>{
+    if(fw && g.week!==parseInt(fw)) return;
+    if(ft && g.team_a!==ft && g.team_b!==ft) return;
+    if(fs && g.slot!==fs) return;
+    if(fd && isoDay(g.kickoff)!==fd) return;
+
+    const dia = fechaLarga(g.kickoff);
+    if(dia!==ultimaFecha){
+      ultimaFecha=dia;
+      const h=document.createElement('h2');
+      h.textContent=dia.toUpperCase();
+      h.style.marginTop='1.2rem';
+      list.appendChild(h);
+    }
+
+    const d = new Date(g.kickoff);
+    const res = (g.score_a!==null && g.score_a!==undefined)
+      ? `<span class="chip gold">${g.score_a} - ${g.score_b}</span> ` : '';
+    const card = document.createElement('div');
+    card.className='card match-card';
+    card.innerHTML = `
+      <div class="match-date">
+        <div class="d">${d.toLocaleDateString('es-MX',{timeZone:TZ,day:'2-digit'})}</div>
+        <div class="m">${d.toLocaleDateString('es-MX',{timeZone:TZ,month:'short'}).toUpperCase()}</div>
+        <div class="t">${hora(g.kickoff)}</div>
+      </div>
+      <div>
+        <div class="match-teams">${esc(tname(g.team_a))} <span style="opacity:.5">@</span> ${esc(tname(g.team_b))}</div>
+        <div class="match-meta">
+          ${res}
+          <span class="chip">${esc(weekLabel(g.week))}</span>
+          <span class="chip grey">${esc(slotLabel(g.slot))}</span>
+          ${g.is_special?'<span class="chip red">⭐ EXTRAORDINARIO · '+cfgInt('pts_win_especial',15)+' PTS</span>':''}
+          ${g.venue?'<br>📍 '+esc(g.venue):''}
+        </div>
+      </div>
+      <button class="btn-reserve" data-gid="${esc(g.id)}" onclick="abrirReserva(this.dataset.gid)">🍻 RESERVAR</button>`;
+    list.appendChild(card);
+  });
+
+  if(!list.children.length){
+    list.innerHTML='<p class="muted" style="text-align:center;padding:2rem">Sin partidos que coincidan con los filtros.</p>';
+  }
+}
+
+function abrirReserva(gid){
+  const g = games.find(x=>x.id===gid);
+  if(!g) return;
+  const a = tname(g.team_a), b = tname(g.team_b);
+  const cuando = fechaLarga(g.kickoff)+' · '+hora(g.kickoff)+' hrs';
+  document.getElementById('modal-match').innerHTML =
+    `${esc(a)} <span style="opacity:.5">@</span> ${esc(b)}<br><small class="muted">${esc(weekLabel(g.week))} · ${esc(cuando)}</small>`;
+  const wa  = cfgText('whatsapp','528343144848');
+  const tel = cfgText('telefono','8343144848');
+  const msg = encodeURIComponent(`¡Hola La Corte! Quiero reservar mesa para ver ${a} vs ${b} (${cuando}).`);
+  document.getElementById('wa-link').href  = `https://wa.me/${wa}?text=${msg}`;
+  document.getElementById('tel-link').href = 'tel:'+tel;
+  document.getElementById('tel-btn').href  = 'tel:'+tel;
+  document.getElementById('tel-link').textContent = tel.replace(/(\d{3})(\d{3})(\d{4})/,'$1 $2 $3');
+  document.getElementById('modal-reserva').classList.remove('hidden');
+}
+function cerrarModal(){document.getElementById('modal-reserva').classList.add('hidden')}
+document.getElementById('modal-reserva').addEventListener('click',e=>{
+  if(e.target.id==='modal-reserva') cerrarModal();
+});
+
+/* =====================================================
+   PUNTOS DEL USUARIO
+   ===================================================== */
+function misPuntos(){
+  let confianza=0, anotador=0, aciertos=0, jugados=0;
+  const detalle={};
+  games.forEach(g=>{
+    const real = ganadorReal(g);
+    if(real===null) return;
+    const p = myPicks[g.id];
+    if(!p) return;
+    jugados++;
+    let pts=0;
+    if(p.ganador && real!=='E' && p.ganador===real){ pts += ptsDeAcierto(g,p); aciertos++; }
+    confianza += pts;
+    let ap=0;
+    if(g.is_stellar && g.first_scorer && p.primero===g.first_scorer){ ap = cfgInt('pts_anotador',3); }
+    anotador += ap;
+    detalle[g.id] = pts+ap;
+  });
+  const consumo = misFolios.reduce((s,f)=>s+(f.puntos||0),0);
+  let underdog = 0;
+  Object.entries(myUD).forEach(([w,op])=>{
+    const uw = udWeeks[w];
+    if(!uw) return;
+    const gid = uw['opt_'+op.toLowerCase()+'_game'];
+    const tm  = uw['opt_'+op.toLowerCase()+'_team'];
+    const g = games.find(x=>x.id===gid);
+    if(!g || g.score_a===null || g.score_a===undefined || g.score_a===g.score_b) return;
+    const win = g.score_a>g.score_b ? g.team_a : g.team_b;
+    if(win===tm) underdog += (uw.puntos||0);
+  });
+  return {confianza, anotador, consumo, underdog, aciertos, jugados,
+          total: confianza+anotador+consumo+underdog, detalle};
+}
+
+/* =====================================================
+   RENDER: QUINIELA
+   ===================================================== */
+function setSemana(w){
+  if(dirty && !confirm('Tienes cambios sin guardar en esta semana. ¿Cambiar de semana igual?')){
+    document.getElementById('wk-select').value = currentWeek;
+    return;
+  }
+  dirty=false; currentWeek=w; renderQuiniela();
+}
+function cambiarSemana(delta){
+  const weeks = [...new Set(games.map(g=>g.week))].sort((a,b)=>a-b);
+  const i = weeks.indexOf(currentWeek);
+  if(i<0) return;
+  const nw = weeks[i+delta];
+  if(nw!==undefined) setSemana(nw);
+}
+
+function renderTablaPuntos(){
+  const t = document.getElementById('tabla-puntos');
+  if(!t) return;
+  const mode = cfgText('conf_mode','additive');
+  const modeTxt = mode==='flat' ? 'solo el fijo'
+                : mode==='solo' ? 'solo tu confianza'
+                : 'fijo + tu confianza';
+  t.innerHTML = `
+    <tr><td>🎯 Ganador acertado · partido normal</td><td>${cfgInt('pts_win_normal',5)} pts</td></tr>
+    <tr><td>⭐ Ganador acertado · partido extraordinario (mié/vie/sáb)</td><td>${cfgInt('pts_win_especial',15)} pts</td></tr>
+    <tr><td>🔢 Puntos de confianza (repartes 1 a N cada semana)</td><td>${esc(modeTxt)}</td></tr>
+    <tr><td>⚡ Primer equipo en anotar · partidos estelares</td><td>${cfgInt('pts_anotador',3)} pts</td></tr>
+    <tr><td>🦄 Underdog de la semana (fuera del top ${cfgInt('underdog_top_n',10)})</td><td>${cfgInt('pts_underdog',20)} pts</td></tr>
+    <tr><td>🍔 Folio de consumo · lunes</td><td>${cfgInt('pts_folio_lunes',10)} pts</td></tr>
+    <tr><td>🍔 Folio de consumo · jueves</td><td>${cfgInt('pts_folio_jueves',5)} pts</td></tr>
+    <tr><td>🍔 Folio de consumo · domingo</td><td>${cfgInt('pts_folio_domingo',5)} pts</td></tr>
+    <tr><td>🍔 Folio de consumo · día extraordinario</td><td>${cfgInt('pts_folio_especial',10)} pts</td></tr>`;
+}
+
+function renderStats(){
+  const cont = document.getElementById('mis-stats');
+  if(!cont) return;
+  const p = misPuntos();
+  cont.innerHTML = `
+    <div class="stat"><div class="v">${p.total}</div><div class="l">TOTAL</div></div>
+    <div class="stat"><div class="v">${p.confianza}</div><div class="l">CONFIANZA</div></div>
+    <div class="stat"><div class="v">${p.anotador}</div><div class="l">ANOTADOR</div></div>
+    <div class="stat"><div class="v">${p.consumo}</div><div class="l">CONSUMO</div></div>
+    <div class="stat"><div class="v">${p.underdog}</div><div class="l">UNDERDOG</div></div>
+    <div class="stat"><div class="v">${p.aciertos}/${p.jugados}</div><div class="l">ACIERTOS</div></div>`;
+}
+
+function renderMisFolios(){
+  const cont = document.getElementById('mis-folios');
+  if(!cont) return;
+  if(!misFolios.length){ cont.innerHTML='<span class="small muted">Aún no has canjeado folios.</span>'; return; }
+  cont.innerHTML = misFolios.map(f=>
+    `<span class="folio-tag">${esc(f.fecha.split('-').reverse().slice(0,2).join('/'))} · +${f.puntos}</span>`
+  ).join('');
+}
+
+function renderQuiniela(){
+  if(!sbProfile) return;
+  renderTablaPuntos(); renderStats(); renderMisFolios();
+
+  const wSel = document.getElementById('wk-select');
+  const weeks = [...new Set(games.map(g=>g.week))].sort((a,b)=>a-b);
+  wSel.innerHTML = weeks.map(w=>`<option value="${w}">${esc(weekLabel(w))}</option>`).join('');
+  wSel.value = currentWeek;
+  document.getElementById('wk-prev').disabled = weeks.indexOf(currentWeek)<=0;
+  document.getElementById('wk-next').disabled = weeks.indexOf(currentWeek)>=weeks.length-1;
+
+  const gs = gamesOf(currentWeek);
+  const cerrada = semanaCerrada(currentWeek);
+  const ini = inicioSemana(currentWeek);
+  const banner = document.getElementById('lock-banner');
+  if(!gs.length){
+    banner.className='lock-banner shut';
+    banner.textContent='Sin partidos cargados para esta semana.';
+  } else if(cerrada){
+    banner.className='lock-banner shut';
+    banner.textContent='🔒 ESTA SEMANA YA CERRÓ · arrancó el '+fechaLarga(ini)+' a las '+hora(ini);
+  } else {
+    banner.className='lock-banner open';
+    banner.textContent='✅ ABIERTA · cierra el '+fechaLarga(ini)+' a las '+hora(ini)+' hrs (primer kickoff)';
+  }
+
+  renderUnderdog();
+
+  const list = document.getElementById('quiniela-list');
+  list.innerHTML='';
+  const det = misPuntos().detalle;
+  const N = gs.length;
+
+  let ultimoDia='';
+  gs.forEach(g=>{
+    const dia = fechaLarga(g.kickoff);
+    if(dia!==ultimoDia){
+      ultimoDia=dia;
+      const h=document.createElement('h2');
+      h.textContent=dia.toUpperCase();
+      h.style.marginTop='1rem';
+      list.appendChild(h);
+    }
+    list.appendChild(renderGamePick(g, N, det));
+  });
+
+  document.getElementById('save-bar').style.display = (gs.length && !cerrada) ? '' : 'none';
+  actualizarBotonGuardar();
+}
+
+function renderGamePick(g, N, det){
+  const p = myPicks[g.id] || {};
+  const locked = partidoCerrado(g);
+  const real = ganadorReal(g);
+  const div = document.createElement('div');
+  const acierto = real && real!=='E' && p.ganador===real;
+  div.className = 'qgame'
+    + (g.is_special?' special':'')
+    + (locked?' locked':'')
+    + (real ? (acierto?' hit':' miss') : '');
+
+  const jugado = real!==null;
+  const dis = locked ? 'disabled' : '';
+  const opts = [`<option value="">–</option>`].concat(
+    Array.from({length:N},(_,i)=>{
+      const v=N-i;
+      return `<option value="${v}"${p.confianza===v?' selected':''}>${v}</option>`;
+    })
+  ).join('');
+
+  const marcador = jugado
+    ? `<span class="chip gold">FINAL ${g.score_a} - ${g.score_b}</span>` : '';
+
+  div.innerHTML = `
+    <div class="qg-head">
+      <span>${esc(hora(g.kickoff))} hrs · ${esc(slotLabel(g.slot))}${g.is_special?' · <b style="color:var(--dorado)">⭐ '+cfgInt('pts_win_especial',15)+' PTS</b>':' · '+cfgInt('pts_win_normal',5)+' pts'}</span>
+      <span>${marcador}${g.is_stellar?'<span class="chip red" style="margin-left:.3rem">ESTELAR</span>':''}</span>
+    </div>
+    <div class="qg-versus">
+      <button class="team-btn ${p.ganador==='A'?'sel':''}" ${dis}
+        onclick="pickGanador('${esc(g.id)}','A',this)">
+        ${esc(tshort(g.team_a))}<small>VISITA</small>
+      </button>
+      <div class="vs">@</div>
+      <button class="team-btn ${p.ganador==='B'?'sel':''}" ${dis}
+        onclick="pickGanador('${esc(g.id)}','B',this)">
+        ${esc(tshort(g.team_b))}<small>LOCAL</small>
+      </button>
+    </div>
+    <div class="conf-row">
+      <label>🔢 CONFIANZA</label>
+      <select id="cf-${esc(g.id)}" ${dis} onchange="pickConfianza('${esc(g.id)}',this.value)">${opts}</select>
+      <span class="small muted">${N>0?'de 1 a '+N+', sin repetir':''}</span>
+    </div>
+    ${g.is_stellar ? `
+    <div class="anot-row">
+      <span class="lbl">⚡ PRIMER EQUIPO EN ANOTAR (+${cfgInt('pts_anotador',3)})</span>
+      <div class="mini-group">
+        <button class="mini-btn ${p.primero==='A'?'sel':''}" ${dis} onclick="pickPrimero('${esc(g.id)}','A',this)">${esc(tshort(g.team_a))}</button>
+        <button class="mini-btn ${p.primero==='B'?'sel':''}" ${dis} onclick="pickPrimero('${esc(g.id)}','B',this)">${esc(tshort(g.team_b))}</button>
+      </div>
+    </div>` : ''}
+    ${jugado ? `<div class="earned ${det[g.id]?'':'zero'}">${det[g.id] ? '🎉 +'+det[g.id]+' PUNTOS' : 'Sin puntos en este partido'}</div>` : ''}
+  `;
+  return div;
+}
+
+function pickGanador(gid, val, btn){
+  myPicks[gid] = myPicks[gid] || {};
+  myPicks[gid].ganador = (myPicks[gid].ganador===val) ? null : val;
+  btn.parentElement.querySelectorAll('.team-btn').forEach(b=>b.classList.remove('sel'));
+  if(myPicks[gid].ganador) btn.classList.add('sel');
+  dirty=true; actualizarBotonGuardar();
+}
+function pickPrimero(gid, val, btn){
+  myPicks[gid] = myPicks[gid] || {};
+  myPicks[gid].primero = (myPicks[gid].primero===val) ? null : val;
+  btn.parentElement.querySelectorAll('.mini-btn').forEach(b=>b.classList.remove('sel'));
+  if(myPicks[gid].primero) btn.classList.add('sel');
+  dirty=true; actualizarBotonGuardar();
+}
+function pickConfianza(gid, val){
+  myPicks[gid] = myPicks[gid] || {};
+  myPicks[gid].confianza = val==='' ? null : parseInt(val);
+  dirty=true; actualizarBotonGuardar();
+}
+
+function actualizarBotonGuardar(){
+  const gs = gamesOf(currentWeek);
+  const btn = document.getElementById('btn-guardar');
+  if(!btn) return;
+
+  // Detectar confianzas repetidas
+  const usados = {};
+  gs.forEach(g=>{
+    const c = myPicks[g.id]?.confianza;
+    if(c) (usados[c]=usados[c]||[]).push(g.id);
+  });
+  let dups = 0;
+  gs.forEach(g=>{
+    const el = document.getElementById('cf-'+g.id);
+    if(!el) return;
+    const c = myPicks[g.id]?.confianza;
+    const isDup = c && usados[c].length>1;
+    el.classList.toggle('dup', !!isDup);
+    if(isDup) dups++;
+  });
+
+  const asignados = Object.keys(usados).length;
+  const faltan = gs.length - gs.filter(g=>myPicks[g.id]?.confianza).length;
+
+  if(dups>0){
+    btn.disabled = true;
+    btn.textContent = '⚠️ HAY '+dups+' CONFIANZAS REPETIDAS';
+  } else if(semanaCerrada(currentWeek)){
+    btn.disabled = true;
+    btn.textContent = '🔒 SEMANA CERRADA';
+  } else {
+    btn.disabled = false;
+    btn.textContent = faltan>0
+      ? `💾 GUARDAR · faltan ${faltan} por asignar`
+      : `💾 GUARDAR MI SEMANA (${asignados}/${gs.length} listos)`;
+  }
+}
+
+async function guardarSemana(){
+  const gs = gamesOf(currentWeek);
+  // Se mandan TODOS los partidos de la semana (no solo los llenos): así, si el
+  // usuario borra un pronóstico, el vacío también se persiste.
+  const payload = gs.map(g=>{
+    const p = myPicks[g.id] || {};
+    return {
+      game_id:g.id,
+      ganador: p.ganador || '',
+      confianza: p.confianza ? String(p.confianza) : '',
+      primero: p.primero || ''
+    };
+  });
+
+  const btn = document.getElementById('btn-guardar');
+  btn.disabled=true; btn.textContent='Guardando...';
+  const {data,error} = await sb.rpc('guardar_semana',{p_week:currentWeek, p_picks:payload});
+  if(error){ toast('Error: '+error.message,'err'); actualizarBotonGuardar(); return; }
+  if(!data?.ok){ toast(data?.msg||'No se pudo guardar','err'); actualizarBotonGuardar(); return; }
+
+  dirty=false;
+  toast('✅ '+data.msg);
+  await loadMyPicks();
+  renderQuiniela();
+  await renderRanking();
+}
+
+/* ---------- Underdog ---------- */
+function renderUnderdog(){
+  const slot = document.getElementById('underdog-slot');
+  if(!slot) return;
+  const uw = udWeeks[currentWeek];
+  const topN = cfgInt('underdog_top_n',10);
+
+  if(!uw || !uw.opt_a_team){
+    slot.innerHTML = `<div class="underdog-box">
+      <h3>🦄 MULTIPLICADOR DE PUNTOS: UNDERDOG</h3>
+      <p class="small" style="margin-top:.4rem;opacity:.85">Los underdogs de ${esc(weekLabel(currentWeek))} aún no se publican. Se abren cada miércoles.</p>
+    </div>`;
+    return;
+  }
+
+  const elegible = puedoUnderdog(currentWeek);
+  const cerrado = semanaCerrada(currentWeek) || !uw.abierto;
+  const mio = myUD[currentWeek];
+
+  if(!elegible){
+    slot.innerHTML = `<div class="underdog-box">
+      <h3>🦄 MULTIPLICADOR DE PUNTOS: UNDERDOG</h3>
+      <div class="ud-locked" style="margin-top:.6rem">
+        🔒 Cerraste la semana pasada en el <b>#${miPosPrevia(currentWeek)}</b>.<br>
+        El Underdog es exclusivo para quienes vienen del lugar #${topN+1} hacia abajo. ¡Vas muy bien, defiéndelo!
+      </div>
+    </div>`;
+    return;
+  }
+
+  const opciones = ['A','B','C'].map(op=>{
+    const gid = uw['opt_'+op.toLowerCase()+'_game'];
+    const tm  = uw['opt_'+op.toLowerCase()+'_team'];
+    if(!tm) return '';
+    const g = games.find(x=>x.id===gid);
+    const rival = g ? (g.team_a===tm ? g.team_b : g.team_a) : null;
+    return `<button class="ud-opt ${mio===op?'sel':''}" ${cerrado?'disabled':''}
+              onclick="pickUnderdog('${op}')">
+              ${esc(tname(tm))}
+              <small>${rival?'vs '+esc(tshort(rival)):''}${g?' · '+esc(hora(g.kickoff))+' hrs':''}</small>
+            </button>`;
+  }).join('');
+
+  slot.innerHTML = `<div class="underdog-box">
+    <h3>🦄 MULTIPLICADOR DE PUNTOS: UNDERDOG</h3>
+    <p class="small" style="margin-top:.4rem;opacity:.9">
+      Estás fuera del top ${topN}: elige <b>un</b> underdog de ${esc(weekLabel(currentWeek))}.
+      Si gana su partido te llevas <b style="color:#d8b3ff">+${uw.puntos} puntos</b>. No pierdes nada si falla.
+    </p>
+    <div class="ud-options">${opciones}</div>
+    ${cerrado ? '<p class="small" style="margin-top:.6rem;opacity:.7">🔒 Ventana cerrada para esta semana.</p>' : ''}
+  </div>`;
+}
+
+async function pickUnderdog(op){
+  const {error} = await sb.from('underdog_picks')
+    .upsert({user_id:sbUser.id, week:currentWeek, opcion:op},{onConflict:'user_id,week'});
+  if(error){ toast('No se pudo registrar: '+error.message,'err'); return; }
+  myUD[currentWeek]=op;
+  toast('🦄 Underdog registrado');
+  renderUnderdog(); renderStats();
+  await renderRanking();
+}
+
+/* ---------- Folios ---------- */
+async function canjearFolio(){
+  const input = document.getElementById('folio-input');
+  const code = input.value.trim().toUpperCase();
+  if(!code){ toast('Escribe tu folio','err'); return; }
+  const {data,error} = await sb.rpc('canjear_folio',{p_code:code});
+  if(error){ toast(error.message,'err'); return; }
+  if(!data.ok){ toast(data.msg,'err'); return; }
+  input.value='';
+  toast('🎉 '+data.msg);
+  await loadMisFolios();
+  renderMisFolios(); renderStats();
+  await renderRanking();
+}
+
+/* =====================================================
+   RENDER: RANKING
+   ===================================================== */
+async function renderRanking(){
+  const list = document.getElementById('rank-list');
+  if(!list) return;
+  const {data:rows,error} = await sb.from('ranking').select('*');
+  if(error){ list.innerHTML='<p class="muted" style="text-align:center;padding:2rem">Error cargando ranking</p>'; return; }
+  rankRows = rows||[];
+  list.innerHTML='';
+  if(!rankRows.length){
+    list.innerHTML='<p class="muted" style="text-align:center;padding:2rem">Aún no hay participantes</p>';
+    return;
+  }
+  const topN = cfgInt('underdog_top_n',10);
+  rankRows.forEach((r,i)=>{
+    if(i===topN){
+      const c=document.createElement('div');
+      c.className='cutline';
+      c.textContent='ZONA UNDERDOG · DEL #'+(topN+1)+' HACIA ABAJO';
+      list.appendChild(c);
+    }
+    const isMe = sbProfile && r.id===sbProfile.id;
+    const cls = i===0?'gold':i===1?'silver':i===2?'bronze':(i<10?'prize':'');
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+    const row=document.createElement('div');
+    row.className='rank-row '+cls+(isMe?' me':'');
+    row.innerHTML=`
+      <div class="rank-pos">${medal}</div>
+      <div>
+        <div class="rank-name">${esc(r.nombre)}${isMe?' <span style="color:var(--dorado)">(tú)</span>':''}</div>
+        <div class="rank-breakdown">🎯 ${r.pts_confianza} confianza · ⚡ ${r.pts_anotador} anotador · 🍔 ${r.pts_consumo} consumo · 🦄 ${r.pts_underdog} underdog</div>
+      </div>
+      <div class="rank-points">${r.total_puntos}</div>`;
+    list.appendChild(row);
+  });
+
+  const my = rankRows.findIndex(r=>sbProfile && r.id===sbProfile.id);
+  const el = document.getElementById('mi-pos-actual');
+  if(el){
+    el.textContent = my>=0
+      ? `Tu posición actual: #${my+1} · ${rankRows[my].total_puntos} pts`
+      : 'Empieza a jugar para aparecer en el ranking';
+  }
+}
+
+/* =====================================================
+   RENDER: HISTORIAL
+   ===================================================== */
+async function renderHistorial(){
+  const list = document.getElementById('hist-list');
+  if(!list) return;
+  const {data} = await sb.from('historial').select('*').order('orden').order('created_at');
+  if(!data || !data.length){
+    list.innerHTML='<p class="muted">Todavía no hay quinielas anteriores registradas.</p>';
+    return;
+  }
+  list.innerHTML = data.map(h=>`
+    <div class="hist-card">
+      <div class="hist-emoji">${esc(h.emoji||'🏆')}</div>
+      <h2 style="margin:.3rem 0 .1rem">${esc(h.titulo)}</h2>
+      <div class="chip gold">${esc(h.temporada||'—')}</div>
+      ${h.descripcion?`<p class="small muted" style="margin-top:.6rem">${esc(h.descripcion)}</p>`:''}
+      ${(h.ganador_1||h.ganador_2||h.ganador_3)?`
+        <div class="hist-win">
+          ${h.ganador_1?`🥇 ${esc(h.ganador_1)}<br>`:''}
+          ${h.ganador_2?`🥈 ${esc(h.ganador_2)}<br>`:''}
+          ${h.ganador_3?`🥉 ${esc(h.ganador_3)}`:''}
+        </div>`:''}
+      ${h.url?`<a href="${esc(h.url)}" target="_blank" rel="noopener" class="btn-reserve" style="display:inline-block;margin-top:.8rem">🔗 VER QUINIELA</a>`:''}
+    </div>`).join('');
+}
+
+/* =====================================================
+   RENDER: PREMIOS
+   ===================================================== */
+function renderPremios(){
+  const top = document.getElementById('premios-top');
+  const resto = document.getElementById('premios-resto');
+  if(!top) return;
+  const cls = {1:'gold',2:'silver',3:'bronze'};
+  top.innerHTML = PREMIOS.slice(0,3).map((p,i)=>`
+    <div class="prize-card ${cls[p.p]}" style="animation-delay:${(i+1)*.15}s">
+      <span class="prize-icon">${p.icon}</span>
+      <div class="prize-medal">${['🥇','🥈','🥉'][i]} ${p.p}° LUGAR</div>
+      <div class="prize-desc">${esc(p.t)}</div>
+      <div class="prize-sub">${esc(p.s)}</div>
+    </div>`).join('');
+  resto.innerHTML = PREMIOS.slice(3).map((p,i)=>`
+    <div class="prize-card plain" style="animation-delay:${(i+1)*.08}s">
+      <span class="prize-icon">${p.icon}</span>
+      <div class="prize-medal" style="color:var(--dorado);font-size:1.1rem">${p.p}° LUGAR</div>
+      <div class="prize-desc">${esc(p.t)}</div>
+      <div class="prize-sub">${esc(p.s)}</div>
+    </div>`).join('');
+}
+
+/* =====================================================
+   ADMIN
+   ===================================================== */
+function isAdminOrManager(){ return sbProfile?.role==='admin' || sbProfile?.role==='manager'; }
+function isAdmin(){ return sbProfile?.role==='admin'; }
+function salirAdmin(){ document.querySelector('.tab[data-tab=grupos]').click(); }
+
+async function renderAdmin(){
+  if(!isAdminOrManager()){ toast('Sin permiso','err'); return; }
+  const weeks = [...new Set(games.map(g=>g.week))].sort((a,b)=>a-b);
+  ['adm-week','ud-week','cs-week'].forEach(id=>{
+    const s = document.getElementById(id);
+    const prev = s.value;
+    s.innerHTML = weeks.map(w=>`<option value="${w}">${esc(weekLabel(w))}</option>`).join('');
+    s.value = prev || currentWeek;
+  });
+  document.getElementById('fol-fecha').value ||= new Date().toLocaleDateString('en-CA',{timeZone:TZ});
+  renderAdminGames();
+  renderAdminUnderdog();
+  renderConfig();
+  renderFoliosStats();
+  renderHistAdmin();
+  renderCortes();
+}
+
+function teamOptions(sel){
+  const list = Object.values(TEAMS).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  return `<option value="">— TBD —</option>` +
+    list.map(t=>`<option value="${t.code}"${sel===t.code?' selected':''}>${esc(t.ciudad+' '+t.nombre)}</option>`).join('');
+}
+
+function renderAdminGames(){
+  const w = parseInt(document.getElementById('adm-week').value);
+  const cont = document.getElementById('admin-games');
+  const gs = gamesOf(w);
+  cont.innerHTML = gs.map(g=>`
+    <div class="admin-game-row">
+      <div class="small muted" title="${esc(g.id)}">${esc(fecha(g.kickoff,{day:'2-digit',month:'2-digit'}))} ${esc(hora(g.kickoff))}${g.is_special?' ⭐':''}</div>
+      <select id="ga-${esc(g.id)}">${teamOptions(g.team_a)}</select>
+      <select id="gb-${esc(g.id)}">${teamOptions(g.team_b)}</select>
+      <input type="number" id="sa-${esc(g.id)}" value="${g.score_a??''}" placeholder="-" min="0" />
+      <span style="text-align:center">-</span>
+      <input type="number" id="sbx-${esc(g.id)}" value="${g.score_b??''}" placeholder="-" min="0" />
+      <select id="fs-${esc(g.id)}">
+        <option value="">1er anotador</option>
+        <option value="A"${g.first_scorer==='A'?' selected':''}>${esc(tshort(g.team_a))}</option>
+        <option value="B"${g.first_scorer==='B'?' selected':''}>${esc(tshort(g.team_b))}</option>
+      </select>
+      <button class="btn-ok" onclick="guardarGame('${esc(g.id)}')">💾</button>
+    </div>`).join('') || '<p class="small muted">Sin partidos en esta semana.</p>';
+}
+
+async function guardarGame(gid){
+  if(!isAdminOrManager()){ toast('Sin permiso','err'); return; }
+  const a  = document.getElementById('sa-'+gid).value;
+  const b  = document.getElementById('sbx-'+gid).value;
+  const ta = document.getElementById('ga-'+gid).value;
+  const tb = document.getElementById('gb-'+gid).value;
+  const fs = document.getElementById('fs-'+gid).value;
+
+  const patch = {
+    team_a: ta||null, team_b: tb||null,
+    score_a: a===''?null:parseInt(a),
+    score_b: b===''?null:parseInt(b),
+    first_scorer: fs||null
+  };
+  const {error} = await sb.from('games').update(patch).eq('id',gid);
+  if(error){ toast('Error: '+error.message,'err'); return; }
+  const i = games.findIndex(g=>g.id===gid);
+  if(i>=0) Object.assign(games[i], patch);
+  toast('✅ Partido guardado');
+  renderDivisiones(); renderCalendario();
+  if(sbProfile && !dirty) renderQuiniela();
+  await renderRanking();
+}
+
+async function importarCalendario(){
+  if(!isAdmin()){ toast('Solo admin puede importar','err'); return; }
+  const txt = document.getElementById('imp-text').value.trim();
+  if(!txt){ toast('Pega el calendario primero','err'); return; }
+
+  const filas = txt.split(/\r?\n/).map(l=>l.trim()).filter(l=>l && !l.startsWith('#'));
+  const nuevos = [];
+  const errores = [];
+  const porSemana = {};
+
+  filas.forEach((linea,idx)=>{
+    const c = linea.split(',').map(s=>s.trim());
+    if(c.length<5){ errores.push(`Línea ${idx+1}: faltan columnas`); return; }
+    const [wk, dia, hr, away, home, slot, ...venue] = c;
+    const w = parseInt(wk);
+    if(isNaN(w)){ errores.push(`Línea ${idx+1}: semana inválida`); return; }
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(dia)){ errores.push(`Línea ${idx+1}: fecha debe ser AAAA-MM-DD`); return; }
+    if(!/^\d{1,2}:\d{2}$/.test(hr)){ errores.push(`Línea ${idx+1}: hora debe ser HH:MM`); return; }
+    const A = away.toUpperCase(), B = home.toUpperCase();
+    if(A && !TEAMS[A]){ errores.push(`Línea ${idx+1}: equipo "${away}" no existe`); return; }
+    if(B && !TEAMS[B]){ errores.push(`Línea ${idx+1}: equipo "${home}" no existe`); return; }
+    const sl = (slot||'SUN').toUpperCase();
+    if(!['TNF','SUN','SUN_LATE','SNF','MNF','ESPECIAL'].includes(sl)){
+      errores.push(`Línea ${idx+1}: slot "${slot}" inválido`); return;
+    }
+    porSemana[w] = (porSemana[w]||0)+1;
+    nuevos.push({
+      id: `W${String(w).padStart(2,'0')}-I${String(porSemana[w]).padStart(2,'0')}`,
+      week: w,
+      kickoff: `${dia}T${hr.padStart(5,'0')}:00-06:00`,
+      team_a: A||null, team_b: B||null,
+      slot: sl,
+      venue: venue.join(',').trim()
+    });
+  });
+
+  if(errores.length){ toast(errores[0],'err'); alert('Errores en el import:\n\n'+errores.join('\n')); return; }
+  if(!nuevos.length){ toast('Nada que importar','err'); return; }
+
+  const semanas = Object.keys(porSemana).map(Number).sort((a,b)=>a-b);
+  if(!confirm(`Se reemplazarán por completo ${semanas.length} semana(s): ${semanas.map(weekLabel).join(', ')}\n\n${nuevos.length} partidos nuevos.\nSe borrarán los pronósticos de esas semanas.\n\n¿Continuar?`)) return;
+
+  const {error:delErr} = await sb.from('games').delete().in('week', semanas);
+  if(delErr){ toast('Error borrando: '+delErr.message,'err'); return; }
+  const {error:insErr} = await sb.from('games').insert(nuevos);
+  if(insErr){ toast('Error insertando: '+insErr.message,'err'); return; }
+
+  await loadGames();
+  toast(`✅ ${nuevos.length} partidos importados`);
+  document.getElementById('imp-text').value='';
+  renderAdmin(); renderDivisiones(); renderCalendario();
+  if(sbProfile) renderQuiniela();
+}
+
+async function generarFolios(){
+  if(!isAdminOrManager()){ toast('Sin permiso','err'); return; }
+  const f = document.getElementById('fol-fecha').value;
+  const n = parseInt(document.getElementById('fol-cant').value);
+  if(!f){ toast('Elige la fecha','err'); return; }
+  const {data,error} = await sb.rpc('generar_folios',{p_fecha:f, p_cantidad:n});
+  if(error){ toast(error.message,'err'); return; }
+  if(!data.ok){ toast(data.msg,'err'); return; }
+  const out = document.getElementById('codes-out');
+  out.style.display='';
+  out.textContent = `${data.codes.length} folios para ${f} · ${data.puntos} pts c/u\n\n` + data.codes.join('\n');
+  document.getElementById('fol-hint').textContent = `Valor: ${data.puntos} pts`;
+  toast(`✅ ${data.codes.length} folios generados`);
+  renderFoliosStats();
+}
+
+async function renderFoliosStats(){
+  const {data} = await sb.from('folios').select('fecha,usado');
+  const cont = document.getElementById('folios-stats');
+  if(!data || !data.length){ cont.textContent='Sin folios generados.'; return; }
+  const porFecha = {};
+  data.forEach(f=>{
+    porFecha[f.fecha] = porFecha[f.fecha] || {t:0,u:0};
+    porFecha[f.fecha].t++;
+    if(f.usado) porFecha[f.fecha].u++;
+  });
+  cont.innerHTML = Object.entries(porFecha).sort().map(([f,v])=>
+    `${f}: <b>${v.u}</b> canjeados de ${v.t}`).join(' &nbsp;·&nbsp; ');
+}
+
+function renderAdminUnderdog(){
+  const w = parseInt(document.getElementById('ud-week').value);
+  const uw = udWeeks[w] || {};
+  document.getElementById('ud-pts').value = uw.puntos ?? cfgInt('pts_underdog',20);
+  document.getElementById('ud-abierto').checked = uw.abierto ?? true;
+  const gs = gamesOf(w);
+  const gameOpts = (sel)=> `<option value="">— partido —</option>` +
+    gs.map(g=>`<option value="${esc(g.id)}"${sel===g.id?' selected':''}>${esc(tshort(g.team_a))} @ ${esc(tshort(g.team_b))} · ${esc(hora(g.kickoff))}</option>`).join('');
+
+  document.getElementById('ud-config').innerHTML = ['a','b','c'].map(k=>`
+    <div style="display:flex;gap:.4rem;align-items:center;margin-bottom:.35rem;flex-wrap:wrap">
+      <b style="width:22px;color:#d8b3ff">${k.toUpperCase()}</b>
+      <select id="udg-${k}" style="flex:1;min-width:200px">${gameOpts(uw['opt_'+k+'_game'])}</select>
+      <select id="udt-${k}" style="min-width:170px">${teamOptions(uw['opt_'+k+'_team'])}</select>
+    </div>`).join('') +
+    '<p class="small muted">Elige el partido y el equipo underdog que debe ganarlo.</p>';
+}
+
+async function guardarUnderdog(){
+  if(!isAdminOrManager()){ toast('Sin permiso','err'); return; }
+  const w = parseInt(document.getElementById('ud-week').value);
+  const row = {
+    week: w,
+    puntos: parseInt(document.getElementById('ud-pts').value) || cfgInt('pts_underdog',20),
+    abierto: document.getElementById('ud-abierto').checked
+  };
+  ['a','b','c'].forEach(k=>{
+    row['opt_'+k+'_game'] = document.getElementById('udg-'+k).value || null;
+    row['opt_'+k+'_team'] = document.getElementById('udt-'+k).value || null;
+  });
+  const {error} = await sb.from('underdog_weeks').upsert(row,{onConflict:'week'});
+  if(error){ toast('Error: '+error.message,'err'); return; }
+  await loadUnderdog();
+  toast('🦄 Underdog guardado');
+  if(sbProfile && !dirty) renderUnderdog();
+}
+
+async function cerrarSemanaAdmin(){
+  if(!isAdminOrManager()){ toast('Sin permiso','err'); return; }
+  const w = parseInt(document.getElementById('cs-week').value);
+  if(!confirm(`¿Congelar la tabla de ${weekLabel(w)}?\n\nDe este corte sale quién puede jugar el Underdog la semana siguiente.`)) return;
+  const {data,error} = await sb.rpc('cerrar_semana',{p_week:w});
+  if(error){ toast(error.message,'err'); return; }
+  if(!data.ok){ toast(data.msg,'err'); return; }
+  toast('🔒 '+data.msg);
+  await Promise.all([loadUnderdog(), loadElegibilidad()]);
+  renderCortes();
+}
+
+async function renderCortes(){
+  const {data} = await sb.from('week_snapshots').select('week').order('week');
+  const cont = document.getElementById('cs-info');
+  if(!data || !data.length){ cont.textContent='Todavía no hay semanas cerradas.'; return; }
+  const ws = [...new Set(data.map(r=>r.week))];
+  cont.innerHTML = 'Semanas cerradas: <b>'+ws.map(weekLabel).join(', ')+'</b>';
+}
+
+function renderConfig(){
+  const cont = document.getElementById('cfg-list');
+  const keys = Object.keys(CFG).sort();
+  cont.innerHTML = keys.map(k=>`
+    <div class="cfg-row">
+      <span class="small">${esc(k)}</span>
+      <input type="text" id="cfg-${esc(k)}" value="${esc(CFG[k])}" ${isAdmin()?'':'disabled'} />
+    </div>`).join('') +
+    `<p class="small muted" style="margin-top:.4rem">
+      <b>conf_mode</b>: <code>additive</code> = fijo + confianza · <code>flat</code> = solo el fijo · <code>solo</code> = solo confianza.<br>
+      <b>lock_mode</b>: <code>semana</code> = todo cierra al primer kickoff · <code>partido</code> = cada partido cierra en su hora.
+    </p>`;
+}
+
+async function guardarConfig(){
+  if(!isAdmin()){ toast('Solo admin','err'); return; }
+  const updates = [];
+  Object.keys(CFG).forEach(k=>{
+    const v = document.getElementById('cfg-'+k)?.value;
+    if(v!==undefined && v!==CFG[k]) updates.push(sb.from('config').update({valor:v, updated_at:new Date().toISOString()}).eq('clave',k));
+  });
+  if(!updates.length){ toast('Sin cambios'); return; }
+  const res = await Promise.all(updates);
+  const err = res.find(r=>r.error);
+  if(err){ toast('Error: '+err.error.message,'err'); return; }
+  await loadConfig();
+  toast('⚖️ Configuración guardada');
+  renderAll();
+}
+
+async function renderHistAdmin(){
+  const {data} = await sb.from('historial').select('*').order('orden');
+  const cont = document.getElementById('hist-admin');
+  cont.innerHTML = (data||[]).map(h=>`
+    <div style="padding:.25rem .4rem;border-bottom:1px dashed #333">
+      ${esc(h.emoji)} <b>${esc(h.titulo)}</b> <span class="muted">· ${esc(h.temporada)}</span>
+      ${isAdmin()?`<button onclick="borrarHistorial('${esc(h.id)}')" style="float:right;color:#f55">✕</button>`:''}
+    </div>`).join('') || '<span class="muted">Vacío.</span>';
+}
+
+async function crearHistorial(){
+  if(!isAdmin()){ toast('Solo admin','err'); return; }
+  const t = document.getElementById('h-titulo').value.trim();
+  if(!t){ toast('Escribe un título','err'); return; }
+  const row = {
+    titulo:t,
+    temporada:document.getElementById('h-temp').value.trim(),
+    emoji:document.getElementById('h-emoji').value.trim()||'🏆',
+    url:document.getElementById('h-url').value.trim(),
+    descripcion:document.getElementById('h-desc').value.trim(),
+    ganador_1:document.getElementById('h-g1').value.trim(),
+    ganador_2:document.getElementById('h-g2').value.trim(),
+    ganador_3:document.getElementById('h-g3').value.trim(),
+    orden:99
+  };
+  const {error} = await sb.from('historial').insert(row);
+  if(error){ toast(error.message,'err'); return; }
+  ['h-titulo','h-temp','h-emoji','h-url','h-desc','h-g1','h-g2','h-g3'].forEach(id=>document.getElementById(id).value='');
+  toast('📜 Agregado al historial');
+  renderHistAdmin(); renderHistorial();
+}
+
+async function borrarHistorial(id){
+  if(!isAdmin()) return;
+  if(!confirm('¿Borrar esta entrada del historial?')) return;
+  await sb.from('historial').delete().eq('id',id);
+  renderHistAdmin(); renderHistorial();
+}
+
+async function resetGeneral(){
+  if(!isAdmin()){ toast('Solo admin puede hacer reset','err'); return; }
+  if(!confirm('⚠️ ESTO BORRARÁ: pronósticos, underdogs, folios canjeados, cortes semanales y resultados.\n\n¿Continuar?')) return;
+  if(!confirm('¿Estás completamente seguro? Esta acción es irreversible.')) return;
+  await sb.from('picks').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  await sb.from('underdog_picks').delete().neq('week',-1);
+  await sb.from('week_snapshots').delete().neq('week',-1);
+  await sb.from('folios').delete().neq('code','__nunca__');
+  await sb.from('games').update({score_a:null,score_b:null,first_scorer:null}).neq('id','__nunca__');
+  myPicks={}; myUD={}; misFolios=[]; dirty=false;
+  await Promise.all([loadGames(), loadUnderdog(), loadElegibilidad()]);
+  toast('🔥 Reset completado');
+  renderAll();
+}
+
+/* =====================================================
+   TOAST
+   ===================================================== */
+function toast(msg, type=''){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = (type==='err'?'err show':'show');
+  clearTimeout(window._toastT);
+  window._toastT = setTimeout(()=> t.className = (type==='err'?'err':''), 3200);
+}
+
+/* =====================================================
+   INIT
+   ===================================================== */
+function renderAll(){
+  renderDivisiones();
+  renderCalendario();
+  renderPremios();
+  renderHistorial();
+  if(sbProfile) renderQuiniela();
+  renderRanking();
+}
+
+initApp();
+</script>
+</body>
+</html>
