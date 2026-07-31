@@ -117,6 +117,9 @@ h3{font-size:1rem;color:var(--dorado)}
 .btn-primary:hover{transform:translateY(-2px)}
 .btn-primary:active{transform:translateY(2px);box-shadow:0 2px 0 #7a0808}
 .btn-gold{background:linear-gradient(90deg,var(--dorado-osc),var(--dorado),var(--dorado-osc));color:#000;font-weight:900}
+.mode-toggle{display:flex;gap:.4rem;margin:1rem 0 .4rem;background:#020a12;padding:.3rem;border-radius:8px;border:1px solid #24486e}
+.mode-toggle button{flex:1;padding:.55rem .4rem;border-radius:6px;font-size:.75rem;font-weight:800;letter-spacing:1px;color:#8fa8c4;transition:all .2s}
+.mode-toggle button.active{background:linear-gradient(180deg,var(--azul-claro),var(--azul));color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 
 /* ========= CARDS ========= */
 .card{
@@ -327,17 +330,42 @@ td.pts{color:var(--dorado);font-weight:900}
     <div id="reg-form-step">
       <div style="text-align:center;font-size:3rem">🏈🏆</div>
       <h1 style="text-align:center">QUINIELA <span style="color:#fff">NFL</span><br><span style="color:#fff;font-size:1rem">EN LA CORTE</span></h1>
-      <p class="lead">Temporada 2026-27 · Regístrate para participar</p>
-      <label>NOMBRE COMPLETO</label>
-      <input type="text" id="reg-nombre" placeholder="Juan Pérez" />
+      <p class="lead">Temporada 2026-27</p>
+
+      <div class="mode-toggle">
+        <button id="modo-login"    class="active" onclick="setModo('login')">YA TENGO CUENTA</button>
+        <button id="modo-registro"                onclick="setModo('registro')">SOY NUEVO</button>
+      </div>
+
+      <div id="campo-nombre" style="display:none">
+        <label>NOMBRE COMPLETO</label>
+        <input type="text" id="reg-nombre" placeholder="Juan Pérez" />
+      </div>
       <label>CORREO ELECTRÓNICO</label>
       <input type="email" id="reg-email" placeholder="juan@correo.com" />
-      <label>TELÉFONO</label>
-      <input type="tel" id="reg-tel" placeholder="834 123 4567" />
-      <button class="btn-primary" id="reg-btn">🏈 ENTRAR A LA QUINIELA</button>
-      <p style="text-align:center;font-size:.7rem;opacity:.6;margin-top:1rem">
-        Al registrarte aceptas participar en la Quiniela NFL 2026-27 de La Corte
+      <div id="campo-tel" style="display:none">
+        <label>TELÉFONO</label>
+        <input type="tel" id="reg-tel" placeholder="834 123 4567" />
+      </div>
+      <button class="btn-primary" id="reg-btn">🏈 ENTRAR</button>
+      <p id="reg-pie" style="text-align:center;font-size:.7rem;opacity:.6;margin-top:1rem">
+        Te enviaremos un código de 6 dígitos a tu correo
       </p>
+    </div>
+
+    <!-- Sesión activa pero sin perfil: se completa aquí -->
+    <div id="reg-perfil-step" style="display:none">
+      <div style="text-align:center;font-size:3rem">👤</div>
+      <h1 style="text-align:center">COMPLETA TU PERFIL</h1>
+      <p class="lead">Ya verificamos <strong id="perfil-email-shown" style="color:var(--dorado)"></strong>.<br>Solo faltan estos datos para entrar.</p>
+      <label>NOMBRE COMPLETO</label>
+      <input type="text" id="perfil-nombre" placeholder="Juan Pérez" />
+      <label>TELÉFONO</label>
+      <input type="tel" id="perfil-tel" placeholder="834 123 4567" />
+      <button class="btn-primary" id="perfil-btn">✅ GUARDAR Y ENTRAR</button>
+      <button onclick="cerrarSesion(true)" style="width:100%;margin-top:.6rem;opacity:.65;font-size:.85rem;padding:.5rem;border-radius:6px;background:transparent;border:1px solid #333">
+        ← Usar otro correo
+      </button>
     </div>
     <div id="reg-otp-step" style="display:none">
       <div style="text-align:center;font-size:3rem">📧</div>
@@ -819,6 +847,15 @@ async function initApp(){
   if(session){
     sbUser = session.user;
     await loadProfile();
+    if(!sbProfile){
+      // Sesión válida pero sin fila en profiles. Pasa si alguien verificó su
+      // correo y el guardado de perfil no llegó a completarse. Antes esto
+      // dejaba la app a medias; ahora se pide completar el perfil.
+      await loadUnderdog();
+      renderDivisiones(); renderCalendario(); renderHistorial(); renderPremios();
+      pedirPerfil();
+      return;
+    }
     await Promise.all([loadMyPicks(), loadUnderdog(), loadMisFolios(), loadElegibilidad()]);
     mostrarApp();
     initRealtime();
@@ -843,21 +880,53 @@ async function initApp(){
   });
 }
 
-/* ---------- Registro / OTP ---------- */
-let _regNombre='', _regEmail='', _regTel='';
+/* ---------- Registro / Inicio de sesión / OTP ---------- */
+let _regNombre='', _regEmail='', _regTel='', _regModo='login';
+
+function setModo(modo){
+  _regModo = modo;
+  const nuevo = modo==='registro';
+  document.getElementById('modo-login').classList.toggle('active', !nuevo);
+  document.getElementById('modo-registro').classList.toggle('active', nuevo);
+  document.getElementById('campo-nombre').style.display = nuevo?'':'none';
+  document.getElementById('campo-tel').style.display    = nuevo?'':'none';
+  document.getElementById('reg-btn').textContent = nuevo ? '🏈 CREAR MI CUENTA' : '🏈 ENTRAR';
+  document.getElementById('reg-pie').textContent = nuevo
+    ? 'Al registrarte aceptas participar en la Quiniela NFL 2026-27 de La Corte'
+    : 'Te enviaremos un código de 6 dígitos a tu correo';
+}
 
 document.getElementById('reg-btn').onclick = async ()=>{
-  const n = document.getElementById('reg-nombre').value.trim();
+  const nuevo = _regModo==='registro';
   const e = document.getElementById('reg-email').value.trim().toLowerCase();
+  const n = document.getElementById('reg-nombre').value.trim();
   const t = document.getElementById('reg-tel').value.trim();
-  if(!n||!e||!t){toast('Completa todos los campos','err');return}
+
+  if(!e){toast('Escribe tu correo','err');return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){toast('Correo inválido','err');return}
+  if(nuevo && (!n||!t)){toast('Completa nombre y teléfono','err');return}
+
   _regNombre=n; _regEmail=e; _regTel=t;
   const btn = document.getElementById('reg-btn');
+  const textoOriginal = btn.textContent;
   btn.disabled=true; btn.textContent='Enviando...';
-  const {error} = await sb.auth.signInWithOtp({email:e, options:{shouldCreateUser:true}});
-  btn.disabled=false; btn.textContent='🏈 ENTRAR A LA QUINIELA';
-  if(error){toast(error.message,'err');return}
+  // En modo "ya tengo cuenta" NO se crea usuario: si el correo no existe,
+  // Supabase devuelve error y se le dice que se registre, en vez de crearle
+  // una cuenta fantasma en silencio.
+  const {error} = await sb.auth.signInWithOtp({email:e, options:{shouldCreateUser:nuevo}});
+  btn.disabled=false; btn.textContent=textoOriginal;
+
+  if(error){
+    const noExiste = /signup|not found|disabled|no account/i.test(error.message);
+    if(!nuevo && noExiste){
+      toast('No encontramos ese correo. Usa "SOY NUEVO" para registrarte.','err');
+      setModo('registro');
+      return;
+    }
+    toast(error.message,'err');
+    return;
+  }
+
   document.getElementById('otp-email-shown').textContent = e;
   document.getElementById('reg-form-step').style.display='none';
   document.getElementById('reg-otp-step').style.display='block';
@@ -875,19 +944,59 @@ document.getElementById('otp-btn').onclick = async ()=>{
   if(error){toast('Código incorrecto o expirado','err');return}
 
   sbUser = data.user;
-  const {error:upErr} = await sb.from('profiles').upsert({
-    id:sbUser.id, nombre:_regNombre, email:_regEmail, tel:_regTel
-  },{onConflict:'id'});
-  if(upErr){toast('Error guardando perfil: '+upErr.message,'err');return}
+
+  if(_regModo==='registro'){
+    const {error:upErr} = await sb.from('profiles').upsert({
+      id:sbUser.id, nombre:_regNombre, email:_regEmail, tel:_regTel
+    },{onConflict:'id'});
+    if(upErr){toast('Error guardando perfil: '+upErr.message,'err');return}
+  }
 
   await loadProfile();
+  if(!sbProfile){ pedirPerfil(); return; }   // verificó pero aún no tiene perfil
+  await entrarALaApp();
+};
+
+// Paso de rescate: hay sesión verificada pero falta la fila en profiles
+function pedirPerfil(){
+  document.getElementById('registro').classList.remove('hidden');
+  document.getElementById('reg-form-step').style.display='none';
+  document.getElementById('reg-otp-step').style.display='none';
+  document.getElementById('reg-perfil-step').style.display='block';
+  document.getElementById('perfil-email-shown').textContent = sbUser?.email || '';
+  const n = document.getElementById('perfil-nombre');
+  if(!n.value) n.value = _regNombre || '';
+  const t = document.getElementById('perfil-tel');
+  if(!t.value) t.value = _regTel || '';
+  n.focus();
+}
+
+document.getElementById('perfil-btn').onclick = async ()=>{
+  const n = document.getElementById('perfil-nombre').value.trim();
+  const t = document.getElementById('perfil-tel').value.trim();
+  if(!n||!t){toast('Completa nombre y teléfono','err');return}
+  const btn = document.getElementById('perfil-btn');
+  btn.disabled=true; btn.textContent='Guardando...';
+  const {error} = await sb.from('profiles').upsert({
+    id:sbUser.id, nombre:n, email:sbUser.email, tel:t
+  },{onConflict:'id'});
+  btn.disabled=false; btn.textContent='✅ GUARDAR Y ENTRAR';
+  if(error){toast('Error guardando perfil: '+error.message,'err');return}
+  await loadProfile();
+  if(!sbProfile){toast('No se pudo crear el perfil','err');return}
+  toast('¡Listo! Bienvenido');
+  await entrarALaApp();
+};
+
+async function entrarALaApp(){
   await Promise.all([loadMyPicks(), loadUnderdog(), loadMisFolios(), loadElegibilidad()]);
   mostrarApp();
   initRealtime();
-};
+}
 
 function volverRegistro(){
   document.getElementById('reg-otp-step').style.display='none';
+  document.getElementById('reg-perfil-step').style.display='none';
   document.getElementById('reg-form-step').style.display='block';
   document.getElementById('reg-otp').value='';
 }
@@ -897,10 +1006,16 @@ function mostrarApp(){
   document.getElementById('user-name').textContent = sbProfile?.nombre || sbUser?.email || '';
   renderAll();
 }
-async function cerrarSesion(){
-  if(dirty && !confirm('Tienes cambios sin guardar. ¿Salir de todos modos?')) return;
-  if(!confirm('¿Cerrar sesión?')) return;
+async function cerrarSesion(sinPreguntar){
+  if(!sinPreguntar){
+    if(dirty && !confirm('Tienes cambios sin guardar. ¿Salir de todos modos?')) return;
+    if(!confirm('¿Cerrar sesión?')) return;
+  }
   await sb.auth.signOut();
+  sbUser=null; sbProfile=null;
+  document.getElementById('registro').classList.remove('hidden');
+  volverRegistro();
+  setModo('login');
 }
 
 /* ---------- Navegación ---------- */
