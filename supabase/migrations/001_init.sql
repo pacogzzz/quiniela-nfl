@@ -31,7 +31,8 @@ INSERT INTO config (clave, valor, etiqueta) VALUES
   ('lock_mode',         'semana',    'Cuándo se cierran los pronósticos: semana | partido'),
   ('underdog_top_n',    '10',        'Solo participan en underdog los jugadores fuera del top N'),
   ('whatsapp',          '528343144848', 'WhatsApp del restaurante (con lada país, sin +)'),
-  ('telefono',          '8343144848',   'Teléfono del restaurante')
+  ('telefono',          '8343144848',   'Teléfono del restaurante'),
+  ('pts_bono_instalacion','25',       'Puntos de regalo por instalar la app en el teléfono')
 ON CONFLICT (clave) DO NOTHING;
 
 CREATE OR REPLACE FUNCTION cfg_int(p_clave TEXT, p_default INT)
@@ -99,9 +100,43 @@ CREATE TABLE IF NOT EXISTS profiles (
   nombre     TEXT NOT NULL,
   email      TEXT NOT NULL,
   tel        TEXT NOT NULL DEFAULT '',
+  -- Con el que la gente entra a la app. Va aparte del correo porque es mas
+  -- facil de recordar y de dictar en el restaurante. Nullable a proposito:
+  -- si el registro se corta a la mitad, el perfil se rescata y se completa.
+  usuario    TEXT,
   role       TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user','manager','admin')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS usuario TEXT;
+
+-- Unico sin importar mayusculas: "PacoG" y "pacog" son el mismo usuario, si no
+-- dos personas podrian registrar el mismo nombre escrito distinto.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_usuario
+  ON profiles(lower(usuario)) WHERE usuario IS NOT NULL;
+
+-- Para entrar escribiendo el usuario en vez del correo.
+-- Supabase solo sabe autenticar por correo, asi que el front traduce
+-- usuario -> correo con esta funcion y luego pide la sesion.
+--
+-- Es SECURITY DEFINER y la puede llamar gente SIN sesion, porque justamente
+-- se usa antes de iniciarla. Devuelve el correo solo con el usuario EXACTO;
+-- no permite listar ni buscar por partes.
+CREATE OR REPLACE FUNCTION correo_de_usuario(p_usuario TEXT)
+RETURNS TEXT LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT email FROM profiles WHERE lower(usuario) = lower(trim(p_usuario))
+$$;
+GRANT EXECUTE ON FUNCTION correo_de_usuario(TEXT) TO anon, authenticated;
+
+-- Para avisar "ese usuario ya esta ocupado" ANTES de crear la cuenta, y no
+-- dejar cuentas huerfanas sin perfil.
+CREATE OR REPLACE FUNCTION usuario_disponible(p_usuario TEXT)
+RETURNS BOOL LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT NOT EXISTS (
+    SELECT 1 FROM profiles WHERE lower(usuario) = lower(trim(p_usuario))
+  )
+$$;
+GRANT EXECUTE ON FUNCTION usuario_disponible(TEXT) TO anon, authenticated;
 
 -- =====================================================================
 -- 4. PARTIDOS
@@ -495,6 +530,63 @@ SELECT 'Quiniela Mundial FIFA', '2026',
 WHERE NOT EXISTS (SELECT 1 FROM historial);
 
 -- =====================================================================
+-- 8B. BONOS (puntos otorgados a mano)
+--
+-- Cuarta fuente de puntos, aparte de confianza, consumo y underdog.
+-- Nació para premiar a quien instala la app en su teléfono —el canal por
+-- el que le llegan los avisos—, pero sirve para cualquier cosa que quieras
+-- premiar: una trivia, un cumpleaños, una promoción de un día.
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS bonos (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  motivo     TEXT NOT NULL,
+  puntos     INT  NOT NULL,
+  creado_por UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_bonos_user ON bonos(user_id);
+
+-- El bono de instalación se cobra UNA sola vez por persona. Los demás motivos
+-- sí se pueden repetir (nada impide dar dos bonos de trivia al mismo jugador).
+CREATE UNIQUE INDEX IF NOT EXISTS idx_bonos_instalacion_unico
+  ON bonos(user_id) WHERE motivo = 'instalacion';
+
+-- Otorga el bono por instalar la app. Es idempotente: si ya lo cobró, responde
+-- ok igual pero sin sumar nada, así el front puede llamarla sin miedo cada vez
+-- que detecte que la app corre instalada.
+--
+-- SECURITY DEFINER porque el jugador NO tiene permiso de escribir en `bonos`
+-- (la política solo deja a admin/manager). Si lo tuviera, se regalaría los
+-- puntos que quisiera.
+CREATE OR REPLACE FUNCTION otorgar_bono_instalacion()
+RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE uid UUID; v_pts INT;
+BEGIN
+  -- auth.uid() y no current_user: dentro de SECURITY DEFINER current_user es el
+  -- DUEÑO de la función (postgres), no quien la llama.
+  uid := auth.uid();
+  IF uid IS NULL THEN
+    RETURN json_build_object('ok', false, 'msg', 'No autenticado');
+  END IF;
+
+  v_pts := cfg_int('pts_bono_instalacion', 25);
+
+  -- El ON CONFLICT contra el índice parcial es la garantía de verdad: aunque
+  -- entren dos llamadas a la vez, solo una inserta.
+  INSERT INTO bonos (user_id, motivo, puntos)
+  VALUES (uid, 'instalacion', v_pts)
+  ON CONFLICT (user_id) WHERE motivo = 'instalacion' DO NOTHING;
+
+  IF NOT FOUND THEN
+    RETURN json_build_object('ok', true, 'ya', true, 'puntos', 0);
+  END IF;
+  RETURN json_build_object('ok', true, 'ya', false, 'puntos', v_pts);
+END $$;
+GRANT EXECUTE ON FUNCTION otorgar_bono_instalacion() TO authenticated;
+
+-- =====================================================================
 -- 9. VISTA DE RANKING
 -- =====================================================================
 CREATE OR REPLACE VIEW ranking AS
@@ -552,6 +644,11 @@ und AS (
   FROM underdog_picks up
   JOIN underdog_weeks uw ON uw.week = up.week
   GROUP BY up.user_id
+),
+bon AS (
+  SELECT user_id, COALESCE(SUM(puntos),0) AS pts_bono
+  FROM bonos
+  GROUP BY user_id
 )
 SELECT
   p.id,
@@ -561,12 +658,15 @@ SELECT
   COALESCE(c.pts_anotador,0)  AS pts_anotador,
   COALESCE(k.pts_consumo,0)   AS pts_consumo,
   COALESCE(u.pts_underdog,0)  AS pts_underdog,
+  COALESCE(b.pts_bono,0)      AS pts_bono,
   COALESCE(c.pts_confianza,0) + COALESCE(c.pts_anotador,0)
-    + COALESCE(k.pts_consumo,0) + COALESCE(u.pts_underdog,0) AS total_puntos
+    + COALESCE(k.pts_consumo,0) + COALESCE(u.pts_underdog,0)
+    + COALESCE(b.pts_bono,0) AS total_puntos
 FROM profiles p
 LEFT JOIN conf c ON c.user_id = p.id
 LEFT JOIN cons k ON k.user_id = p.id
 LEFT JOIN und  u ON u.user_id = p.id
+LEFT JOIN bon  b ON b.user_id = p.id
 ORDER BY total_puntos DESC, p.nombre ASC;
 
 GRANT SELECT ON ranking TO authenticated;
@@ -608,6 +708,7 @@ ALTER TABLE underdog_picks  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE week_snapshots  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE historial       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE config          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bonos           ENABLE ROW LEVEL SECURITY;
 
 -- Helper de rol sin recursión de políticas
 CREATE OR REPLACE FUNCTION mi_rol()
@@ -733,6 +834,19 @@ CREATE POLICY "up upd"  ON underdog_picks FOR UPDATE TO authenticated
 
 DROP POLICY IF EXISTS "ws read" ON week_snapshots;
 CREATE POLICY "ws read" ON week_snapshots FOR SELECT TO authenticated USING (true);
+
+-- bonos: todos leen (el ranking los suma y el desglose los muestra), pero solo
+-- admin/manager los otorgan a mano. El bono de instalación NO entra por aquí:
+-- entra por otorgar_bono_instalacion(), que es SECURITY DEFINER.
+-- Sin UPDATE a propósito: un bono se da o se quita, no se edita.
+DROP POLICY IF EXISTS "bonos read" ON bonos;
+DROP POLICY IF EXISTS "bonos ins"  ON bonos;
+DROP POLICY IF EXISTS "bonos del"  ON bonos;
+CREATE POLICY "bonos read" ON bonos FOR SELECT TO authenticated USING (true);
+CREATE POLICY "bonos ins"  ON bonos FOR INSERT TO authenticated
+  WITH CHECK (mi_rol() IN ('admin','manager'));
+CREATE POLICY "bonos del"  ON bonos FOR DELETE TO authenticated
+  USING (mi_rol() = 'admin');
 
 -- =====================================================================
 -- 11. CALENDARIO 2026-27 (estructura oficial de fechas · equipos por definir)
@@ -923,6 +1037,12 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON underdog_weeks TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON historial      TO authenticated;
 GRANT SELECT, UPDATE                 ON config         TO authenticated;
 GRANT SELECT                         ON week_snapshots TO authenticated;
+GRANT SELECT, INSERT, DELETE         ON bonos          TO authenticated;
+-- Un bono se da o se quita, no se edita. El REVOKE explicito mantiene esta
+-- tabla igual aqui que en 003_bonos.sql, donde SI hace falta porque ahi la
+-- tabla se crea despues del ALTER DEFAULT PRIVILEGES de mas abajo.
+REVOKE UPDATE                        ON bonos          FROM authenticated;
+REVOKE ALL                           ON bonos          FROM anon;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   GRANT SELECT ON TABLES TO anon;
@@ -941,5 +1061,6 @@ BEGIN
   BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE folios;         EXCEPTION WHEN OTHERS THEN NULL; END;
   BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE underdog_picks; EXCEPTION WHEN OTHERS THEN NULL; END;
   BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE underdog_weeks; EXCEPTION WHEN OTHERS THEN NULL; END;
+  BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE bonos;          EXCEPTION WHEN OTHERS THEN NULL; END;
 END
 $rt$;

@@ -3,7 +3,9 @@ import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
 import { readFileSync } from 'node:fs';
 import { SHIM } from './shim.mjs';
 
-const SQL = readFileSync('C:/Users/Paco/Downloads/quiniela-nfl/supabase/migrations/001_init.sql','utf8');
+// Ruta relativa a ESTE archivo: el arnes corre igual en cualquier maquina
+// (antes era una ruta absoluta de la computadora del autor y reventaba con ENOENT).
+const SQL = readFileSync(new URL('../supabase/migrations/001_init.sql', import.meta.url),'utf8');
 const db = await new PGlite({ extensions: { pgcrypto } });
 await db.exec(SHIM);
 await db.exec(SQL);
@@ -38,9 +40,9 @@ chk('301 partidos',           (await one('select count(*)::int c from games')).c
 chk('288 de temporada regular',(await one('select count(*)::int c from games where week<=18')).c, 288);
 chk('13 de playoffs',         (await one('select count(*)::int c from games where week>=19')).c, 13);
 chk('22 semanas de underdog', (await one('select count(*)::int c from underdog_weeks')).c, 22);
-chk('13 llaves de config',    (await one('select count(*)::int c from config')).c, 13);
-chk('27 politicas RLS',       (await one("select count(*)::int c from pg_policies where schemaname='public'")).c, 27);
-chk('RLS activo en 10 tablas',(await one("select count(*)::int c from pg_tables t join pg_class k on k.relname=t.tablename where t.schemaname='public' and k.relrowsecurity")).c, 10);
+chk('14 llaves de config',    (await one('select count(*)::int c from config')).c, 14);
+chk('30 politicas RLS',       (await one("select count(*)::int c from pg_policies where schemaname='public'")).c, 30);
+chk('RLS activo en 11 tablas',(await one("select count(*)::int c from pg_tables t join pg_class k on k.relname=t.tablename where t.schemaname='public' and k.relrowsecurity")).c, 11);
 
 console.log('\n== FECHAS SEMBRADAS ==');
 const w1=await dow('W01-TNF'),  tg=await dow('W12-TG1'), bf=await dow('W12-BF1');
@@ -169,6 +171,45 @@ await q(`update config set valor='solo' where clave='conf_mode'`);
 chk('solo: 16 + 1 = 17',      (await one(`select pts_confianza from ranking where id=$1`,[U1])).pts_confianza, 17);
 await q(`update config set valor='additive' where clave='conf_mode'`);
 chk('additive: 21 + 16 = 37', (await one(`select pts_confianza from ranking where id=$1`,[U1])).pts_confianza, 37);
+
+console.log('\n== BONOS (puntos a mano) ==');
+// Beto viene con 30 (10 de consumo + 20 de underdog) y sin un solo bono.
+chk('sin bonos, pts_bono = 0',  (await one(`select pts_bono from ranking where id=$1`,[U2])).pts_bono, 0);
+await asUser(U2);
+const b1 = await one(`select otorgar_bono_instalacion() r`);
+chk('bono de instalacion = 25', [b1.r.ok, b1.r.ya, b1.r.puntos], [true, false, 25]);
+const b2 = await one(`select otorgar_bono_instalacion() r`);
+chk('no se cobra dos veces',    [b2.r.ok, b2.r.ya, b2.r.puntos], [true, true, 0]);
+chk('y solo quedo 1 fila',      (await one(`select count(*)::int c from bonos where user_id=$1 and motivo='instalacion'`,[U2])).c, 1);
+chk('el bono llega al ranking', (await one(`select pts_bono from ranking where id=$1`,[U2])).pts_bono, 25);
+chk('y suma al total: 30+25',   (await one(`select total_puntos from ranking where id=$1`,[U2])).total_puntos, 55);
+// El monto sale de config, no esta hardcodeado en la funcion
+await q(`update config set valor='50' where clave='pts_bono_instalacion'`);
+await asUser(U1);
+chk('respeta el valor de config',(await one(`select otorgar_bono_instalacion() r`)).r.puntos, 50);
+// Solo 'instalacion' es unico; los demas motivos si se pueden repetir
+await q(`insert into bonos(user_id,motivo,puntos) values($1,'trivia',10)`,[U2]);
+await q(`insert into bonos(user_id,motivo,puntos) values($1,'trivia',10)`,[U2]);
+chk('otros motivos si se repiten',(await one(`select pts_bono from ranking where id=$1`,[U2])).pts_bono, 45);
+await shouldFail('el indice unico bloquea 2o bono de instalacion',
+  ()=>q(`insert into bonos(user_id,motivo,puntos) values($1,'instalacion',25)`,[U2]), 'duplicate key');
+
+console.log('\n== ENTRAR CON USUARIO Y CONTRASENA ==');
+await q(`update profiles set usuario='PacoG' where id=$1`,[U1]);
+chk('encuentra el correo por usuario',
+  (await one(`select correo_de_usuario('PacoG') c`)).c, 'a@x.com');
+chk('no importan mayusculas ni espacios',
+  (await one(`select correo_de_usuario('  pacog ') c`)).c, 'a@x.com');
+chk('usuario que no existe devuelve nada',
+  (await one(`select correo_de_usuario('nadie') c`)).c, null);
+chk('usuario ocupado NO esta disponible',
+  (await one(`select usuario_disponible('PACOG') d`)).d, false);
+chk('usuario libre SI esta disponible',
+  (await one(`select usuario_disponible('otro') d`)).d, true);
+await shouldFail('dos personas no pueden tener el mismo usuario',
+  ()=>q(`update profiles set usuario='pacog' where id=$1`,[U2]), 'duplicate key');
+chk('sin usuario asignado no estorba (puede haber varios NULL)',
+  (await one(`select count(*)::int c from profiles where usuario is null`)).c, 1);
 
 console.log('\n== ORDEN DEL RANKING ==');
 const rank = await q(`select nombre,total_puntos from ranking`);

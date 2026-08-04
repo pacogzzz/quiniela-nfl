@@ -4,6 +4,21 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>QUINIELA NFL EN LA CORTE · 2026-27</title>
+
+<!-- PWA: esto es lo que permite instalarla en el telefono como una app.
+     Sin app instalada NO hay notificaciones, que es de lo que depende que
+     la gente no se caiga de la quiniela por falta de aviso. -->
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#013369" />
+<link rel="icon" type="image/png" href="/icons/icon-192.png" />
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+<!-- iOS ignora el manifest por completo: pantalla completa, nombre del icono
+     y barra de estado se piden con estas etiquetas aparte. La barra va en
+     'black' (no 'black-translucent') para que NO se encime con el header. -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="apple-mobile-web-app-title" content="Quiniela LC" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 /* ========= RESET & BASE ========= */
@@ -301,6 +316,19 @@ td.pts{color:var(--dorado);font-weight:900}
 .cfg-row{display:grid;grid-template-columns:1fr 120px;gap:.5rem;align-items:center;margin-bottom:.4rem;font-size:.8rem}
 #codes-out{font-family:ui-monospace,Consolas,monospace;font-size:.72rem;background:#000;border:1px solid #444;border-radius:6px;padding:.6rem;max-height:180px;overflow:auto;margin-top:.5rem;white-space:pre-wrap;word-break:break-all}
 
+/* ========= INSTALAR LA APP (PWA) ========= */
+#install-sheet{position:fixed;left:0;right:0;bottom:0;z-index:1500;background:linear-gradient(180deg,var(--acero2) 0%,#0a1520 100%);border-top:3px solid var(--dorado);box-shadow:0 -8px 30px rgba(0,0,0,.75);padding:1rem 1rem 1.3rem;transform:translateY(115%);transition:transform .35s ease;max-height:88vh;overflow-y:auto}
+#install-sheet.show{transform:translateY(0)}
+#install-sheet h3{color:var(--dorado);font-size:1.05rem;margin-bottom:.15rem}
+.inst-top{display:flex;align-items:center;gap:.7rem;margin-bottom:.6rem}
+.inst-top img{width:46px;height:46px;border-radius:10px;flex:none}
+.inst-cerrar{position:absolute;top:.5rem;right:.6rem;font-size:1.3rem;color:var(--plata);line-height:1;padding:.2rem .4rem}
+.inst-premio{background:rgba(255,182,18,.13);border:1px solid var(--dorado);border-radius:8px;padding:.5rem .7rem;margin-bottom:.7rem;font-size:.85rem;font-weight:700;color:var(--dorado);text-align:center}
+.inst-pasos{list-style:none;counter-reset:p;margin:.2rem 0 .8rem}
+.inst-pasos li{counter-increment:p;position:relative;padding:.3rem 0 .3rem 1.9rem;font-size:.87rem;line-height:1.35}
+.inst-pasos li::before{content:counter(p);position:absolute;left:0;top:.35rem;width:1.35rem;height:1.35rem;border-radius:50%;background:var(--azul-claro);color:#fff;font-size:.72rem;font-weight:700;display:grid;place-items:center}
+.inst-tecla{display:inline-block;background:#000;border:1px solid #456;border-radius:4px;padding:0 .32rem;font-weight:700}
+
 /* ========= TOAST ========= */
 #toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%) translateY(120px);background:var(--verde);color:#fff;padding:.8rem 1.4rem;border-radius:99px;font-weight:700;z-index:2000;opacity:0;transition:all .35s;border:2px solid var(--dorado);box-shadow:0 4px 20px rgba(0,0,0,.6);max-width:92vw;text-align:center}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
@@ -337,64 +365,68 @@ td.pts{color:var(--dorado);font-weight:900}
         <button id="modo-registro"                onclick="setModo('registro')">SOY NUEVO</button>
       </div>
 
+      <!-- Solo al registrarse -->
       <div id="campo-nombre" style="display:none">
         <label>NOMBRE COMPLETO</label>
-        <input type="text" id="reg-nombre" placeholder="Juan Pérez" />
+        <input type="text" id="reg-nombre" placeholder="Juan Pérez" autocomplete="name" />
       </div>
-      <label>CORREO ELECTRÓNICO</label>
-      <input type="email" id="reg-email" placeholder="juan@correo.com" />
+
+      <label id="lbl-ident">USUARIO</label>
+      <input type="text" id="reg-usuario" placeholder="juanp" autocomplete="username"
+             autocapitalize="none" spellcheck="false" />
+      <p id="ayuda-usuario" class="small muted" style="display:none;margin:-.3rem 0 .5rem">
+        Con este entrarás. Sin espacios, de 3 a 20 letras o números.
+      </p>
+
+      <!-- Solo al registrarse: el correo sirve para recuperar la contraseña -->
+      <div id="campo-email" style="display:none">
+        <label>CORREO ELECTRÓNICO</label>
+        <input type="email" id="reg-email" placeholder="juan@correo.com" autocomplete="email" />
+      </div>
       <div id="campo-tel" style="display:none">
         <label>TELÉFONO</label>
-        <input type="tel" id="reg-tel" placeholder="834 123 4567" />
+        <input type="tel" id="reg-tel" placeholder="834 123 4567" autocomplete="tel" />
       </div>
+
+      <label>CONTRASEÑA</label>
+      <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres" autocomplete="current-password" />
+
       <button class="btn-primary" id="reg-btn">🏈 ENTRAR</button>
-      <p id="reg-pie" style="text-align:center;font-size:.7rem;opacity:.6;margin-top:1rem">
-        Te enviaremos un código de 6 dígitos a tu correo
+
+      <button id="link-olvide" onclick="pedirRecuperacion()"
+              style="width:100%;margin-top:.7rem;font-size:.8rem;opacity:.75;text-decoration:underline;background:transparent">
+        ¿Olvidaste tu contraseña?
+      </button>
+      <p id="reg-pie" style="text-align:center;font-size:.7rem;opacity:.6;margin-top:.8rem">
+        Entra con tu usuario y contraseña
       </p>
+    </div>
+
+    <!-- Volver de un correo de recuperación: poner contraseña nueva -->
+    <div id="reg-nueva-pass-step" style="display:none">
+      <div style="text-align:center;font-size:3rem">🔑</div>
+      <h1 style="text-align:center">NUEVA CONTRASEÑA</h1>
+      <p class="lead">Escribe la contraseña que vas a usar de ahora en adelante.</p>
+      <label>CONTRASEÑA NUEVA</label>
+      <input type="password" id="pass-nueva" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+      <button class="btn-primary" id="pass-btn">✅ GUARDAR Y ENTRAR</button>
     </div>
 
     <!-- Sesión activa pero sin perfil: se completa aquí -->
     <div id="reg-perfil-step" style="display:none">
       <div style="text-align:center;font-size:3rem">👤</div>
       <h1 style="text-align:center">COMPLETA TU PERFIL</h1>
-      <p class="lead">Ya verificamos <strong id="perfil-email-shown" style="color:var(--dorado)"></strong>.<br>Solo faltan estos datos para entrar.</p>
+      <p class="lead">Tu cuenta es <strong id="perfil-email-shown" style="color:var(--dorado)"></strong>.<br>Solo faltan estos datos para entrar.</p>
       <label>NOMBRE COMPLETO</label>
-      <input type="text" id="perfil-nombre" placeholder="Juan Pérez" />
+      <input type="text" id="perfil-nombre" placeholder="Juan Pérez" autocomplete="name" />
+      <label>USUARIO</label>
+      <input type="text" id="perfil-usuario" placeholder="juanp" autocomplete="username"
+             autocapitalize="none" spellcheck="false" />
       <label>TELÉFONO</label>
-      <input type="tel" id="perfil-tel" placeholder="834 123 4567" />
+      <input type="tel" id="perfil-tel" placeholder="834 123 4567" autocomplete="tel" />
       <button class="btn-primary" id="perfil-btn">✅ GUARDAR Y ENTRAR</button>
       <button onclick="cerrarSesion(true)" style="width:100%;margin-top:.6rem;opacity:.65;font-size:.85rem;padding:.5rem;border-radius:6px;background:transparent;border:1px solid #333">
-        ← Usar otro correo
-      </button>
-    </div>
-    <div id="reg-otp-step" style="display:none">
-      <div style="text-align:center;font-size:3rem">📧</div>
-      <h1 style="text-align:center">REVISA TU CORREO</h1>
-      <p class="lead">Te enviamos un enlace de acceso a<br><strong id="otp-email-shown" style="color:var(--dorado)"></strong></p>
-
-      <div style="background:rgba(255,182,18,.08);border:1px solid var(--dorado);border-radius:10px;padding:1rem;text-align:center;margin-top:.4rem">
-        <div style="font-size:2rem;line-height:1">👆</div>
-        <p style="font-weight:800;color:var(--dorado);letter-spacing:1px;margin-top:.3rem">HAZ CLIC EN EL ENLACE</p>
-        <p style="font-size:.8rem;opacity:.85;margin-top:.4rem;line-height:1.5">
-          Abre el correo y toca el botón de confirmación.<br>Regresas aquí ya adentro.
-        </p>
-      </div>
-
-      <p style="font-size:.72rem;opacity:.6;margin-top:.9rem;text-align:center;line-height:1.5">
-        ¿No llega? Revisa spam o correo no deseado.<br>Puede tardar un par de minutos.
-      </p>
-
-      <details style="margin-top:.9rem">
-        <summary style="font-size:.75rem;opacity:.7;cursor:pointer;text-align:center">
-          ¿Te llegó un código de 6 dígitos?
-        </summary>
-        <input type="text" id="reg-otp" placeholder="123456" maxlength="6" inputmode="numeric"
-               style="letter-spacing:6px;font-size:1.4rem;text-align:center;margin-top:.5rem"/>
-        <button class="btn-primary" id="otp-btn" style="margin-top:.6rem">✅ VERIFICAR CÓDIGO</button>
-      </details>
-
-      <button onclick="volverRegistro()" style="width:100%;margin-top:.9rem;opacity:.65;font-size:.85rem;padding:.5rem;border-radius:6px;background:transparent;border:1px solid #333">
-        ← Cambiar correo
+        ← Usar otra cuenta
       </button>
     </div>
   </div>
@@ -640,6 +672,24 @@ td.pts{color:var(--dorado);font-weight:900}
   </div>
 </div>
 
+<!-- Hoja de instalacion: se asoma desde abajo tras guardar los pronosticos.
+     No bloquea nada; el contenido lo arma pintarInstalacion() segun el
+     telefono, porque los pasos son distintos en cada uno. -->
+<div id="install-sheet">
+  <button class="inst-cerrar" onclick="posponerInstalacion()" aria-label="Cerrar">✕</button>
+  <div class="inst-top">
+    <img src="/icons/icon-192.png" alt="" />
+    <div>
+      <h3 id="inst-titulo">INSTALA LA APP</h3>
+      <div class="small muted" id="inst-sub">Para que no se te pase ninguna semana</div>
+    </div>
+  </div>
+  <div class="inst-premio" id="inst-premio"></div>
+  <div id="inst-cuerpo"></div>
+  <button class="btn-primary" id="inst-accion" style="display:none;width:100%" onclick="instalarAhora()">📲 INSTALAR</button>
+  <button class="small muted" style="display:block;margin:.6rem auto 0;text-decoration:underline" onclick="posponerInstalacion()">Ahora no</button>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -861,28 +911,28 @@ async function initApp(){
   await Promise.all([loadConfig(), loadTeams(), loadGames()]);
   currentWeek = semanaActual();
 
+  // Si viene de un correo de recuperación, la URL trae type=recovery. Hay que
+  // mirarla ANTES de restaurar la sesión: Supabase deja una sesión temporal
+  // válida y, sin este corte, entraría a la app sin cambiar la contraseña.
+  const hash = new URLSearchParams((location.hash||'').replace(/^#/,''));
+  const recuperando = hash.get('type')==='recovery' ||
+                      new URLSearchParams(location.search).get('type')==='recovery';
+
   const {data:{session}} = await sb.auth.getSession();
   if(session){
     sbUser = session.user;
     await loadProfile();
 
-    if(!sbProfile){
-      // Llegamos aquí sobre todo al volver del ENLACE del correo: la sesión
-      // ya es válida pero el perfil todavía no existe. Si guardamos los datos
-      // antes de mandar el correo, se crea solo y el usuario no nota nada.
-      const pend = leerPendiente();
-      if(pend && pend.nombre && pend.tel &&
-         pend.email === (sbUser.email||'').toLowerCase()){
-        const {error:upErr} = await sb.from('profiles').upsert({
-          id:sbUser.id, nombre:pend.nombre, email:sbUser.email, tel:pend.tel
-        },{onConflict:'id'});
-        if(!upErr){ limpiarPendiente(); await loadProfile(); }
-      }
+    if(recuperando){
+      await loadUnderdog();
+      renderDivisiones(); renderCalendario(); renderHistorial(); renderPremios();
+      pedirNuevaPassword();
+      return;
     }
 
     if(!sbProfile){
-      // Sin datos guardados (p.ej. abrió el enlace en otro dispositivo):
-      // se piden nombre y teléfono en vez de dejar la app a medias.
+      // Cuenta creada pero sin perfil: el registro se cortó a medias.
+      // Se piden los datos en vez de dejar la app inservible.
       await loadUnderdog();
       renderDivisiones(); renderCalendario(); renderHistorial(); renderPremios();
       pedirPerfil();
@@ -905,6 +955,10 @@ async function initApp(){
       document.getElementById('registro').classList.remove('hidden');
       volverRegistro();
     }
+    if(event==='PASSWORD_RECOVERY'){
+      sbUser = (await sb.auth.getSession()).data.session?.user || sbUser;
+      pedirNuevaPassword();
+    }
   });
 
   window.addEventListener('beforeunload', e=>{
@@ -912,128 +966,213 @@ async function initApp(){
   });
 }
 
-/* ---------- Registro / Inicio de sesión / OTP ---------- */
-let _regNombre='', _regEmail='', _regTel='', _regModo='login';
+/* ---------- Registro / Inicio de sesión ----------
 
-// Al entrar por el ENLACE del correo, el usuario sale de la página y vuelve
-// con la pestaña recargada: todo lo capturado en memoria se pierde. Por eso
-// nombre y teléfono se guardan antes de mandar el correo, y al regresar se
-// crea el perfil solo, sin volver a preguntar.
-const PEND_KEY = 'quiniela-nfl:registro-pendiente';
-function guardarPendiente(o){ try{ localStorage.setItem(PEND_KEY, JSON.stringify(o)); }catch(_){} }
-function leerPendiente(){ try{ return JSON.parse(localStorage.getItem(PEND_KEY)||'null'); }catch(_){ return null; } }
-function limpiarPendiente(){ try{ localStorage.removeItem(PEND_KEY); }catch(_){} }
+   Se entra con USUARIO (o correo) + CONTRASEÑA. Sin enlaces ni códigos.
+
+   Por dentro Supabase solo sabe autenticar por correo, así que cuando alguien
+   escribe su usuario lo traducimos a correo con la función correo_de_usuario()
+   y con ese correo pedimos la sesión. El correo se sigue guardando porque es
+   la única vía para recuperar la contraseña si se les olvida.
+   ------------------------------------------------------------------------ */
+let _regModo = 'login';
+
+const USUARIO_OK = /^[a-z0-9._-]{3,20}$/;   // sin espacios ni acentos: se dicta fácil
+
+function normUsuario(s){ return (s||'').trim().toLowerCase(); }
 
 function setModo(modo){
   _regModo = modo;
   const nuevo = modo==='registro';
   document.getElementById('modo-login').classList.toggle('active', !nuevo);
   document.getElementById('modo-registro').classList.toggle('active', nuevo);
-  document.getElementById('campo-nombre').style.display = nuevo?'':'none';
-  document.getElementById('campo-tel').style.display    = nuevo?'':'none';
+  document.getElementById('campo-nombre').style.display  = nuevo?'':'none';
+  document.getElementById('campo-email').style.display   = nuevo?'':'none';
+  document.getElementById('campo-tel').style.display     = nuevo?'':'none';
+  document.getElementById('ayuda-usuario').style.display = nuevo?'':'none';
+  document.getElementById('link-olvide').style.display   = nuevo?'none':'';
+  document.getElementById('lbl-ident').textContent = nuevo ? 'USUARIO' : 'USUARIO O CORREO';
+  document.getElementById('reg-usuario').placeholder = nuevo ? 'juanp' : 'juanp o juan@correo.com';
+  document.getElementById('reg-pass').setAttribute('autocomplete', nuevo?'new-password':'current-password');
   document.getElementById('reg-btn').textContent = nuevo ? '🏈 CREAR MI CUENTA' : '🏈 ENTRAR';
   document.getElementById('reg-pie').textContent = nuevo
     ? 'Al registrarte aceptas participar en la Quiniela NFL 2026-27 de La Corte'
-    : 'Te enviaremos un código de 6 dígitos a tu correo';
+    : 'Entra con tu usuario y contraseña';
 }
 
 document.getElementById('reg-btn').onclick = async ()=>{
-  const nuevo = _regModo==='registro';
-  const e = document.getElementById('reg-email').value.trim().toLowerCase();
-  const n = document.getElementById('reg-nombre').value.trim();
-  const t = document.getElementById('reg-tel').value.trim();
-
-  if(!e){toast('Escribe tu correo','err');return}
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){toast('Correo inválido','err');return}
-  if(nuevo && (!n||!t)){toast('Completa nombre y teléfono','err');return}
-
-  _regNombre=n; _regEmail=e; _regTel=t;
   const btn = document.getElementById('reg-btn');
   const textoOriginal = btn.textContent;
-  btn.disabled=true; btn.textContent='Enviando...';
-  // En modo "ya tengo cuenta" NO se crea usuario: si el correo no existe,
-  // Supabase devuelve error y se le dice que se registre, en vez de crearle
-  // una cuenta fantasma en silencio.
-  // emailRedirectTo hace que el enlace del correo regrese a esta misma app.
-  const {error} = await sb.auth.signInWithOtp({
-    email: e,
-    options: { shouldCreateUser: nuevo, emailRedirectTo: window.location.origin }
-  });
-  btn.disabled=false; btn.textContent=textoOriginal;
+  const ident = document.getElementById('reg-usuario').value.trim();
+  const pass  = document.getElementById('reg-pass').value;
 
-  if(!error && nuevo) guardarPendiente({email:e, nombre:n, tel:t});
+  if(!ident){ toast(_regModo==='registro'?'Escribe tu usuario':'Escribe tu usuario o correo','err'); return; }
+  if(pass.length < 6){ toast('La contraseña necesita al menos 6 caracteres','err'); return; }
 
-  if(error){
-    const noExiste = /signup|not found|disabled|no account/i.test(error.message);
-    if(!nuevo && noExiste){
-      toast('No encontramos ese correo. Usa "SOY NUEVO" para registrarte.','err');
-      setModo('registro');
+  /* ---------- CREAR CUENTA ---------- */
+  if(_regModo==='registro'){
+    const nombre  = document.getElementById('reg-nombre').value.trim();
+    const email   = document.getElementById('reg-email').value.trim().toLowerCase();
+    const tel     = document.getElementById('reg-tel').value.trim();
+    const usuario = normUsuario(ident);
+
+    if(!nombre){ toast('Escribe tu nombre','err'); return; }
+    if(!USUARIO_OK.test(usuario)){
+      toast('El usuario va sin espacios: 3 a 20 letras o números','err'); return;
+    }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ toast('Correo inválido','err'); return; }
+    if(!tel){ toast('Escribe tu teléfono','err'); return; }
+
+    btn.disabled=true; btn.textContent='Creando cuenta...';
+
+    // Se avisa ANTES de crear la cuenta. Si no, quedaría una cuenta sin
+    // perfil: el problema clásico de este proyecto.
+    const {data:libre} = await sb.rpc('usuario_disponible',{p_usuario:usuario});
+    if(libre === false){
+      btn.disabled=false; btn.textContent=textoOriginal;
+      toast('Ese usuario ya está ocupado, elige otro','err'); return;
+    }
+
+    const {data, error} = await sb.auth.signUp({ email, password: pass });
+    if(error){
+      btn.disabled=false; btn.textContent=textoOriginal;
+      toast(/already registered|already exists/i.test(error.message)
+        ? 'Ese correo ya tiene cuenta. Entra con "YA TENGO CUENTA".'
+        : error.message, 'err');
       return;
     }
-    toast(error.message,'err');
+
+    // Sin sesión = Supabase todavía tiene encendida la confirmación por correo.
+    if(!data.session){
+      btn.disabled=false; btn.textContent=textoOriginal;
+      toast('Falta apagar "Confirm email" en Supabase','err'); return;
+    }
+
+    sbUser = data.session.user;
+    const {error:upErr} = await sb.from('profiles')
+      .upsert({ id:sbUser.id, nombre, email, tel, usuario }, {onConflict:'id'});
+    btn.disabled=false; btn.textContent=textoOriginal;
+    if(upErr){
+      // La cuenta ya existe; el perfil no. Se rescata sin perder nada.
+      toast('Casi listo, completa tu perfil','err');
+      pedirPerfil(); return;
+    }
+    await loadProfile();
+    toast('¡Bienvenido a la quiniela!');
+    await entrarALaApp();
     return;
   }
 
-  document.getElementById('otp-email-shown').textContent = e;
-  document.getElementById('reg-form-step').style.display='none';
-  document.getElementById('reg-otp-step').style.display='block';
-  document.getElementById('reg-otp').focus();
-  toast('Código enviado — revisa tu correo');
-};
+  /* ---------- ENTRAR ---------- */
+  btn.disabled=true; btn.textContent='Entrando...';
 
-document.getElementById('otp-btn').onclick = async ()=>{
-  const token = document.getElementById('reg-otp').value.trim();
-  if(token.length!==6){toast('El código tiene 6 dígitos','err');return}
-  const btn = document.getElementById('otp-btn');
-  btn.disabled=true; btn.textContent='Verificando...';
-  const {data,error} = await sb.auth.verifyOtp({email:_regEmail, token, type:'email'});
-  btn.disabled=false; btn.textContent='✅ VERIFICAR CÓDIGO';
-  if(error){toast('Código incorrecto o expirado','err');return}
-
-  sbUser = data.user;
-
-  if(_regModo==='registro'){
-    const {error:upErr} = await sb.from('profiles').upsert({
-      id:sbUser.id, nombre:_regNombre, email:_regEmail, tel:_regTel
-    },{onConflict:'id'});
-    if(upErr){toast('Error guardando perfil: '+upErr.message,'err');return}
+  // Si escribió un correo se usa tal cual; si escribió su usuario, se traduce.
+  let email = ident.toLowerCase();
+  if(!ident.includes('@')){
+    const {data:correo} = await sb.rpc('correo_de_usuario',{p_usuario:ident});
+    if(!correo){
+      btn.disabled=false; btn.textContent=textoOriginal;
+      toast('No encontramos ese usuario','err'); return;
+    }
+    email = correo;
   }
 
+  const {data, error} = await sb.auth.signInWithPassword({ email, password: pass });
+  btn.disabled=false; btn.textContent=textoOriginal;
+  if(error){
+    toast(/invalid login|credentials/i.test(error.message)
+      ? 'Usuario o contraseña incorrectos'
+      : error.message, 'err');
+    return;
+  }
+
+  sbUser = data.user;
   await loadProfile();
-  if(!sbProfile){ pedirPerfil(); return; }   // verificó pero aún no tiene perfil
-  limpiarPendiente();
+  if(!sbProfile){ pedirPerfil(); return; }
   await entrarALaApp();
 };
 
-// Paso de rescate: hay sesión verificada pero falta la fila en profiles
+/* ---------- Olvidé mi contraseña ---------- */
+async function pedirRecuperacion(){
+  const ident = document.getElementById('reg-usuario').value.trim();
+  if(!ident){ toast('Escribe primero tu usuario o correo','err'); return; }
+
+  let email = ident.toLowerCase();
+  if(!ident.includes('@')){
+    const {data:correo} = await sb.rpc('correo_de_usuario',{p_usuario:ident});
+    if(!correo){ toast('No encontramos ese usuario','err'); return; }
+    email = correo;
+  }
+  const {error} = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin
+  });
+  if(error){ toast(error.message,'err'); return; }
+  // No se muestra el correo completo: quien pide el reset puede no ser el dueño.
+  toast('Te mandamos un correo para cambiar tu contraseña');
+}
+
+// Al volver del correo de recuperación, Supabase deja una sesión temporal.
+function pedirNuevaPassword(){
+  document.getElementById('registro').classList.remove('hidden');
+  document.getElementById('reg-form-step').style.display='none';
+  document.getElementById('reg-perfil-step').style.display='none';
+  document.getElementById('reg-nueva-pass-step').style.display='block';
+  document.getElementById('pass-nueva').focus();
+}
+
+document.getElementById('pass-btn').onclick = async ()=>{
+  const p = document.getElementById('pass-nueva').value;
+  if(p.length < 6){ toast('La contraseña necesita al menos 6 caracteres','err'); return; }
+  const btn = document.getElementById('pass-btn');
+  btn.disabled=true; btn.textContent='Guardando...';
+  const {error} = await sb.auth.updateUser({ password: p });
+  btn.disabled=false; btn.textContent='✅ GUARDAR Y ENTRAR';
+  if(error){ toast(error.message,'err'); return; }
+  document.getElementById('reg-nueva-pass-step').style.display='none';
+  document.getElementById('reg-form-step').style.display='block';
+  toast('Contraseña actualizada');
+  await loadProfile();
+  if(!sbProfile){ pedirPerfil(); return; }
+  await entrarALaApp();
+};
+
+/* ---------- Rescate: hay cuenta pero falta la fila en profiles ---------- */
 function pedirPerfil(){
   document.getElementById('registro').classList.remove('hidden');
   document.getElementById('reg-form-step').style.display='none';
-  document.getElementById('reg-otp-step').style.display='none';
+  document.getElementById('reg-nueva-pass-step').style.display='none';
   document.getElementById('reg-perfil-step').style.display='block';
   document.getElementById('perfil-email-shown').textContent = sbUser?.email || '';
-  const pend = leerPendiente() || {};
   const n = document.getElementById('perfil-nombre');
-  if(!n.value) n.value = _regNombre || pend.nombre || '';
+  if(!n.value) n.value = document.getElementById('reg-nombre').value.trim();
+  const u = document.getElementById('perfil-usuario');
+  if(!u.value) u.value = normUsuario(document.getElementById('reg-usuario').value);
   const t = document.getElementById('perfil-tel');
-  if(!t.value) t.value = _regTel || pend.tel || '';
+  if(!t.value) t.value = document.getElementById('reg-tel').value.trim();
   n.focus();
 }
 
 document.getElementById('perfil-btn').onclick = async ()=>{
   const n = document.getElementById('perfil-nombre').value.trim();
+  const u = normUsuario(document.getElementById('perfil-usuario').value);
   const t = document.getElementById('perfil-tel').value.trim();
-  if(!n||!t){toast('Completa nombre y teléfono','err');return}
+  if(!n||!t){ toast('Completa nombre y teléfono','err'); return; }
+  if(!USUARIO_OK.test(u)){ toast('El usuario va sin espacios: 3 a 20 letras o números','err'); return; }
+
   const btn = document.getElementById('perfil-btn');
   btn.disabled=true; btn.textContent='Guardando...';
+  const {data:libre} = await sb.rpc('usuario_disponible',{p_usuario:u});
+  if(libre === false && normUsuario(sbProfile?.usuario) !== u){
+    btn.disabled=false; btn.textContent='✅ GUARDAR Y ENTRAR';
+    toast('Ese usuario ya está ocupado, elige otro','err'); return;
+  }
   const {error} = await sb.from('profiles').upsert({
-    id:sbUser.id, nombre:n, email:sbUser.email, tel:t
+    id:sbUser.id, nombre:n, email:sbUser.email, tel:t, usuario:u
   },{onConflict:'id'});
   btn.disabled=false; btn.textContent='✅ GUARDAR Y ENTRAR';
-  if(error){toast('Error guardando perfil: '+error.message,'err');return}
+  if(error){ toast('Error guardando perfil: '+error.message,'err'); return; }
   await loadProfile();
-  if(!sbProfile){toast('No se pudo crear el perfil','err');return}
-  limpiarPendiente();
+  if(!sbProfile){ toast('No se pudo crear el perfil','err'); return; }
   toast('¡Listo! Bienvenido');
   await entrarALaApp();
 };
@@ -1045,10 +1184,11 @@ async function entrarALaApp(){
 }
 
 function volverRegistro(){
-  document.getElementById('reg-otp-step').style.display='none';
   document.getElementById('reg-perfil-step').style.display='none';
+  document.getElementById('reg-nueva-pass-step').style.display='none';
   document.getElementById('reg-form-step').style.display='block';
-  document.getElementById('reg-otp').value='';
+  document.getElementById('reg-pass').value='';
+  document.getElementById('pass-nueva').value='';
 }
 function mostrarApp(){
   document.getElementById('registro').classList.add('hidden');
@@ -1058,6 +1198,12 @@ function mostrarApp(){
   document.getElementById('user-name').innerHTML =
     esc(sbProfile?.nombre || sbUser?.email || '') + badge;
   renderAll();
+  // Si ya la trae instalada, que cobre su bono sin tener que hacer nada.
+  revisarBonoInstalacion();
+  // Y si no la tiene, la invitacion con los 25 puntos es lo PRIMERO que ve
+  // al entrar. El respiro de 800 ms deja que la app termine de pintar para
+  // que la hoja suba sobre una pantalla ya armada y no de un tiron feo.
+  setTimeout(mostrarInstalacion, 800);
 }
 async function cerrarSesion(sinPreguntar){
   if(!sinPreguntar){
@@ -1536,6 +1682,10 @@ async function guardarSemana(){
   await loadMyPicks();
   renderQuiniela();
   await renderRanking();
+  // Segunda oportunidad: la principal es al entrar (ver mostrarApp). Esta
+  // agarra a quien la ignoro sin cerrarla. Si le dio "Ahora no", el candado
+  // de 7 dias de mostrarInstalacion() evita que lo volvamos a molestar.
+  setTimeout(mostrarInstalacion, 1200);
 }
 
 /* ---------- Underdog ---------- */
@@ -1648,7 +1798,7 @@ async function renderRanking(){
       <div class="rank-pos">${medal}</div>
       <div>
         <div class="rank-name">${esc(r.nombre)}${isMe?' <span style="color:var(--dorado)">(tú)</span>':''}</div>
-        <div class="rank-breakdown">🎯 ${r.pts_confianza} confianza · ⚡ ${r.pts_anotador} anotador · 🍔 ${r.pts_consumo} consumo · 🦄 ${r.pts_underdog} underdog</div>
+        <div class="rank-breakdown">🎯 ${r.pts_confianza} confianza · ⚡ ${r.pts_anotador} anotador · 🍔 ${r.pts_consumo} consumo · 🦄 ${r.pts_underdog} underdog · 📲 ${r.pts_bono??0} app</div>
       </div>
       <div class="rank-points">${r.total_puntos}</div>`;
     list.appendChild(row);
@@ -2024,6 +2174,153 @@ function toast(msg, type=''){
   t.className = (type==='err'?'err show':'show');
   clearTimeout(window._toastT);
   window._toastT = setTimeout(()=> t.className = (type==='err'?'err':''), 3200);
+}
+
+/* =====================================================
+   PWA: INSTALAR LA APP + BONO DE INSTALACION
+
+   Por que importa: las notificaciones SOLO llegan si la app esta instalada
+   en la pantalla de inicio. Aqui se juega la cobertura de todo el sistema
+   de avisos, que es lo que evita que la gente se caiga de la quiniela por
+   falta de recordatorio (el problema de la temporada pasada).
+
+   Se PREMIA la instalacion en vez de obligarla: un muro espantaria
+   participantes, que es justo lo contrario de lo que buscamos.
+   ===================================================== */
+const INST_KEY = 'quiniela-nfl:instalacion-pospuesta';
+const INST_ESPERA_DIAS = 7;
+let promptInstalacion = null;   // el dialogo nativo de Android/escritorio
+
+function appInstalada(){
+  return window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+}
+
+function esIOS(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+}
+
+// WhatsApp, Instagram y Facebook abren los enlaces en su propio navegador,
+// donde NO existe "Agregar a pantalla de inicio". Como el enlace de la
+// quiniela va a circular justamente por WhatsApp, esto pasa mucho: sin
+// detectarlo, mandariamos a media banca a un callejon sin salida.
+//
+// La senal buena en iPhone es navigator.standalone: en Safari existe
+// (aunque valga false) y en los navegadores internos no existe.
+function enNavegadorInterno(){
+  const ua = navigator.userAgent || '';
+  if(/FBAN|FBAV|FB_IAB|Instagram|Line\/|MicroMessenger/i.test(ua)) return true;
+  if(esIOS() && typeof navigator.standalone === 'undefined') return true;
+  return false;
+}
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/sw.js').catch(e=> console.warn('SW no registrado:', e));
+  });
+}
+
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();          // sin esto Chrome muestra su propio banner encima
+  promptInstalacion = e;
+});
+
+window.addEventListener('appinstalled', ()=>{
+  promptInstalacion = null;
+  ocultarInstalacion();
+  revisarBonoInstalacion();
+});
+
+function pintarInstalacion(){
+  const titulo = document.getElementById('inst-titulo');
+  const sub    = document.getElementById('inst-sub');
+  const premio = document.getElementById('inst-premio');
+  const cuerpo = document.getElementById('inst-cuerpo');
+  const accion = document.getElementById('inst-accion');
+  accion.style.display = 'none';
+  premio.style.display = '';
+  premio.textContent = `🎁 +${cfgInt('pts_bono_instalacion',25)} puntos de regalo al instalarla`;
+
+  if(enNavegadorInterno()){
+    titulo.textContent = 'ÁBRELA EN TU NAVEGADOR';
+    sub.textContent = 'Desde aquí no se puede instalar';
+    premio.style.display = 'none';
+    cuerpo.innerHTML = esIOS()
+      ? `<ul class="inst-pasos">
+           <li>Toca <span class="inst-tecla">···</span> abajo a la derecha.</li>
+           <li>Elige <b>Abrir en Safari</b>.</li>
+           <li>Ahí te decimos cómo instalarla y cobrar tus puntos.</li>
+         </ul>`
+      : `<ul class="inst-pasos">
+           <li>Toca <span class="inst-tecla">⋮</span> arriba a la derecha.</li>
+           <li>Elige <b>Abrir en Chrome</b>.</li>
+           <li>Ahí te decimos cómo instalarla y cobrar tus puntos.</li>
+         </ul>`;
+    return;
+  }
+
+  titulo.textContent = 'INSTALA LA APP';
+  sub.textContent = 'Para que no se te pase ninguna semana';
+
+  if(esIOS()){
+    cuerpo.innerHTML = `<ul class="inst-pasos">
+        <li>Toca <b>Compartir</b> <span class="inst-tecla">⬆</span>, abajo al centro.</li>
+        <li>Baja y elige <b>Agregar a pantalla de inicio</b>.</li>
+        <li>Toca <b>Agregar</b>. Listo.</li>
+      </ul>
+      <p class="small muted">Tiene que ser desde Safari. Es el único que deja instalar apps en iPhone.</p>`;
+    return;
+  }
+
+  if(promptInstalacion){
+    cuerpo.innerHTML = `<p class="small" style="margin-bottom:.6rem">Un toque y queda en tu pantalla de inicio, como cualquier otra app.</p>`;
+    accion.style.display = '';
+    return;
+  }
+
+  cuerpo.innerHTML = `<ul class="inst-pasos">
+      <li>Toca <span class="inst-tecla">⋮</span> arriba a la derecha.</li>
+      <li>Elige <b>Instalar aplicación</b> o <b>Agregar a pantalla de inicio</b>.</li>
+      <li>Confirma. Listo.</li>
+    </ul>`;
+}
+
+function mostrarInstalacion(){
+  if(appInstalada() || !sbUser) return;
+  const pospuesta = parseInt(localStorage.getItem(INST_KEY) || '0', 10);
+  if(pospuesta && (Date.now() - pospuesta) < INST_ESPERA_DIAS*86400000) return;
+  pintarInstalacion();
+  document.getElementById('install-sheet').classList.add('show');
+}
+
+function ocultarInstalacion(){
+  document.getElementById('install-sheet').classList.remove('show');
+}
+
+function posponerInstalacion(){
+  try{ localStorage.setItem(INST_KEY, String(Date.now())); }catch(e){}
+  ocultarInstalacion();
+}
+
+async function instalarAhora(){
+  if(!promptInstalacion) return;
+  promptInstalacion.prompt();
+  const {outcome} = await promptInstalacion.userChoice;
+  promptInstalacion = null;
+  if(outcome==='accepted') ocultarInstalacion(); else posponerInstalacion();
+}
+
+// Idempotente del lado del servidor: se puede llamar cada vez que abre la
+// app instalada; solo la primera suma puntos.
+async function revisarBonoInstalacion(){
+  if(!sbUser || !appInstalada()) return;
+  const {data,error} = await sb.rpc('otorgar_bono_instalacion');
+  if(error || !data?.ok) return;    // silencioso: no vale la pena molestar por esto
+  if(!data.ya){
+    toast(`🎁 +${data.puntos} puntos por instalar la app`);
+    await renderRanking();
+  }
 }
 
 /* =====================================================

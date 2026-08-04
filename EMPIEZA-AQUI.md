@@ -123,7 +123,7 @@ Si no lo subes, el cambio solo existe en tu computadora.
 
 ### Hay pruebas automáticas — úsalas
 
-El proyecto trae 93 pruebas que revisan que las reglas de puntos y la seguridad
+El proyecto trae 109 pruebas que revisan que las reglas de puntos y la seguridad
 funcionen. Se corren así:
 
 ```
@@ -227,6 +227,34 @@ marcadores, usa **`manager`**. Deja `admin` para ti.
 
 ---
 
+## 6B. La app se puede instalar en el celular
+
+La quiniela no es solo una página: la gente puede **instalarla en su teléfono** y
+queda con su ícono, como cualquier otra app.
+
+**Esto importa más de lo que parece.** Las notificaciones —los recordatorios de
+«ya casi cierran los pronósticos»— solo le llegan a quien la tiene instalada. Es
+justo lo que faltó la temporada pasada, cuando varios dejaron de jugar porque
+nadie les avisó.
+
+Para animarlos, **la app regala 25 puntos a quien la instale**. Se cobran solos la
+primera vez que la abren ya instalada; nadie puede cobrarlos dos veces. El monto
+se cambia en **ADMIN → Configuración de puntaje**, llave `pts_bono_instalacion`.
+
+Después de guardar sus pronósticos, a cada jugador le aparece una tarjeta con los
+pasos de **su** teléfono. Dos cosas que te van a preguntar:
+
+- **iPhone:** tiene que hacerlo desde **Safari**. Es el único navegador que deja
+  instalar apps en iPhone.
+- **Si abrieron el enlace desde WhatsApp:** ahí *no se puede* instalar. La app lo
+  detecta sola y les dice cómo abrirla en Safari o Chrome. Si alguien se atora,
+  es casi siempre por esto.
+
+> Vale mucho la pena empujarlo en el restaurante los primeros días: cada persona
+> que la instale es una a la que sí le van a llegar los avisos.
+
+---
+
 ## 7. Las reglas de la quiniela, en resumen
 
 Hay **4 formas de ganar puntos**:
@@ -322,9 +350,12 @@ qué significa.
 | Archivo | Qué es |
 |---|---|
 | `index.html` | La app completa. Aquí vive todo lo que se ve |
+| `manifest.json`, `sw.js`, `icons/` | Lo que permite instalarla en el celular |
+| `vercel.json` | Le dice al servidor qué no debe guardar en caché. No lo borres |
 | `supabase/migrations/001_init.sql` | El diseño de la base de datos |
 | `supabase/migrations/002_grants.sql` | Permisos de la base de datos |
-| `test/` | Las 93 pruebas automáticas |
+| `supabase/migrations/003_bonos.sql` | Agrega los bonos a una base ya instalada |
+| `test/` | Las 109 pruebas automáticas |
 | `README.md` | Documentación técnica a detalle |
 | `EMPIEZA-AQUI.md` | Este documento |
 

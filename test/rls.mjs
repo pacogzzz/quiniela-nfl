@@ -3,7 +3,9 @@ import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
 import { readFileSync } from 'node:fs';
 import { SHIM } from './shim.mjs';
 
-const SQL = readFileSync('C:/Users/Paco/Downloads/quiniela-nfl/supabase/migrations/001_init.sql','utf8');
+// Ruta relativa a ESTE archivo: el arnes corre igual en cualquier maquina
+// (antes era una ruta absoluta de la computadora del autor y reventaba con ENOENT).
+const SQL = readFileSync(new URL('../supabase/migrations/001_init.sql', import.meta.url),'utf8');
 const db = await new PGlite({ extensions: { pgcrypto } });
 await db.exec(SHIM);
 await db.exec(SQL);
@@ -84,6 +86,8 @@ await blocked('escribir en el historial',
   `insert into historial(titulo) values('hackeado')`);
 await blocked('inventarse un corte de semana',
   `insert into week_snapshots(week,user_id,posicion,total) values(1,$1,1,99999)`,[ANA]);
+await blocked('regalarse puntos con un bono',
+  `insert into bonos(user_id,motivo,puntos) values($1,'trampa',9999)`,[ANA]);
 
 console.log('\n== ...PERO SI PUEDE HACER LO SUYO ==');
 await allowed('guardar su propio pronostico',
@@ -97,6 +101,18 @@ await allowed('registrar underdog', `insert into underdog_picks(user_id,week,opc
 await allowed('canjear folio por RPC (la via correcta)', `select canjear_folio('TEST01')`);
 chk('  el canje SI le sumo los puntos',
   (await one(`select pts_consumo from ranking where id=$1`,[ANA])).pts_consumo, 10);
+await allowed('cobrar el bono de instalacion por RPC', `select otorgar_bono_instalacion()`);
+chk('  el bono SI le sumo los puntos',
+  (await one(`select pts_bono from ranking where id=$1`,[ANA])).pts_bono, 25);
+
+console.log('\n== LOS BONOS SOLO LOS MUEVE EL ADMIN ==');
+await login(BETO);
+await blocked('un jugador NO puede borrar el bono de otro',
+  `delete from bonos where user_id=$1`,[ANA]);
+await blocked('ni inflarle los puntos a un bono',
+  `update bonos set puntos=9999 where user_id=$1`,[ANA]);
+chk('  el bono de Ana sigue ahi',
+  (await one(`select count(*)::int c from bonos where user_id=$1`,[ANA])).c, 1);
 
 console.log('\n== EL UNDERDOG RESPETA EL TOP 10 ==');
 await db.exec(`RESET ROLE`);
@@ -130,6 +146,7 @@ await allowed('cambiar configuracion',`update config set valor='5' where clave='
 await allowed('generar folios',       `select generar_folios('2026-09-13'::date,2)`);
 await allowed('cerrar la semana',     `select cerrar_semana(2)`);
 await allowed('escribir historial',   `insert into historial(titulo) values('Quiniela NFL 2026')`);
+await allowed('dar un bono a mano',   `insert into bonos(user_id,motivo,puntos) values($1,'trivia',15)`,[BETO]);
 
 console.log('\n== UN VISITANTE SIN CUENTA ==');
 await db.exec(`RESET ROLE`);
@@ -137,6 +154,7 @@ await db.exec(`SELECT set_config('request.jwt.claim.sub','',false)`);
 await db.exec(`SET ROLE anon`);
 await allowed('puede ver el calendario', `select count(*) from games`);
 await blocked('NO puede ver pronosticos ajenos', `select * from picks`);
+await blocked('NO puede ver los bonos de nadie', `select * from bonos`);
 await blocked('NO puede escribir pronosticos',
   `insert into picks(user_id,game_id,ganador) values($1,'W01-D01','A')`,[ANA]);
 

@@ -69,7 +69,7 @@ oficial cuando salga y corrígelas en el import si hace falta.
 
 ---
 
-## 🎯 Las 4 formas de ganar puntos
+## 🎯 Las 5 formas de ganar puntos
 
 ### 1. Puntos de confianza
 
@@ -153,6 +153,19 @@ entra a **ADMIN → CIERRE DE SEMANA** y presiona *Cerrar semana*. Eso congela l
 ese día y de ahí sale quién puede jugar el underdog la semana siguiente. **Si no cierras
 la semana, la elegibilidad no avanza.**
 
+### 5. Bonos 🎁
+
+Puntos que se dan a mano, por el motivo que quieras: una trivia, un cumpleaños, una
+promoción de un día. Se guardan en la tabla `bonos` y aparecen en el desglose del ranking.
+
+Hay uno automático: **instalar la app** vale **25 puntos** (`pts_bono_instalacion`).
+Se cobra solo la primera vez que la persona abre la quiniela ya instalada en su teléfono,
+y la base de datos impide cobrarlo dos veces.
+
+> **Por qué se premia instalarla.** Las notificaciones solo llegan si la app está en la
+> pantalla de inicio. Premiar la instalación —en vez de obligarla con un muro— sube la
+> cobertura de los avisos sin espantar participantes.
+
 ---
 
 ## 🧭 Secciones de la app
@@ -199,19 +212,28 @@ la semana, la elegibilidad no avanza.**
 1. Supabase → **SQL Editor** → **New query**.
 2. Pega **todo** el contenido de `supabase/migrations/001_init.sql` y dale **Run**.
 3. En **Table Editor** debes ver: `profiles`, `teams`, `games`, `picks`, `folios`,
-   `underdog_weeks`, `underdog_picks`, `week_snapshots`, `historial`, `config`.
+   `underdog_weeks`, `underdog_picks`, `week_snapshots`, `historial`, `config`, `bonos`.
 4. `teams` debe tener 32 filas y `games` **301** (288 de temporada regular + 13 de playoffs).
 
    > La plantilla trae 16 partidos por semana (los 32 equipos jugando). En la realidad,
    > las semanas con byes tienen menos. Eso se corrige solo cuando importes el
    > calendario oficial, que reemplaza la semana completa.
 
-### Paso 3 — Activar login por correo (OTP)
+### Paso 3 — Activar login con usuario y contraseña
 
 1. **Authentication → Providers → Email**: habilitado.
-2. Activa **Confirm email** (modo OTP, no magic link).
+2. **APAGA "Confirm email"**. ⚠️ Este es el paso que más se olvida: con esa opción
+   encendida, Supabase exige confirmar por correo antes de dejar entrar, `signUp`
+   no devuelve sesión y el registro se queda a medias.
 3. **Authentication → URL Configuration**: pon tu URL de Vercel en *Site URL* y en
-   *Redirect URLs* (lo puedes actualizar después de desplegar).
+   *Redirect URLs*. Esto lo usa el correo de **recuperar contraseña**, así que sí
+   hace falta. Si además vas a probar en tu computadora, agrega también
+   `http://localhost:4173` a *Redirect URLs*.
+
+> **Cómo funciona por dentro.** La gente entra con **usuario + contraseña**. Supabase
+> solo sabe autenticar por correo, así que el front traduce el usuario a correo con
+> la función `correo_de_usuario()` y con ese correo pide la sesión. El correo se
+> sigue pidiendo al registrarse porque es la única forma de recuperar la contraseña.
 
 ### Paso 4 — Credenciales
 
@@ -251,11 +273,41 @@ Después regresa a Supabase → **Authentication → URL Configuration** y pon a
 2. Supabase → **Table Editor** → `profiles` → busca tu fila y cambia `role` de `user` a `admin`.
 3. Recarga la app: aparece la pestaña **ADMIN**.
 
-### Paso 8 — Verificar Realtime
+### Paso 7B — Si tu base YA estaba desplegada antes del login con usuario
+
+Corre **`supabase/migrations/004_login_usuario.sql`** en el SQL Editor. Agrega la
+columna `usuario` y las dos funciones que traducen usuario → correo. Al final
+imprime tres renglones de verificación; los tres deben decir `true`.
+
+Y no olvides **apagar "Confirm email"** (Paso 3), que es la otra mitad del cambio.
+
+### Paso 8 — Si tu base YA estaba desplegada antes de los bonos
+
+Solo aplica si corriste `001_init.sql` antes de que existiera la tabla `bonos`. En vez
+de volver a correr `001` entero, pega **`supabase/migrations/003_bonos.sql`** en el SQL
+Editor y dale Run. Al final imprime cuatro renglones de verificación: los cuatro deben
+decir `true`. Correrlo dos veces no rompe nada.
+
+### Paso 9 — La app instalable (PWA)
+
+No hay que configurar nada: `manifest.json`, `sw.js` y `icons/` ya vienen en el repo y
+Vercel los sirve tal cual. Para comprobar que quedó bien, abre la URL desplegada en tu
+celular; después de guardar tus pronósticos debe asomarse desde abajo la hoja que invita
+a instalarla, con los pasos de **tu** teléfono.
+
+Dos cosas que conviene saber:
+
+- **Los íconos son provisionales** (un balón dorado sobre azul marino). Cuando tengas el
+  logo real de La Corte en PNG cuadrado de 512×512, reemplaza los archivos de `icons/`.
+  El script `icons/generar-iconos.mjs` documenta cómo se hicieron los actuales.
+- **`vercel.json` impide que el CDN cachee `sw.js`.** No lo quites: si el service worker
+  se queda cacheado, los cambios que subas dejan de llegarle a quien ya instaló la app.
+
+### Paso 10 — Verificar Realtime
 
 Supabase → **Database → Replication** (o *Publications*) → confirma que `supabase_realtime`
-incluya `games`, `picks`, `folios`, `underdog_picks` y `underdog_weeks`. La migración
-intenta agregarlas sola; si alguna no quedó, actívala con el switch.
+incluya `games`, `picks`, `folios`, `underdog_picks`, `underdog_weeks` y `bonos`. La
+migración intenta agregarlas sola; si alguna no quedó, actívala con el switch.
 
 ---
 
@@ -282,6 +334,7 @@ Todo se edita en **ADMIN → CONFIGURACIÓN DE PUNTAJE** sin tocar código.
 | `conf_mode` | `additive` | `additive` · `flat` · `solo` (ver arriba) |
 | `pts_anotador` | `3` | Primer equipo en anotar, partidos estelares |
 | `pts_underdog` | `20` | Acertar el underdog de la semana |
+| `pts_bono_instalacion` | `25` | Regalo por instalar la app en el teléfono |
 | `pts_folio_lunes` | `10` | Folio de consumo, lunes |
 | `pts_folio_jueves` | `5` | Folio de consumo, jueves |
 | `pts_folio_domingo` | `5` | Folio de consumo, domingo |
@@ -332,9 +385,9 @@ npm install
 npm test
 ```
 
-**93 pruebas**, en dos bloques:
+**109 pruebas**, en dos bloques:
 
-`suite.mjs` — **60 pruebas de lógica**
+`suite.mjs` — **69 pruebas de lógica**
 - Estructura: 32 equipos, 301 partidos, 27 políticas, RLS activo en las 10 tablas
 - Fechas: que el arranque caiga en jueves, Thanksgiving en jueves 26-nov,
   Black Friday en viernes, Navidad en viernes, Super Bowl en domingo 14-feb
@@ -350,7 +403,7 @@ npm test
 - Underdog: acierto, y que el corte del lunes decida bien quién es elegible
 - Que cambiar `conf_mode` recalcule todo el histórico al instante
 
-`rls.mjs` — **33 pruebas de seguridad**, simulando roles reales de Supabase.
+`rls.mjs` — **40 pruebas de seguridad**, simulando roles reales de Supabase.
 Que un jugador normal **no pueda**: escribir pronósticos a nombre de otro, cargar
 marcadores, cambiar el puntaje, borrar partidos, fabricarse folios, leer folios
 ajenos, editar el underdog, **ascenderse a admin**, escribir el historial ni
