@@ -2,14 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "headers": [
     {
-      "//": "sw.js e index.html NUNCA se cachean en el CDN. Si se cachearan, subir un cambio con git push no le llegaria a la gente que ya instalo la app: el navegador seguiria viendo el service worker viejo, que a su vez sirve el HTML viejo. Es el error clasico que deja una PWA congelada.",
       "source": "/(sw.js|manifest.json|index.html)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
     },
     {
-      "//": "Los iconos si se cachean fuerte: no cambian, y si algun dia cambian se sube el numero de CACHE en sw.js.",
       "source": "/icons/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }

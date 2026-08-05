@@ -92,6 +92,20 @@ agrega la prueba correspondiente.
    base migrada y una instalación nueva quedan con permisos distintos. Cierra la
    diferencia con un `REVOKE` explícito en ambos archivos, como hace `bonos`.
 
+8. **`vercel.json` no admite comentarios, ni con la llave `"//"`.** Vercel valida
+   ese archivo contra un esquema estricto y rechaza cualquier propiedad que no
+   reconozca. El despliegue truena de inmediato, antes de construir, con
+   `should NOT have additional property`. El truco de `"//"` funciona en
+   `package.json` de npm, aquí no. El *porqué* de esas cabeceras va en este
+   archivo (trampa 6), no en el JSON.
+
+9. **Los despliegues los dispara un Deploy Hook, no la integración de Git.**
+   Vercel en plan Hobby sólo publica commits cuyo autor de GitHub esté ligado a
+   la cuenta dueña del proyecto, así que los push de un colaborador quedaban
+   bloqueados. `.github/workflows/deploy.yml` llama un Deploy Hook —que no revisa
+   autoría— con el secret `VERCEL_DEPLOY_HOOK` del repo. Si nadie ve sus cambios
+   en vivo, revisa primero la pestaña **Actions** de GitHub, no el panel de Vercel.
+
 ## Reglas de puntaje (configurables en la tabla `config`)
 
 | Forma | Puntos |
