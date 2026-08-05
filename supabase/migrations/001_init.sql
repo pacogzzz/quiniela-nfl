@@ -791,7 +791,21 @@ DROP POLICY IF EXISTS "picks read"   ON picks;
 DROP POLICY IF EXISTS "picks insert" ON picks;
 DROP POLICY IF EXISTS "picks update" ON picks;
 DROP POLICY IF EXISTS "picks delete" ON picks;
-CREATE POLICY "picks read"   ON picks FOR SELECT TO authenticated USING (true);
+-- Los pronosticos ajenos NO se ven antes del kickoff: la quiniela es abierta y
+-- la llave anon es publica, asi que USING (true) dejaba que cualquier
+-- participante leyera los picks de los demas y jugara con ventaja. Se destapan
+-- solos cuando arranca el partido, que es cuando ya no se pueden cambiar.
+-- Ver 005_privacidad_picks.sql (delta para la base ya desplegada).
+CREATE POLICY "picks read"   ON picks FOR SELECT TO authenticated
+  USING (
+    user_id = auth.uid()
+    OR mi_rol() IN ('admin','manager')
+    OR EXISTS (
+      SELECT 1 FROM games g
+      WHERE g.id = picks.game_id
+        AND g.kickoff <= NOW()
+    )
+  );
 CREATE POLICY "picks insert" ON picks FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
 CREATE POLICY "picks update" ON picks FOR UPDATE TO authenticated USING (user_id = auth.uid());
 CREATE POLICY "picks delete" ON picks FOR DELETE TO authenticated USING (user_id = auth.uid());
@@ -817,7 +831,25 @@ CREATE POLICY "uw upd"  ON underdog_weeks FOR UPDATE TO authenticated
 DROP POLICY IF EXISTS "up read" ON underdog_picks;
 DROP POLICY IF EXISTS "up ins"  ON underdog_picks;
 DROP POLICY IF EXISTS "up upd"  ON underdog_picks;
-CREATE POLICY "up read" ON underdog_picks FOR SELECT TO authenticated USING (true);
+-- Mismo criterio que "picks read": el underdog ajeno se destapa cuando el admin
+-- cierra la semana o cuando arranca alguno de los partidos en juego.
+CREATE POLICY "up read" ON underdog_picks FOR SELECT TO authenticated
+  USING (
+    user_id = auth.uid()
+    OR mi_rol() IN ('admin','manager')
+    OR EXISTS (
+      SELECT 1 FROM underdog_weeks uw
+      WHERE uw.week = underdog_picks.week
+        AND (
+          uw.abierto = FALSE
+          OR EXISTS (
+            SELECT 1 FROM games g
+            WHERE g.id IN (uw.opt_a_game, uw.opt_b_game, uw.opt_c_game)
+              AND g.kickoff <= NOW()
+          )
+        )
+    )
+  );
 CREATE POLICY "up ins"  ON underdog_picks FOR INSERT TO authenticated
   WITH CHECK (
     user_id = auth.uid()

@@ -106,6 +106,13 @@ agrega la prueba correspondiente.
    autoría— con el secret `VERCEL_DEPLOY_HOOK` del repo. Si nadie ve sus cambios
    en vivo, revisa primero la pestaña **Actions** de GitHub, no el panel de Vercel.
 
+10. **Una prueba de seguridad que corre como `anon` NO prueba al participante.**
+    `picks read` estuvo en `USING (true)` toda la vida: cualquiera con sesión leía
+    los pronósticos de los otros ~200 antes del kickoff. La prueba que debía
+    cacharlo ("NO puede ver pronósticos ajenos") corría como visitante sin cuenta,
+    y `anon` nunca tuvo permiso — pasaba en verde sin probar nada. Toda política
+    nueva se prueba desde los **dos** roles. Arreglado en `005_privacidad_picks.sql`.
+
 ## Reglas de puntaje (configurables en la tabla `config`)
 
 | Forma | Puntos |

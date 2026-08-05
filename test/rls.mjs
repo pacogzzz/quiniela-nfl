@@ -124,6 +124,39 @@ await login(BETO);
 await allowed('Beto (#50 del corte) SI puede jugar underdog de la semana 2',
   `insert into underdog_picks(user_id,week,opcion) values($1,2,'B')`,[BETO]);
 
+console.log('\n== LOS PRONOSTICOS AJENOS SON SECRETOS HASTA EL KICKOFF ==');
+// Este es el hueco que estuvo abierto hasta 005_privacidad_picks.sql: la
+// politica decia USING (true), asi que cualquier participante CON sesion leia
+// los pronosticos de los otros ~200 antes de que rodara la bola. Con puntos de
+// confianza y dinero de por medio, eso es ventaja directa.
+//
+// No lo cacho nadie porque la unica prueba que existia ("NO puede ver
+// pronosticos ajenos") corria como VISITANTE SIN CUENTA, y anon efectivamente
+// nunca pudo. El caso que faltaba era este: el participante con sesion.
+await db.exec(`RESET ROLE`);
+await q(`update games set kickoff = NOW() + interval '3 days' where id='W01-D01'`);
+await q(`insert into picks(user_id,game_id,ganador,confianza) values($1,'W01-D01','B',7)`,[BETO]);
+
+await login(ANA);
+chk('Ana NO ve el pronostico de Beto antes del kickoff',
+  (await one(`select count(*)::int c from picks where user_id=$1`,[BETO])).c, 0);
+chk('  pero si ve el suyo',
+  (await one(`select count(*)::int c from picks where user_id=$1`,[ANA])).c, 1);
+chk('Ana NO ve el underdog de Beto mientras la semana siga abierta',
+  (await one(`select count(*)::int c from underdog_picks where user_id=$1 and week=2`,[BETO])).c, 0);
+
+await login(ADMIN);
+chk('el admin SI ve los pronosticos de todos (los necesita para operar)',
+  (await one(`select count(*)::int c from picks where user_id=$1`,[BETO])).c, 1);
+
+// Una vez que arranca el partido el pronostico ya no se puede cambiar, asi que
+// destaparlo no da ventaja: es justo la gracia de la quiniela.
+await db.exec(`RESET ROLE`);
+await q(`update games set kickoff = NOW() - interval '1 hour' where id='W01-D01'`);
+await login(ANA);
+chk('Ana SI ve el pronostico de Beto ya que arranco el partido',
+  (await one(`select count(*)::int c from picks where user_id=$1`,[BETO])).c, 1);
+
 console.log('\n== RUTAS LEGITIMAS PARA CAMBIAR ROLES ==');
 await login(ANA);
 await allowed('un jugador SI puede editar su nombre/telefono',
