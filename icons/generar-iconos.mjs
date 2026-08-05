@@ -1,23 +1,23 @@
 /* =====================================================================
-   Genera los iconos de la PWA sin dependencias externas.
-   Son PROVISIONALES: en cuanto tengas el logo real de La Corte en PNG
-   cuadrado (512x512 minimo), reemplaza los archivos y olvidate de esto.
+   Genera los iconos de la PWA a partir del logo real, sin dependencias.
 
      node icons/generar-iconos.mjs
 
-   Escribe icon-192.png, icon-512.png y apple-touch-icon.png.
-   Los iconos son "maskable": fondo a sangre y el balon dentro del 80%
-   central, porque Android e iOS les recortan las esquinas a su manera.
+   Entrada : icons/logo-fuente.png   (el logo de La Corte, vertical)
+   Salida  : icon-192.png · icon-512.png · apple-touch-icon.png
+
+   El logo es vertical y los iconos tienen que ser CUADRADOS, asi que se
+   recorta un cuadro centrado en la corona y el balon (la parte de arriba),
+   dejando fuera el texto de abajo: a 192 px no se alcanzaria a leer y solo
+   ensuciaria el icono.
    ===================================================================== */
-import { deflateSync } from 'node:zlib';
-import { writeFileSync } from 'node:fs';
+import { deflateSync, inflateSync } from 'node:zlib';
+import { readFileSync, writeFileSync } from 'node:fs';
 
-// Paleta tomada de las variables CSS de index.html
-const AZUL   = [1, 51, 105];      // --azul
-const DORADO = [255, 182, 18];    // --dorado
-const BLANCO = [255, 255, 255];
+// Que tanto del alto se salta desde arriba para centrar corona+balon.
+const RECORTE_ARRIBA = 0.08;
 
-// ---------- codificador PNG minimo (RGBA, sin filtros) ----------
+// ---------- CRC32, comun a leer y escribir ----------
 const TABLA_CRC = (() => {
   const t = new Int32Array(256);
   for (let n = 0; n < 256; n++) {
@@ -27,92 +27,124 @@ const TABLA_CRC = (() => {
   }
   return t;
 })();
-
-function crc32(buf) {
+const crc32 = (buf) => {
   let c = -1;
   for (let i = 0; i < buf.length; i++) c = TABLA_CRC[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
   return (c ^ -1) >>> 0;
+};
+
+// ---------- LECTOR PNG (8 bits, RGB o RGBA, sin entrelazar) ----------
+function leerPng(buf) {
+  if (buf.readUInt32BE(0) !== 0x89504e47) throw new Error('no es un PNG');
+  let p = 8, ancho = 0, alto = 0, canales = 0;
+  const trozos = [];
+
+  while (p < buf.length) {
+    const largo = buf.readUInt32BE(p);
+    const tipo = buf.toString('ascii', p + 4, p + 8);
+    const datos = buf.subarray(p + 8, p + 8 + largo);
+    if (tipo === 'IHDR') {
+      ancho = datos.readUInt32BE(0);
+      alto = datos.readUInt32BE(4);
+      const bits = datos[8], tipoColor = datos[9], entrelazado = datos[12];
+      if (bits !== 8) throw new Error(`solo 8 bits por canal (este trae ${bits})`);
+      if (entrelazado !== 0) throw new Error('PNG entrelazado no soportado');
+      if (tipoColor === 2) canales = 3;
+      else if (tipoColor === 6) canales = 4;
+      else throw new Error(`tipo de color ${tipoColor} no soportado (usa RGB o RGBA)`);
+    } else if (tipo === 'IDAT') trozos.push(datos);
+    else if (tipo === 'IEND') break;
+    p += 12 + largo;
+  }
+
+  const crudo = inflateSync(Buffer.concat(trozos));
+  const anchoFila = ancho * canales;
+  const salida = Buffer.alloc(ancho * alto * 4);
+  let previa = Buffer.alloc(anchoFila);
+
+  for (let y = 0; y < alto; y++) {
+    const filtro = crudo[y * (anchoFila + 1)];
+    const fila = Buffer.from(crudo.subarray(y * (anchoFila + 1) + 1, (y + 1) * (anchoFila + 1)));
+    // Deshacer el filtro de la fila (los 5 tipos del estandar PNG)
+    for (let i = 0; i < anchoFila; i++) {
+      const a = i >= canales ? fila[i - canales] : 0;   // pixel de la izquierda
+      const b = previa[i];                              // pixel de arriba
+      const c = i >= canales ? previa[i - canales] : 0; // arriba-izquierda
+      let v = fila[i];
+      if (filtro === 1) v += a;
+      else if (filtro === 2) v += b;
+      else if (filtro === 3) v += (a + b) >> 1;
+      else if (filtro === 4) {
+        const q = a + b - c, pa = Math.abs(q - a), pb = Math.abs(q - b), pc = Math.abs(q - c);
+        v += (pa <= pb && pa <= pc) ? a : (pb <= pc ? b : c);
+      }
+      fila[i] = v & 0xff;
+    }
+    previa = fila;
+    for (let x = 0; x < ancho; x++) {
+      const o = (y * ancho + x) * 4, i = x * canales;
+      salida[o] = fila[i]; salida[o + 1] = fila[i + 1]; salida[o + 2] = fila[i + 2];
+      salida[o + 3] = canales === 4 ? fila[i + 3] : 255;
+    }
+  }
+  return { ancho, alto, pixeles: salida };
 }
 
+// ---------- ESCRITOR PNG ----------
 function chunk(tipo, datos) {
-  const largo = Buffer.alloc(4);
-  largo.writeUInt32BE(datos.length);
+  const largo = Buffer.alloc(4); largo.writeUInt32BE(datos.length);
   const cuerpo = Buffer.concat([Buffer.from(tipo, 'ascii'), datos]);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(cuerpo));
+  const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(cuerpo));
   return Buffer.concat([largo, cuerpo, crc]);
 }
-
-function png(ancho, alto, rgba) {
+function escribirPng(lado, rgba) {
   const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(ancho, 0);
-  ihdr.writeUInt32BE(alto, 4);
-  ihdr[8] = 8;   // bits por canal
-  ihdr[9] = 6;   // RGBA
-  // filas con byte de filtro 0 al inicio
-  const crudo = Buffer.alloc(alto * (ancho * 4 + 1));
-  for (let y = 0; y < alto; y++) {
-    crudo[y * (ancho * 4 + 1)] = 0;
-    rgba.copy(crudo, y * (ancho * 4 + 1) + 1, y * ancho * 4, (y + 1) * ancho * 4);
+  ihdr.writeUInt32BE(lado, 0); ihdr.writeUInt32BE(lado, 4);
+  ihdr[8] = 8; ihdr[9] = 6;
+  const crudo = Buffer.alloc(lado * (lado * 4 + 1));
+  for (let y = 0; y < lado; y++) {
+    crudo[y * (lado * 4 + 1)] = 0;
+    rgba.copy(crudo, y * (lado * 4 + 1) + 1, y * lado * 4, (y + 1) * lado * 4);
   }
   return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk('IHDR', ihdr),
-    chunk('IDAT', deflateSync(crudo, { level: 9 })),
-    chunk('IEND', Buffer.alloc(0)),
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x08 + 2]),
+    chunk('IHDR', ihdr), chunk('IDAT', deflateSync(crudo, { level: 9 })), chunk('IEND', Buffer.alloc(0)),
   ]);
 }
 
-// ---------- dibujo ----------
-// Todo en coordenadas normalizadas (-0.5 .. 0.5) para que sea independiente
-// del tamano. Se muestrea 4x4 por pixel para que los bordes salgan suaves.
-const MUESTRAS = 4;
-const ANGULO = -Math.PI / 9;   // balon ligeramente inclinado
-const COS = Math.cos(-ANGULO), SIN = Math.sin(-ANGULO);
-const EJE_LARGO = 0.30, EJE_CORTO = 0.185;
+// ---------- Recortar cuadrado y reescalar promediando ----------
+function iconoDe(src, lado) {
+  const cuadro = Math.min(src.ancho, src.alto);
+  const x0 = Math.round((src.ancho - cuadro) / 2);
+  const y0 = Math.min(Math.round(src.alto * RECORTE_ARRIBA), src.alto - cuadro);
+  const paso = cuadro / lado;
+  const out = Buffer.alloc(lado * lado * 4);
 
-function colorEn(nx, ny) {
-  // rotar al sistema del balon
-  const bx = nx * COS - ny * SIN;
-  const by = nx * SIN + ny * COS;
-  const dentro = (bx / EJE_LARGO) ** 2 + (by / EJE_CORTO) ** 2 <= 1;
-  if (!dentro) return AZUL;
-
-  // costura central + agujetas, en blanco
-  const costura = Math.abs(by) < 0.011 && Math.abs(bx) < 0.155;
-  let agujeta = false;
-  for (const cx of [-0.093, -0.031, 0.031, 0.093]) {
-    if (Math.abs(bx - cx) < 0.011 && Math.abs(by) < 0.048) agujeta = true;
-  }
-  return costura || agujeta ? BLANCO : DORADO;
-}
-
-function generar(tam) {
-  const rgba = Buffer.alloc(tam * tam * 4);
-  const paso = 1 / (tam * MUESTRAS);
-  for (let y = 0; y < tam; y++) {
-    for (let x = 0; x < tam; x++) {
-      let r = 0, g = 0, b = 0;
-      for (let sy = 0; sy < MUESTRAS; sy++) {
-        for (let sx = 0; sx < MUESTRAS; sx++) {
-          const nx = (x + (sx + 0.5) / MUESTRAS) / tam - 0.5;
-          const ny = (y + (sy + 0.5) / MUESTRAS) / tam - 0.5;
-          const c = colorEn(nx, ny);
-          r += c[0]; g += c[1]; b += c[2];
+  for (let y = 0; y < lado; y++) {
+    for (let x = 0; x < lado; x++) {
+      // Promedia el bloque de origen: reescalar tomando un solo pixel
+      // deja los bordes dentados y el logo tiene mucho detalle fino.
+      const sx0 = x0 + Math.floor(x * paso), sx1 = x0 + Math.floor((x + 1) * paso);
+      const sy0 = y0 + Math.floor(y * paso), sy1 = y0 + Math.floor((y + 1) * paso);
+      let r = 0, g = 0, b = 0, n = 0;
+      for (let sy = sy0; sy < sy1; sy++) {
+        for (let sx = sx0; sx < sx1; sx++) {
+          const o = (sy * src.ancho + sx) * 4;
+          r += src.pixeles[o]; g += src.pixeles[o + 1]; b += src.pixeles[o + 2]; n++;
         }
       }
-      const n = MUESTRAS * MUESTRAS, i = (y * tam + x) * 4;
-      rgba[i]     = Math.round(r / n);
-      rgba[i + 1] = Math.round(g / n);
-      rgba[i + 2] = Math.round(b / n);
-      rgba[i + 3] = 255;
+      const o = (y * lado + x) * 4;
+      out[o] = Math.round(r / n); out[o + 1] = Math.round(g / n);
+      out[o + 2] = Math.round(b / n); out[o + 3] = 255;
     }
   }
-  return png(tam, tam, rgba);
+  return escribirPng(lado, out);
 }
 
 const base = new URL('.', import.meta.url);
-for (const [archivo, tam] of [['icon-192.png', 192], ['icon-512.png', 512], ['apple-touch-icon.png', 180]]) {
-  writeFileSync(new URL(archivo, base), generar(tam));
-  console.log(`  ${archivo}  ${tam}x${tam}`);
+const src = leerPng(readFileSync(new URL('logo-fuente.png', base)));
+console.log(`logo de origen: ${src.ancho}x${src.alto}`);
+for (const [archivo, lado] of [['icon-192.png', 192], ['icon-512.png', 512], ['apple-touch-icon.png', 180]]) {
+  writeFileSync(new URL(archivo, base), iconoDe(src, lado));
+  console.log(`  ${archivo}  ${lado}x${lado}`);
 }

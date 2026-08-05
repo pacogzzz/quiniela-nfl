@@ -320,10 +320,11 @@ td.pts{color:var(--dorado);font-weight:900}
 #install-sheet{position:fixed;left:0;right:0;bottom:0;z-index:1500;background:linear-gradient(180deg,var(--acero2) 0%,#0a1520 100%);border-top:3px solid var(--dorado);box-shadow:0 -8px 30px rgba(0,0,0,.75);padding:1rem 1rem 1.3rem;transform:translateY(115%);transition:transform .35s ease;max-height:88vh;overflow-y:auto}
 #install-sheet.show{transform:translateY(0)}
 #install-sheet h3{color:var(--dorado);font-size:1.05rem;margin-bottom:.15rem}
-.inst-top{display:flex;align-items:center;gap:.7rem;margin-bottom:.6rem}
-.inst-top img{width:46px;height:46px;border-radius:10px;flex:none}
+.inst-top{display:flex;align-items:center;gap:.75rem;margin-bottom:.7rem}
+.inst-top img{width:58px;height:58px;border-radius:12px;flex:none;border:2px solid var(--dorado)}
 .inst-cerrar{position:absolute;top:.5rem;right:.6rem;font-size:1.3rem;color:var(--plata);line-height:1;padding:.2rem .4rem}
-.inst-premio{background:rgba(255,182,18,.13);border:1px solid var(--dorado);border-radius:8px;padding:.5rem .7rem;margin-bottom:.7rem;font-size:.85rem;font-weight:700;color:var(--dorado);text-align:center}
+.inst-premio{background:rgba(255,182,18,.13);border:2px solid var(--dorado);border-radius:10px;padding:.75rem;margin-bottom:.55rem;font-size:2rem;font-weight:900;letter-spacing:1px;color:var(--dorado);text-align:center;line-height:1}
+.inst-pie{text-align:center;font-size:.9rem;font-weight:700;margin-bottom:.7rem}
 .inst-pasos{list-style:none;counter-reset:p;margin:.2rem 0 .8rem}
 .inst-pasos li{counter-increment:p;position:relative;padding:.3rem 0 .3rem 1.9rem;font-size:.87rem;line-height:1.35}
 .inst-pasos li::before{content:counter(p);position:absolute;left:0;top:.35rem;width:1.35rem;height:1.35rem;border-radius:50%;background:var(--azul-claro);color:#fff;font-size:.72rem;font-weight:700;display:grid;place-items:center}
@@ -678,15 +679,15 @@ td.pts{color:var(--dorado);font-weight:900}
 <div id="install-sheet">
   <button class="inst-cerrar" onclick="posponerInstalacion()" aria-label="Cerrar">✕</button>
   <div class="inst-top">
-    <img src="/icons/icon-192.png" alt="" />
+    <img src="/icons/icon-192.png" alt="Quiniela NFL La Corte" />
     <div>
-      <h3 id="inst-titulo">INSTALA LA APP</h3>
-      <div class="small muted" id="inst-sub">Para que no se te pase ninguna semana</div>
+      <h3 id="inst-titulo">INICIA LA QUINIELA GANANDO</h3>
+      <div class="small muted" id="inst-sub">Descarga la quiniela y hazla aplicación</div>
     </div>
   </div>
   <div class="inst-premio" id="inst-premio"></div>
   <div id="inst-cuerpo"></div>
-  <button class="btn-primary" id="inst-accion" style="display:none;width:100%" onclick="instalarAhora()">📲 INSTALAR</button>
+  <button class="btn-primary" id="inst-accion" style="display:none;width:100%" onclick="instalarAhora()">INSTALAR</button>
   <button class="small muted" style="display:block;margin:.6rem auto 0;text-decoration:underline" onclick="posponerInstalacion()">Ahora no</button>
 </div>
 
@@ -2240,7 +2241,7 @@ function pintarInstalacion(){
   const accion = document.getElementById('inst-accion');
   accion.style.display = 'none';
   premio.style.display = '';
-  premio.textContent = `🎁 +${cfgInt('pts_bono_instalacion',25)} puntos de regalo al instalarla`;
+  premio.textContent = `${cfgInt('pts_bono_instalacion',25)} Pts`;
 
   if(enNavegadorInterno()){
     titulo.textContent = 'ÁBRELA EN TU NAVEGADOR';
@@ -2260,9 +2261,11 @@ function pintarInstalacion(){
     return;
   }
 
-  titulo.textContent = 'INSTALA LA APP';
-  sub.textContent = 'Para que no se te pase ninguna semana';
+  titulo.textContent = 'INICIA LA QUINIELA GANANDO';
+  sub.textContent = 'Descarga la quiniela y hazla aplicación';
 
+  // En iPhone NO existe forma de instalar por codigo: Apple obliga a hacerlo
+  // a mano desde Safari. Por eso ahi van los pasos en vez del boton.
   if(esIOS()){
     cuerpo.innerHTML = `<ul class="inst-pasos">
         <li>Toca <b>Compartir</b> <span class="inst-tecla">⬆</span>, abajo al centro.</li>
@@ -2274,7 +2277,7 @@ function pintarInstalacion(){
   }
 
   if(promptInstalacion){
-    cuerpo.innerHTML = `<p class="small" style="margin-bottom:.6rem">Un toque y queda en tu pantalla de inicio, como cualquier otra app.</p>`;
+    cuerpo.innerHTML = `<p class="inst-pie">Presiona el botón y listo</p>`;
     accion.style.display = '';
     return;
   }
