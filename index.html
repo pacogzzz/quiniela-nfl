@@ -79,6 +79,7 @@ a{color:inherit;text-decoration:none}
   display:flex;align-items:center;gap:.4rem;
 }
 .user-pill button{color:#ff9d9d;font-size:.75rem;margin-left:.3rem}
+.btn-instalar-hdr{background:var(--dorado);color:#1a1206;font-weight:800;font-size:.78rem;padding:.4rem .7rem;border-radius:99px;white-space:nowrap}
 
 /* ========= NAV ========= */
 #nav{background:#05090d;border-bottom:2px solid var(--dorado);position:sticky;top:63px;z-index:99;overflow-x:auto}
@@ -443,10 +444,16 @@ td.pts{color:var(--dorado);font-weight:900}
         <div class="logo-sub">EN LA CORTE · 2026-27</div>
       </div>
     </div>
-    <div class="user-pill" id="user-pill" style="display:none">
-      <span>👤</span>
-      <span id="user-name">Usuario</span>
-      <button onclick="cerrarSesion()">salir</button>
+    <div style="display:flex;align-items:center;gap:.5rem">
+      <!-- Salida permanente para instalar: sin esto, quien cierra la tarjeta
+           se queda 7 dias sin poder hacerlo. Se oculta solo si ya la instaló. -->
+      <button class="btn-instalar-hdr" id="btn-instalar-hdr" style="display:none"
+              onclick="abrirInstalacion()">📲 Instalar</button>
+      <div class="user-pill" id="user-pill" style="display:none">
+        <span>👤</span>
+        <span id="user-name">Usuario</span>
+        <button onclick="cerrarSesion()">salir</button>
+      </div>
     </div>
   </div>
 </header>
@@ -954,6 +961,7 @@ async function initApp(){
       document.getElementById('user-pill').style.display='none';
       document.getElementById('tab-admin').style.display='none';
       document.getElementById('registro').classList.remove('hidden');
+      actualizarBotonInstalar();
       volverRegistro();
     }
     if(event==='PASSWORD_RECOVERY'){
@@ -1199,6 +1207,7 @@ function mostrarApp(){
   document.getElementById('user-name').innerHTML =
     esc(sbProfile?.nombre || sbUser?.email || '') + badge;
   renderAll();
+  actualizarBotonInstalar();
   // Si ya la trae instalada, que cobre su bono sin tener que hacer nada.
   revisarBonoInstalacion();
   // Y si no la tiene, la invitacion con los 25 puntos es lo PRIMERO que ve
@@ -2230,6 +2239,7 @@ window.addEventListener('beforeinstallprompt', e=>{
 window.addEventListener('appinstalled', ()=>{
   promptInstalacion = null;
   ocultarInstalacion();
+  actualizarBotonInstalar();
   revisarBonoInstalacion();
 });
 
@@ -2299,6 +2309,21 @@ function mostrarInstalacion(){
 
 function ocultarInstalacion(){
   document.getElementById('install-sheet').classList.remove('show');
+}
+
+// Abrir a peticion del usuario, desde el boton del header. A diferencia de
+// mostrarInstalacion(), IGNORA el "Ahora no" de 7 dias: aqui la esta pidiendo
+// el, no se la estamos empujando nosotros.
+function abrirInstalacion(){
+  if(appInstalada()){ toast('Ya tienes la app instalada'); return; }
+  pintarInstalacion();
+  document.getElementById('install-sheet').classList.add('show');
+}
+
+// El boton del header solo tiene sentido si hay sesion y aun no la instala.
+function actualizarBotonInstalar(){
+  const b = document.getElementById('btn-instalar-hdr');
+  if(b) b.style.display = (sbUser && !appInstalada()) ? '' : 'none';
 }
 
 function posponerInstalacion(){
