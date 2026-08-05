@@ -1,0 +1,45 @@
+# Despliega a Vercel cuando alguien hace push a main.
+#
+# ¿Por qué existe esto y no basta la integración normal de Vercel con GitHub?
+# Porque Vercel en plan Hobby sólo despliega commits cuyo autor de GitHub esté
+# ligado a la cuenta de Vercel dueña del proyecto. Los push de un colaborador
+# quedan bloqueados aunque GitHub sí le permita escribir en el repo.
+#
+# Un Deploy Hook no revisa autoría: es una URL secreta que dispara el
+# despliegue de la rama. Así cualquier colaborador despliega con sólo hacer
+# push, sin cuenta de Vercel y sin pagar Pro.
+#
+# CONFIGURACIÓN (una sola vez, la hace el dueño del proyecto en Vercel):
+#
+#   1. Vercel -> Proyecto quiniela-nfl -> Settings -> Git -> Deploy Hooks
+#      Crear uno:  nombre "main",  rama "main".  Copiar la URL que genera.
+#      Se ve así:  https://api.vercel.com/v1/integrations/deploy/prj_XXXX/YYYY
+#
+#   2. GitHub -> repo -> Settings -> Secrets and variables -> Actions
+#      -> New repository secret
+#      Nombre: VERCEL_DEPLOY_HOOK      Valor: la URL del paso 1
+#
+# Esa URL es una llave: quien la tenga puede disparar despliegues. Por eso vive
+# en los Secrets de GitHub y NUNCA se escribe en el repo.
+
+name: Desplegar a Vercel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # permite dispararlo a mano desde la pestaña Actions
+
+jobs:
+  desplegar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar el Deploy Hook de Vercel
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::Falta el secret VERCEL_DEPLOY_HOOK. Ver las instrucciones al inicio de este archivo."
+            exit 1
+          fi
+          curl -fsS -X POST "$HOOK"
+          echo "Despliegue solicitado. Vercel tarda ~1 min en publicarlo."
