@@ -195,10 +195,84 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
 .capi .f{font-size:.72rem;color:var(--gris);font-style:italic}
 
 /* ====== TARJETAS EXTRA (underdog → folio → premios, siempre en vertical) ====== */
-/* En móvil el <aside> va al final del flujo; en escritorio, bajo el perfil. */
+/* Orden pedido: perfil → Capi → extras. En móvil, todo esto ANTES de los partidos. */
 .layout{display:flex;flex-direction:column;gap:1rem}
-.layout > aside{order:2}
 .extras{display:grid;gap:.9rem;grid-template-columns:1fr}
+
+/* ====== VISTAS (pestañas) ====== */
+.vista{display:none}
+.vista.act{display:block;animation:aparece .25s ease}
+@keyframes aparece{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ====== GRUPOS ====== */
+.conf-tog{display:flex;gap:.5rem;margin-bottom:1.1rem}
+.conf-tog button{
+  flex:1;padding:.55rem;border-radius:10px;cursor:pointer;font-family:inherit;
+  background:var(--navy);border:1px solid transparent;color:#c8d6ea;font-weight:700;font-size:.75rem;
+}
+.conf-tog button.on{background:linear-gradient(160deg,#3a2f10,#2a230d);border-color:var(--oro);color:var(--oro2)}
+.divs{display:grid;gap:.9rem;grid-template-columns:1fr}
+.division{padding:1rem}
+.division h4{font-size:.68rem;color:var(--oro2);letter-spacing:.16em;text-transform:uppercase;margin-bottom:.3rem}
+.eq-row{display:flex;align-items:center;gap:.6rem;font-size:.8rem;padding:.5rem 0;border-top:1px solid var(--line)}
+.eq-row .logo{width:26px;height:26px;font-size:.55rem}
+.eq-row .rec{margin-left:auto;color:var(--gris);font-variant-numeric:tabular-nums}
+
+/* ====== CALENDARIO ====== */
+.filtros{display:flex;gap:.5rem;overflow-x:auto;padding-bottom:.4rem;margin-bottom:1rem;scrollbar-width:none}
+.filtros::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto;border:1px solid var(--line);border-radius:999px;background:var(--card);
+  padding:.45rem 1rem;font-size:.68rem;color:var(--gris);font-weight:600;cursor:pointer;font-family:inherit;
+}
+.chip.on{border-color:var(--oro);color:var(--oro2)}
+.dia{font-size:.65rem;color:var(--gris);letter-spacing:.18em;text-transform:uppercase;font-weight:700;margin:1.1rem 0 .5rem}
+.cal-row{display:flex;align-items:center;gap:.7rem;padding:.8rem 1rem;margin-bottom:.6rem;font-size:.82rem}
+.cal-row .logo{width:30px;height:30px;font-size:.58rem}
+.cal-row .at{color:var(--gris);font-size:.7rem}
+.cal-row .meta{margin-left:auto;text-align:right;line-height:1.3}
+.cal-row .hora{font-weight:700}
+.cal-row .slot{display:block;font-size:.62rem;color:var(--gris)}
+
+/* ====== RANKING ====== */
+.rk{display:flex;align-items:center;gap:.8rem;padding:.7rem 1rem;margin-bottom:.5rem}
+.rk .pos{font-family:'Bebas Neue';font-size:1.25rem;width:2rem;color:var(--gris);text-align:center}
+.rk.top3 .pos{color:var(--oro2);font-size:1.5rem}
+.rk .quien b{display:block;font-size:.85rem}
+.rk .quien span{font-size:.65rem;color:var(--gris)}
+.rk .pts{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
+.rk.yo{border-color:var(--oro);box-shadow:0 0 0 1px var(--oro) inset}
+.rk.yo .pts{color:var(--oro2)}
+.corte{
+  text-align:center;font-size:.62rem;color:var(--lila);letter-spacing:.2em;
+  text-transform:uppercase;font-weight:700;margin:.9rem 0;
+  display:flex;align-items:center;gap:.8rem;
+}
+.corte::before,.corte::after{content:'';flex:1;height:1px;background:rgba(176,124,232,.3)}
+
+/* ====== HISTORIAL ====== */
+.hist{padding:1.1rem;margin-bottom:.9rem}
+.hist .anio{font-size:.62rem;color:var(--gris);letter-spacing:.18em;text-transform:uppercase;font-weight:700}
+.hist h4{font-size:1.2rem;margin:.2rem 0 .3rem}
+.hist p{font-size:.78rem;color:var(--gris);margin-bottom:.7rem}
+.hist .campeon{color:var(--oro2);font-weight:600}
+
+/* ====== PREMIOS ====== */
+.premio-hero{text-align:center;padding:1.4rem 1rem;margin-bottom:1rem}
+.premio-hero .pos-act{color:var(--oro2);font-weight:700;font-size:.85rem;margin-top:.5rem}
+.podio{display:grid;gap:.9rem;grid-template-columns:1fr;margin-bottom:1rem}
+.premio{padding:1.1rem;text-align:center}
+.premio .lugar{font-family:'Bebas Neue';font-size:1.6rem;color:var(--oro2)}
+.premio .que{font-size:.95rem;font-weight:700;margin:.25rem 0}
+.premio p{font-size:.72rem;color:var(--gris)}
+.resto{display:grid;gap:.7rem;grid-template-columns:repeat(2,1fr)}
+.resto .premio .lugar{font-size:1.15rem;color:var(--txt)}
+.todos-ganan{
+  text-align:center;padding:1.3rem;margin-top:1.1rem;
+  border:1px dashed var(--oro);border-radius:var(--radius);
+}
+.todos-ganan h4{color:var(--oro2);font-size:1.3rem;margin-bottom:.4rem}
+.todos-ganan p{font-size:.78rem;color:var(--gris);line-height:1.55}
 .extra{padding:1rem}
 .extra .t{display:flex;align-items:center;gap:.5rem;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 .extra p{font-size:.78rem;color:var(--gris);margin:.45rem 0 .7rem;line-height:1.5}
@@ -220,10 +294,12 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
   nav.tabs a.on::after{display:none}
   nav.tabs a.on{border-bottom:2px solid var(--oro);border-radius:0;padding-bottom:.4rem}
   .layout{display:grid;grid-template-columns:250px 1fr;gap:1.4rem;align-items:start}
-  .layout > aside{order:0}
   .solo-desktop{display:block}
   .extras{margin-top:1rem}
   .perfil{padding:1.3rem;text-align:center}
+  .divs{grid-template-columns:repeat(2,1fr)}
+  .podio{grid-template-columns:repeat(3,1fr)}
+  .resto{grid-template-columns:repeat(4,1fr)}
   .perfil .crown{width:70px;height:70px;font-size:2rem;margin:0 auto .8rem}
   .perfil h3{font-size:1.4rem;margin-bottom:.8rem}
   .perfil ul{list-style:none;text-align:left}
@@ -248,12 +324,12 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
 </header>
 
 <nav class="tabs">
-  <a href="#"><span class="i">👥</span>Grupos</a>
-  <a href="#"><span class="i">📅</span>Calendario</a>
-  <a href="#" class="on"><span class="i">🏈</span>Quiniela</a>
-  <a href="#"><span class="i">🏆</span>Ranking</a>
-  <a href="#"><span class="i">🕐</span>Historial</a>
-  <a href="#"><span class="i">🎁</span>Premios</a>
+  <a href="#" data-v="grupos"><span class="i">🏟️</span>Grupos</a>
+  <a href="#" data-v="calendario"><span class="i">📅</span>Calendario</a>
+  <a href="#" class="on" data-v="quiniela"><span class="i">🏈</span>Quiniela</a>
+  <a href="#" data-v="ranking"><span class="i">🏆</span>Ranking</a>
+  <a href="#" data-v="historial"><span class="i">📜</span>Historial</a>
+  <a href="#" data-v="premios"><span class="i">🎁</span>Premios</a>
 </nav>
 
 <main>
@@ -275,7 +351,16 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
       </ul>
     </div>
 
-    <!-- Orden pedido: underdog → folio → premios, en vertical -->
+    <!-- Orden pedido: perfil → Capi → underdog → folio → premios -->
+    <div class="card capi">
+      <div class="foto">🐵</div>
+      <div>
+        <div class="t">Mensaje del Capi</div>
+        <p>"Esta semana vienen varios partidos cerrados. Aprovecha tu confianza, pero elige con cabeza."</p>
+        <div class="f">— El Capi</div>
+      </div>
+    </div>
+
     <div class="extras">
       <div class="card extra underdog">
         <div class="t">🦄 Underdog de la semana</div>
@@ -296,6 +381,8 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
   </aside>
 
   <div>
+    <!-- ================== QUINIELA (vista por defecto) ================== -->
+    <section class="vista act" id="v-quiniela">
     <div class="titulo">
       <h2 class="display">MI QUINIELA</h2>
       <span class="chip-semana">Semana 1 · Jue 10 – Lun 14 Sep</span>
@@ -366,15 +453,145 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
     </div>
 
     <button class="guardar display">👑 &nbsp;GUARDAR QUINIELA</button>
+    </section>
 
-    <div class="card capi">
-      <div class="foto">🐵</div>
-      <div>
-        <div class="t">Mensaje del Capi</div>
-        <p>"Esta semana vienen varios partidos cerrados. Aprovecha tu confianza, pero elige con cabeza."</p>
-        <div class="f">— El Capi</div>
+    <!-- ================== GRUPOS ================== -->
+    <section class="vista" id="v-grupos">
+      <div class="titulo"><h2 class="display">CONFERENCIAS</h2></div>
+      <p class="sub">32 equipos · 2 conferencias · 8 divisiones · récord al día con los resultados.</p>
+      <div class="conf-tog">
+        <button class="on">AFC</button><button>NFC</button><button>TODOS</button>
       </div>
-    </div>
+      <div class="divs">
+        <div class="card division">
+          <h4>AFC Este</h4>
+          <div class="eq-row"><div class="logo" style="background:#00338D">BUF</div>Bills<span class="rec">0-0</span></div>
+          <div class="eq-row"><div class="logo" style="background:#008E97">MIA</div>Dolphins<span class="rec">0-0</span></div>
+          <div class="eq-row"><div class="logo" style="background:#002244">NE</div>Patriots<span class="rec">0-0</span></div>
+          <div class="eq-row"><div class="logo" style="background:#125740">NYJ</div>Jets<span class="rec">0-0</span></div>
+        </div>
+        <div class="card division">
+          <h4>AFC Norte</h4>
+          <div class="eq-row"><div class="logo" style="background:#241773">BAL</div>Ravens<span class="rec">0-0</span></div>
+          <div class="eq-row"><div class="logo" style="background:#FB4F14">CIN</div>Bengals<span class="rec">0-0</span></div>
+          <div class="eq-row"><div class="logo" style="background:#311D00">CLE</div>Browns<span class="rec">0-0</span></div>
+          <div class="eq-row"><div class="logo" style="background:#FFB612;color:#101820">PIT</div>Steelers<span class="rec">0-0</span></div>
+        </div>
+        <div class="card division">
+          <h4>AFC Sur</h4>
+          <div class="eq-row"><div class="logo" style="background:#03202F">HOU</div>Texans<span class="rec">0-0</span></div>
+          <div class="eq-row"><div class="logo" style="background:#002C5F">IND</div>Colts<span class="rec">0-0</span></div>
+          <div class="eq-row"><div class="logo" style="background:#006778">JAX</div>Jaguars<span class="rec">0-0</span></div>
+          <div class="eq-row"><div class="logo" style="background:#0C2340">TEN</div>Titans<span class="rec">0-0</span></div>
+        </div>
+        <div class="card division">
+          <h4>AFC Oeste</h4>
+          <div class="eq-row"><div class="logo" style="background:#FB4F14">DEN</div>Broncos<span class="rec">0-0</span></div>
+          <div class="eq-row"><div class="logo" style="background:#E31837">KC</div>Chiefs<span class="rec">0-0</span></div>
+          <div class="eq-row"><div class="logo" style="background:#000">LV</div>Raiders<span class="rec">0-0</span></div>
+          <div class="eq-row"><div class="logo" style="background:#0080C6">LAC</div>Chargers<span class="rec">0-0</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================== CALENDARIO ================== -->
+    <section class="vista" id="v-calendario">
+      <div class="titulo"><h2 class="display">CALENDARIO</h2><span class="chip-semana">NFL 2026-27</span></div>
+      <p class="sub">Filtra por semana, equipo u horario.</p>
+      <div class="filtros">
+        <button class="chip on">Semana 1</button>
+        <button class="chip">Todas</button>
+        <button class="chip">TNF</button>
+        <button class="chip">Domingo</button>
+        <button class="chip">SNF</button>
+        <button class="chip">MNF</button>
+        <button class="chip">Extraordinarios</button>
+      </div>
+      <div class="dia">Jueves 10 · Septiembre</div>
+      <div class="card cal-row">
+        <div class="logo" style="background:#00338D">BUF</div><span class="at">en</span>
+        <div class="logo" style="background:#241773">BAL</div>Bills · Ravens
+        <div class="meta"><span class="hora">19:15</span><span class="slot">TNF ⭐</span></div>
+      </div>
+      <div class="dia">Domingo 13 · Septiembre</div>
+      <div class="card cal-row">
+        <div class="logo" style="background:#E31837">KC</div><span class="at">en</span>
+        <div class="logo" style="background:#0080C6">LAC</div>Chiefs · Chargers
+        <div class="meta"><span class="hora">12:00</span><span class="slot">Domingo</span></div>
+      </div>
+      <div class="card cal-row">
+        <div class="logo" style="background:#041E42">DAL</div><span class="at">en</span>
+        <div class="logo" style="background:#0B2265">NYG</div>Cowboys · Giants
+        <div class="meta"><span class="hora">15:25</span><span class="slot">Domingo tarde</span></div>
+      </div>
+      <div class="card cal-row">
+        <div class="logo" style="background:#AA0000">SF</div><span class="at">en</span>
+        <div class="logo" style="background:#002244">SEA</div>49ers · Seahawks
+        <div class="meta"><span class="hora">19:20</span><span class="slot">SNF ⭐</span></div>
+      </div>
+      <div class="dia">Lunes 14 · Septiembre</div>
+      <div class="card cal-row">
+        <div class="logo" style="background:#203731">GB</div><span class="at">en</span>
+        <div class="logo" style="background:#4F2683">MIN</div>Packers · Vikings
+        <div class="meta"><span class="hora">19:15</span><span class="slot">MNF</span></div>
+      </div>
+    </section>
+
+    <!-- ================== RANKING ================== -->
+    <section class="vista" id="v-ranking">
+      <div class="titulo"><h2 class="display">RANKING GENERAL</h2></div>
+      <p class="sub">Clasificación en tiempo real · el corte del lunes define quién juega el Underdog.</p>
+      <div class="card rk top3"><div class="pos">1</div><div class="quien"><b>María G.</b><span>racha de 4 ✔</span></div><div class="pts">1,310</div></div>
+      <div class="card rk top3"><div class="pos">2</div><div class="quien"><b>Carlos R.</b></div><div class="pts">1,287</div></div>
+      <div class="card rk top3 yo"><div class="pos">3</div><div class="quien"><b>Juan Pérez</b><span>tú</span></div><div class="pts">1,245</div></div>
+      <div class="card rk"><div class="pos">4</div><div class="quien"><b>Sofía M.</b></div><div class="pts">1,201</div></div>
+      <div class="card rk"><div class="pos">5</div><div class="quien"><b>Alejandro T.</b></div><div class="pts">1,188</div></div>
+      <div class="card rk"><div class="pos">10</div><div class="quien"><b>Regina V.</b></div><div class="pts">1,092</div></div>
+      <div class="corte">🦄 corte · del 11 en adelante juegan underdog</div>
+      <div class="card rk"><div class="pos">11</div><div class="quien"><b>Fernando L.</b></div><div class="pts">1,077</div></div>
+      <div class="card rk"><div class="pos">12</div><div class="quien"><b>Paty D.</b></div><div class="pts">1,060</div></div>
+    </section>
+
+    <!-- ================== HISTORIAL ================== -->
+    <section class="vista" id="v-historial">
+      <div class="titulo"><h2 class="display">HISTORIAL</h2></div>
+      <p class="sub">Todas las quinielas que ha organizado La Corte.</p>
+      <div class="card hist">
+        <div class="anio">2026</div>
+        <h4 class="display">QUINIELA MUNDIAL 2026</h4>
+        <p>64 partidos · 180 participantes · <span class="campeon">🏆 Campeón: Roberto C.</span></p>
+        <button class="chip on">🔗 Ver quiniela</button>
+      </div>
+      <div class="card hist" style="opacity:.65">
+        <div class="anio">En curso</div>
+        <h4 class="display">QUINIELA NFL 2026-27</h4>
+        <p>Semana 1 de 23 · ~200 participantes · La que estás jugando ahora.</p>
+      </div>
+    </section>
+
+    <!-- ================== PREMIOS ================== -->
+    <section class="vista" id="v-premios">
+      <div class="titulo"><h2 class="display">LOS 10 GRANDES PREMIOS</h2></div>
+      <div class="card premio-hero">
+        <p class="sub" style="margin:0">Temporada NFL 2026-27 · La Corte</p>
+        <div class="pos-act">Vas en la posición #3 🔥</div>
+      </div>
+      <div class="podio">
+        <div class="card premio"><div class="lugar">1er lugar</div><div class="que">📺 Pantalla 85"</div><p>El premio mayor de la temporada</p></div>
+        <div class="card premio"><div class="lugar">2do lugar</div><div class="que">🍔 52 hamburguesas</div><p>Una por semana, todo un año</p></div>
+        <div class="card premio"><div class="lugar">3er lugar</div><div class="que">🥂 Consumo en la final</div><p>Mesa pagada para el Super Bowl</p></div>
+      </div>
+      <div class="resto">
+        <div class="card premio"><div class="lugar">4°</div><div class="que">🎁 Premio</div></div>
+        <div class="card premio"><div class="lugar">5°</div><div class="que">🎁 Premio</div></div>
+        <div class="card premio"><div class="lugar">6°–8°</div><div class="que">🎁 Premio</div></div>
+        <div class="card premio"><div class="lugar">9°–10°</div><div class="que">🎁 Premio</div></div>
+      </div>
+      <div class="todos-ganan">
+        <h4 class="display">🔥 ¡TODOS PUEDEN GANAR!</h4>
+        <p>Reparte tus puntos de confianza cada semana, acierta el primer anotador de los estelares, canjea tus folios de consumo y — si vienes abajo del top 10 — aprovecha el multiplicador Underdog.</p>
+      </div>
+    </section>
 
   </div>
 
@@ -383,6 +600,22 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
 
 <script>
 // Interactividad mínima para que el preview "se sienta": nada de esto toca datos.
+// Cambio de pestaña
+document.querySelectorAll('nav.tabs a').forEach(a=>a.onclick=e=>{
+  e.preventDefault();
+  document.querySelectorAll('nav.tabs a').forEach(x=>x.classList.remove('on'));
+  a.classList.add('on');
+  document.querySelectorAll('.vista').forEach(v=>v.classList.remove('act'));
+  document.getElementById('v-'+a.dataset.v).classList.add('act');
+  window.scrollTo({top:0});
+});
+// Toggle AFC/NFC/TODOS y chips del calendario (solo visual)
+document.querySelectorAll('.conf-tog, .filtros').forEach(g=>{
+  g.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    g.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+  });
+});
 // Selectores A/B
 document.querySelectorAll('.seg').forEach(seg=>{
   seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
