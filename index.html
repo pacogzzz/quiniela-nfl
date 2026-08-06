@@ -101,7 +101,11 @@ img{max-width:100%}
   max-width:1240px;margin:0 auto;
   display:flex;align-items:center;justify-content:space-between;gap:.75rem;
 }
-.logo{display:flex;align-items:center;gap:.65rem;min-width:0}
+/* min-width:0 en los dos niveles: sin eso el texto no se deja encoger y
+   empuja al botón de instalar encima de la marca (se veía en un iPhone mini). */
+.logo{display:flex;align-items:center;gap:.65rem;min-width:0;flex:1 1 auto}
+.logo > div{min-width:0;overflow:hidden}
+.logo-title,.logo-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .logo-crown{
   width:42px;height:42px;flex:none;border-radius:50%;
   display:grid;place-items:center;font-size:1.25rem;
@@ -137,9 +141,10 @@ img{max-width:100%}
 .btn-instalar-hdr{
   background:linear-gradient(160deg,var(--oro2),var(--oro));color:#141004;
   font-weight:800;font-size:.72rem;letter-spacing:.04em;
-  padding:.45rem .8rem;border-radius:999px;white-space:nowrap;
+  padding:.45rem .8rem;border-radius:999px;white-space:nowrap;flex:none;
   box-shadow:0 4px 16px rgba(212,175,55,.28);
 }
+.btn-instalar-hdr .txt{margin-left:.25rem}
 
 /* ========= NAV: barra inferior en celular, pestañas arriba en escritorio ========= */
 #nav{
@@ -405,6 +410,10 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 }
 .perfil-lista li b{margin-left:auto;color:var(--txt);font-weight:700;font-variant-numeric:tabular-nums}
 .perfil-lista li b.oro{color:var(--oro2)}
+/* Renglón que invita a instalar: solo aparece si los 25 puntos siguen sin
+   cobrarse, y desaparece solo en cuanto entran. */
+.perfil-nudge{cursor:pointer;color:var(--oro2)!important}
+.perfil-nudge .pi{border-color:var(--oro);background:var(--oro-tenue)}
 
 /* --- El Capi: el guía de la quiniela ---
    Las láminas son PNG recortados al personaje, así que van SIN marco: se
@@ -947,10 +956,36 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   .perfil-lista li{font-size:.72rem;padding:.5rem 0;gap:.45rem}
   .perfil-lista li .pi{width:22px;height:22px;font-size:.72rem;border-radius:6px}
 }
+/* Teléfonos chicos de verdad (iPhone mini y similares, 375 px o menos).
+   Aquí el header lleva tres cosas: marca, botón de instalar y chip de
+   usuario. Con el texto completo no caben y el botón se montaba encima de
+   "LA CORTE", así que a este ancho el botón se queda solo con el ícono. */
 @media (max-width:480px){
-  .logo-title{font-size:1.15rem}
-  .logo-sub{font-size:.5rem;letter-spacing:.22em}
-  .logo-crown{width:36px;height:36px;font-size:1.05rem}
+  #header{padding:.55rem .7rem}
+  #header-inner{gap:.45rem}
+  .logo{gap:.5rem}
+  .logo-title{font-size:1.1rem}
+  .logo-sub{font-size:.46rem;letter-spacing:.16em}
+  .logo-sub .anio{display:none}   /* el año no cabe y no hace falta */
+  .logo-crown{width:34px;height:34px}
+  .logo-crown .ic{width:17px;height:17px}
+  .btn-instalar-hdr{padding:.4rem .55rem;font-size:.9rem;box-shadow:none}
+  .btn-instalar-hdr .txt{display:none}
+  .user-pill{max-width:44vw;padding:.24rem .55rem .24rem .24rem;font-size:.72rem;gap:.35rem}
+  .user-pill .pill-crown{width:24px;height:24px}
+  .user-pill button{font-size:.6rem}
+
+  /* Ficha de perfil compacta: en un teléfono chico ocupaba media pantalla
+     antes de llegar a lo que importa. */
+  .perfil-card{padding:.9rem}
+  .perfil-avatar{width:44px;height:44px;box-shadow:0 0 0 3px rgba(212,175,55,.08)}
+  .perfil-avatar .ic{width:22px;height:22px}
+  .perfil-nom{font-size:1.05rem}
+  .perfil-rol{font-size:.55rem}
+  .perfil-lista{margin-top:.6rem;column-gap:.8rem}
+  .perfil-lista li{font-size:.68rem;padding:.4rem 0}
+  .perfil-lista li .pi{width:19px;height:19px;font-size:.62rem}
+
   h1{font-size:1.75rem}
   .admin-game-row{grid-template-columns:1fr 1fr;font-size:.7rem}
   .match-date{min-width:52px;padding-right:.7rem}
@@ -1057,14 +1092,14 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
       <span class="logo-crown"><svg class="ic"><use href="#ic-corona"/></svg></span>
       <div>
         <div class="logo-title">LA <span>CORTE</span></div>
-        <div class="logo-sub">QUINIELA NFL · 2026-27</div>
+        <div class="logo-sub">QUINIELA NFL<span class="anio"> · 2026-27</span></div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:.5rem">
       <!-- Salida permanente para instalar: sin esto, quien cierra la tarjeta
            se queda 7 dias sin poder hacerlo. Se oculta solo si ya la instaló. -->
       <button class="btn-instalar-hdr" id="btn-instalar-hdr" style="display:none"
-              onclick="abrirInstalacion()">📲 Instalar</button>
+              onclick="abrirInstalacion()" aria-label="Instalar la app">📲<span class="txt">Instalar</span></button>
       <div class="user-pill" id="user-pill" style="display:none">
         <span class="pill-crown"><svg class="ic"><use href="#ic-corona"/></svg></span>
         <span id="user-name">Usuario</span>
@@ -1429,6 +1464,7 @@ let myUD = {};                  // week → opcion
 let misFolios = [];
 let rankRows = [];
 let currentWeek = 1;
+let bonoInstalYa = null;        // ¿ya cobró los 25 por instalar? null = no sabemos
 let misCortes = {};             // week → mi posición en el corte de esa semana
 let semanasCerradas = new Set();// semanas que ya tienen corte hecho
 let dirty = false;
@@ -1688,6 +1724,10 @@ async function initApp(){
     await loadUnderdog();
     document.getElementById('registro').classList.remove('hidden');
     renderDivisiones(); renderCalendario(); renderHistorial(); renderPremios();
+    // Caso típico del iPhone: instala, abre el ícono y ahí NO hay sesión
+    // (iOS guarda la de la app aparte de la de Safari). Sin este aviso
+    // parece que la instalación no sirvió de nada.
+    setTimeout(avisoAppSinSesion, 700);
   }
 
   sb.auth.onAuthStateChange(async (event)=>{
@@ -1946,6 +1986,8 @@ function mostrarApp(){
   actualizarBotonInstalar();
   // Si ya la trae instalada, que cobre su bono sin tener que hacer nada.
   revisarBonoInstalacion();
+  // Y si no, que lo vea pendiente en su perfil en vez de enterarse por azar.
+  bonoInstalacionCobrado().then(ya=>{ bonoInstalYa = ya; renderPerfil(); });
   // Y si no la tiene, la invitacion con los 25 puntos es lo PRIMERO que ve
   // al entrar. El respiro de 800 ms deja que la app termine de pintar para
   // que la hoja suba sobre una pantalla ya armada y no de un tiron feo.
@@ -2318,6 +2360,10 @@ function renderPerfil(p){
       <li><span class="pi">🦄</span> Underdogs        <b>${p.underdogHits}</b></li>
       <li><span class="pi">⚡</span> Primer anotador  <b>${p.anotadorHits}</b></li>
       <li><span class="pi">🎁</span> Bonos            <b>${p.bono}</b></li>
+      ${bonoInstalYa===false ? `
+      <li class="perfil-nudge" onclick="abrirInstalacion()">
+        <span class="pi">📲</span> Instala la app <b class="oro">+${cfgInt('pts_bono_instalacion',25)}</b>
+      </li>` : ''}
     </ul>`;
 }
 
@@ -3236,11 +3282,22 @@ window.addEventListener('beforeinstallprompt', e=>{
   promptInstalacion = e;
 });
 
+// Android/escritorio avisan cuando la instalacion termino. OJO: en ese momento
+// seguimos en la PESTANA del navegador, no en la app, asi que appInstalada()
+// todavia dice que no. Por eso aqui se cobra el bono a la fuerza: el aviso lo
+// manda el navegador, es tan confiable como el modo standalone. Sin este
+// `true`, quien instalaba desde Android nunca veia sus 25 puntos.
 window.addEventListener('appinstalled', ()=>{
   promptInstalacion = null;
   ocultarInstalacion();
   actualizarBotonInstalar();
-  revisarBonoInstalacion();
+  revisarBonoInstalacion(true);
+});
+
+// Al volver a la app (cambiar de pestana, desbloquear el telefono) se
+// reintenta. La funcion del servidor es idempotente: solo la primera suma.
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden) revisarBonoInstalacion();
 });
 
 function pintarInstalacion(){
@@ -3271,18 +3328,39 @@ function pintarInstalacion(){
     return;
   }
 
+  // Si ya la esta usando instalada, no tiene caso enseñarle los pasos.
+  if(appInstalada()){
+    titulo.textContent = 'YA ESTÁS EN LA APP';
+    sub.textContent = 'Instalada y en pantalla completa';
+    premio.style.display = 'none';
+    cuerpo.innerHTML = `<p class="inst-pie">Tus 25 puntos se cargan solos al entrar con tu cuenta.
+      Si no los ves, revisa el renglón <b>Bonos</b> de tu perfil.</p>`;
+    return;
+  }
+
   titulo.textContent = 'INICIA LA QUINIELA GANANDO';
   sub.textContent = 'Descarga la quiniela y hazla aplicación';
 
   // En iPhone NO existe forma de instalar por codigo: Apple obliga a hacerlo
   // a mano desde Safari. Por eso ahi van los pasos en vez del boton.
+  //
+  // El paso 4 no es relleno: es DONDE se cobran los puntos. Poner el icono en
+  // la pantalla no cambia nada mientras la persona siga en Safari — la app no
+  // tiene forma de enterarse. El bono entra cuando abre desde el icono, que es
+  // cuando corre en modo standalone. Y como iOS le da a la app instalada un
+  // almacen aparte del de Safari, ahi hay que volver a iniciar sesion.
   if(esIOS()){
     cuerpo.innerHTML = `<ul class="inst-pasos">
         <li>Toca <b>Compartir</b> <span class="inst-tecla">⬆</span>, abajo al centro.</li>
         <li>Baja y elige <b>Agregar a pantalla de inicio</b>.</li>
-        <li>Toca <b>Agregar</b>. Listo.</li>
+        <li>Toca <b>Agregar</b>.</li>
+        <li><b>Cierra Safari y abre el ícono nuevo.</b> Te va a pedir tu usuario otra vez
+            (el iPhone guarda la sesión de la app aparte). Al entrar ahí se cargan
+            tus <b>${cfgInt('pts_bono_instalacion',25)} puntos</b> solos.</li>
       </ul>
-      <p class="small muted">Tiene que ser desde Safari. Es el único que deja instalar apps en iPhone.</p>`;
+      <p class="small muted">Tiene que ser desde <b>Safari</b>: es el único que deja instalar apps
+      en iPhone. Si abres el ícono y todavía ves la barra de Safari abajo, borra el ícono
+      y vuelve a agregarlo desde Safari.</p>`;
     return;
   }
 
@@ -3295,8 +3373,15 @@ function pintarInstalacion(){
   cuerpo.innerHTML = `<ul class="inst-pasos">
       <li>Toca <span class="inst-tecla">⋮</span> arriba a la derecha.</li>
       <li>Elige <b>Instalar aplicación</b> o <b>Agregar a pantalla de inicio</b>.</li>
-      <li>Confirma. Listo.</li>
+      <li>Confirma. Los ${cfgInt('pts_bono_instalacion',25)} puntos entran solos.</li>
     </ul>`;
+}
+
+// Abrir la app instalada tampoco garantiza que se vean los puntos si no hay
+// sesion. Este aviso sale una sola vez, cuando entra en modo app sin cuenta.
+function avisoAppSinSesion(){
+  if(!appInstalada() || sbUser) return;
+  toast('Entra con tu usuario para cargar tus puntos por instalar');
 }
 
 function mostrarInstalacion(){
@@ -3341,14 +3426,32 @@ async function instalarAhora(){
 
 // Idempotente del lado del servidor: se puede llamar cada vez que abre la
 // app instalada; solo la primera suma puntos.
-async function revisarBonoInstalacion(){
-  if(!sbUser || !appInstalada()) return;
+//
+// `forzar` es para el evento appinstalled de Android: ahi el navegador ya
+// confirmo la instalacion aunque la pestana todavia no sea standalone.
+async function revisarBonoInstalacion(forzar){
+  if(!sbUser) return;
+  if(!forzar && !appInstalada()) return;
   const {data,error} = await sb.rpc('otorgar_bono_instalacion');
-  if(error || !data?.ok) return;    // silencioso: no vale la pena molestar por esto
+  // Ya no se traga el error en silencio: cuando esto falla, la queja que
+  // llega es "instale la app y no me dieron mis puntos" y sin rastro en la
+  // consola no hay por donde empezar.
+  if(error){ console.warn('bono de instalacion:', error.message); return; }
+  if(!data?.ok){ console.warn('bono de instalacion:', data?.msg); return; }
+  bonoInstalYa = true;
   if(!data.ya){
     toast(`🎁 +${data.puntos} puntos por instalar la app`);
     await renderRanking();
   }
+  renderPerfil();
+}
+
+// ¿Ya cobro sus 25? Se usa para no prometerle puntos a quien ya los tiene.
+async function bonoInstalacionCobrado(){
+  if(!sbUser) return false;
+  const {data} = await sb.from('bonos')
+    .select('id').eq('user_id', sbUser.id).eq('motivo','instalacion').limit(1);
+  return !!(data && data.length);
 }
 
 /* =====================================================

@@ -21,7 +21,10 @@
    numero de CACHE. El `activate` borra los caches viejos.
    ===================================================================== */
 
-const CACHE = 'quiniela-nfl-v1';
+// v2: cambio manifest.json (colores nuevos y display_override). Como el
+// manifest se sirve desde cache primero, sin subir este numero la gente que ya
+// tiene la app instalada se queda con el viejo para siempre.
+const CACHE = 'quiniela-nfl-v2';
 
 // Lo minimo para que la app abra sin senal.
 const BASICOS = [

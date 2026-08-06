@@ -177,6 +177,35 @@ Windows lo pinta morado, Android amarillo y iOS con joyas, y es la marca.
     `contentWindow.eval('...')`. Las funciones sí son accesibles porque son
     declaraciones de función.
 
+14. **El bono de instalación tiene DOS trampas, una por sistema.**
+
+    *Android:* el evento `appinstalled` llega mientras seguimos en la pestaña
+    del navegador, no en la app. Ahí `appInstalada()` todavía dice `false`, así
+    que hay que cobrar el bono a la fuerza —`revisarBonoInstalacion(true)`—
+    porque el aviso viene del navegador y es tan confiable como el modo
+    standalone. Sin eso, quien instalaba desde Android **nunca** veía sus
+    25 puntos.
+
+    *iPhone:* no existe ningún evento. La única señal es `navigator.standalone`,
+    que solo es `true` cuando la persona abre desde el ícono. Y iOS le da a la
+    app instalada un **almacén aparte del de Safari**, así que ahí no hay
+    sesión: tiene que volver a entrar con su usuario, y es en ese login donde
+    cae el bono. Los pasos de la hoja de instalación dicen esto explícitamente;
+    si se recortan, vuelve la queja de "instalé y no me dieron mis puntos".
+
+    El renglón *Instala la app +25* del perfil existe para que el pendiente se
+    vea, en vez de que la gente se entere por casualidad.
+
+15. **La app SÍ abre en pantalla completa; el requisito es Safari.** El manifest
+    trae `display: standalone` y el HTML las metas `apple-mobile-web-app-*`.
+    Si alguien ve la barra de Safari abajo, el ícono se creó desde otro
+    navegador (Chrome iOS, o el navegador interno de WhatsApp) o es un ícono
+    viejo: se borra y se vuelve a agregar desde Safari.
+
+16. **Si cambia `manifest.json`, sube el número de `CACHE` en `sw.js`.** El
+    manifest se sirve *cache primero*, así que sin ese cambio la gente que ya
+    tiene la app instalada se queda con el viejo para siempre.
+
 ## Reglas de puntaje (configurables en la tabla `config`)
 
 | Forma | Puntos |

@@ -7,9 +7,10 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
-  "background_color": "#070d12",
-  "theme_color": "#013369",
+  "background_color": "#0B0D10",
+  "theme_color": "#0B0D10",
   "categories": ["sports", "entertainment"],
   "icons": [
     {
