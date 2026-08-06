@@ -380,8 +380,14 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 
 /* ========= QUINIELA ========= */
 #quiniela{position:relative}
+/* En celular manda el orden que pidió La Corte: primero el tablero (MI
+   QUINIELA + cifras + cómo se ganan puntos), luego los partidos, y los
+   accionables hasta el final. El marcado deja el aside primero porque en
+   escritorio es la columna izquierda; aquí se invierte con `order` para no
+   duplicar el HTML. */
 .q-layout{display:flex;flex-direction:column;gap:1rem}
-.q-side{display:flex;flex-direction:column;gap:.9rem}
+.q-main{order:1}
+.q-side{order:2;display:flex;flex-direction:column;gap:.9rem}
 .q-side .card{margin-bottom:0}
 
 /* --- Tarjeta de perfil (con ícono por dato y anillo dorado) --- */
@@ -457,6 +463,50 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
   filter:drop-shadow(0 16px 40px rgba(0,0,0,.7));
 }
 .modal-capi .modal-close{background:rgba(0,0,0,.6);top:0;right:0}
+
+/* --- El Capi en burbuja (dentro de "quiniela") ---
+   Aquí NO es una tarjeta: es un botón chico pegado al desplegable de puntos.
+   Su única función es estar a la mano cuando alguien no entiende la mecánica,
+   así que ocupa lo mínimo y lo que dice es la pregunta, no un recado. */
+.ayuda-row{display:flex;gap:.7rem;align-items:stretch;margin-bottom:1.1rem}
+.ayuda-row .points-table{flex:1;min-width:0;margin-bottom:0}
+.capi-bubble{
+  flex:none;display:flex;align-items:center;gap:.6rem;text-align:left;
+  background:linear-gradient(160deg,#201B0C,var(--card));
+  border:1px solid var(--oro);border-radius:var(--r);
+  padding:.55rem .9rem .55rem .6rem;
+  box-shadow:0 8px 28px rgba(0,0,0,.35);transition:all .18s;
+}
+.capi-bubble:hover{box-shadow:0 0 0 1px rgba(212,175,55,.35), 0 10px 32px rgba(212,175,55,.18)}
+.capi-bubble .cb-art{
+  width:52px;height:56px;flex:none;position:relative;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.capi-bubble .cb-art::before{
+  content:'';position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);
+  width:140%;height:80%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 65%, rgba(212,175,55,.22), transparent 68%);
+}
+.capi-bubble .cb-art img{
+  position:relative;max-width:100%;max-height:100%;object-fit:contain;
+  filter:drop-shadow(0 6px 12px rgba(0,0,0,.55));
+}
+.capi-bubble .cb-txt{display:flex;flex-direction:column;gap:.15rem;min-width:0}
+.capi-bubble .cb-t{
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:1rem;
+  letter-spacing:.09em;color:var(--txt);line-height:1.1;
+}
+.capi-bubble .cb-cta{
+  font-size:.62rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--oro2);
+}
+.capi-bubble .cb-cta::after{content:' ▸'}
+/* En celular la burbuja se pone a lo ancho debajo del desplegable: de lado
+   dejaba el título "CÓMO SE GANAN PUNTOS" en dos renglones. */
+@media (max-width:719px){
+  .ayuda-row{flex-direction:column;gap:.6rem}
+  .capi-bubble{width:100%}
+}
 
 /* El Capi asomándose en las demás pestañas: mismo personaje, formato tira */
 .capi-tip{margin-bottom:1.3rem}
@@ -743,8 +793,99 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   border:1px solid rgba(47,191,113,.4);background:rgba(47,191,113,.08);
   color:#8FE9BB;border-radius:999px;padding:.2rem .6rem;font-size:.66rem;font-weight:600;
 }
-.premio-mini{display:flex;align-items:center;gap:.55rem;font-size:.78rem;padding:.4rem 0;border-top:1px solid var(--linea)}
-.premio-mini .pm-l{font-family:'Bebas Neue','Oswald',sans-serif;color:var(--oro2);font-size:1rem;width:2.2rem}
+/* El Capi con el perrito, dentro de la tarjeta del underdog. Es la lámina
+   `underdog`, la única donde sale el bulldog, y toca justo el tema. Misma
+   burbuja que la de la quiniela pero en lila, que es el color del underdog. */
+.ud-capi{
+  display:flex;align-items:center;gap:.6rem;width:100%;text-align:left;margin-top:.9rem;
+  background:rgba(176,124,232,.09);border:1px solid rgba(176,124,232,.4);
+  border-radius:var(--r-sm);padding:.5rem .8rem .5rem .55rem;transition:all .18s;
+}
+.ud-capi:hover{background:rgba(176,124,232,.18);border-color:var(--lila)}
+.ud-capi .cb-art{width:46px;height:52px;flex:none;display:flex;align-items:flex-end;justify-content:center;position:relative}
+.ud-capi .cb-art::before{
+  content:'';position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);
+  width:140%;height:80%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 65%, rgba(176,124,232,.28), transparent 68%);
+}
+.ud-capi .cb-art img{position:relative;max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 6px 12px rgba(0,0,0,.55))}
+.ud-capi .cb-txt{display:flex;flex-direction:column;gap:.12rem;min-width:0}
+.ud-capi .cb-t{font-family:'Bebas Neue','Oswald',sans-serif;font-size:.95rem;letter-spacing:.08em;line-height:1.1}
+.ud-capi .cb-cta{font-size:.6rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--lila)}
+.ud-capi .cb-cta::after{content:' ▸'}
+
+/* ========= MI PERFIL ========= */
+.perfil-layout{display:flex;flex-direction:column;gap:1.2rem}
+/* En "quiniela" las seis cifras van en carrusel para no enterrar los
+   partidos. Aquí no: el propósito de la pantalla ES verlas todas. */
+@media (max-width:719px){
+  .perfil-layout .stat-row{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;
+    margin:0 0 .4rem;padding:0;overflow:visible;
+  }
+  .perfil-layout .stat{flex:none}
+}
+.sec-t{
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.35rem;letter-spacing:.09em;
+  margin:1.6rem 0 .8rem;
+}
+/* Las tres metas. Cada una dice la distancia REAL en puntos contra quien
+   ocupa hoy ese lugar; si ya estás dentro se pinta en verde y lo dice. */
+.metas{display:grid;gap:.8rem;grid-template-columns:1fr;margin-bottom:1.2rem}
+.meta-card{
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);border-radius:var(--r);
+  padding:1.1rem 1.2rem;box-shadow:0 8px 28px rgba(0,0,0,.35);
+}
+.meta-card .mt-t{
+  font-size:.58rem;letter-spacing:.16em;color:var(--gris);
+  font-weight:700;text-transform:uppercase;display:flex;align-items:center;gap:.35rem;
+}
+.meta-card .mt-n{
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:2.2rem;line-height:1.05;
+  margin-top:.25rem;color:var(--oro2);
+}
+.meta-card .mt-l{font-size:.68rem;color:var(--gris);margin-top:.05rem}
+.meta-card .mt-bar{
+  height:6px;border-radius:999px;background:rgba(255,255,255,.06);
+  margin-top:.8rem;overflow:hidden;
+}
+.meta-card .mt-bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--oro),var(--oro2))}
+.meta-card .mt-tip{font-size:.74rem;color:var(--gris);line-height:1.5;margin-top:.7rem}
+/* Meta ya conseguida: verde, y la cifra deja de ser una distancia */
+.meta-card.ok{border-color:rgba(47,191,113,.45)}
+.meta-card.ok .mt-n{color:#8FE9BB}
+.meta-card.ok .mt-bar span{background:linear-gradient(90deg,#1E8A50,#2FBF71)}
+
+/* El Capi estratega: mismo personaje, pero con lista de jugadas concretas */
+.capi-coach{align-items:flex-start}
+.capi-coach .capi-art{width:112px;height:150px}
+/* En celular NO cabe de lado: la ilustración se come 112 px de los 375 y la
+   lista de jugadas queda en columnas de cinco palabras. Ahí va arriba. */
+@media (max-width:719px){
+  .capi-coach{flex-direction:column;align-items:stretch}
+  .capi-coach .capi-art{width:100%;height:120px}
+  .capi-coach .capi-txt{padding-bottom:0}
+}
+.coach-list{list-style:none;display:grid;gap:.45rem;margin-top:.7rem}
+.coach-list li{
+  display:flex;align-items:flex-start;gap:.55rem;
+  font-size:.78rem;line-height:1.5;color:var(--gris);
+  background:rgba(255,255,255,.03);border:1px solid var(--linea);
+  border-radius:var(--r-sm);padding:.55rem .7rem;
+}
+.coach-list li b{color:var(--oro2);font-variant-numeric:tabular-nums}
+.coach-list .ci{flex:none;font-size:.95rem;line-height:1.2}
+/* Lo que le falta AHORA MISMO en la quiniela, y que al picarle lo lleva.
+   Es la única línea de esta tarjeta que no es estrategia sino pendiente. */
+.coach-ir{
+  display:block;width:100%;text-align:left;margin-top:.7rem;
+  background:rgba(255,255,255,.03);border:1px dashed var(--linea2);
+  border-radius:var(--r-sm);padding:.55rem .7rem;
+  font-size:.74rem;line-height:1.5;color:var(--gris);transition:all .18s;
+}
+.coach-ir::after{content:' →';color:var(--oro2);font-weight:700}
+.coach-ir:hover{border-color:var(--oro);color:var(--txt)}
 
 /* ========= RANKING ========= */
 .rank-row{
@@ -903,9 +1044,9 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 @media (min-width:720px){
   .stat-row{grid-template-columns:repeat(3,1fr)}
   .resumen{width:auto;min-width:330px}
-  /* En tableta la columna todavía va a ancho completo: caben en fila y así
-     no empujan los partidos hacia abajo. */
-  .extras-row{grid-template-columns:repeat(3,1fr)}
+  /* En tableta la columna todavía va a ancho completo: las dos caben en fila. */
+  .extras-row{grid-template-columns:repeat(2,1fr)}
+  .metas{grid-template-columns:repeat(3,1fr)}
 }
 @media (min-width:980px){
   body{padding-bottom:2.5rem}
@@ -926,18 +1067,17 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   /* 300 px y no menos: abajo van el capturador de folio y las opciones del
      underdog, que con menos ancho se parten feo. */
   .q-layout{display:grid;grid-template-columns:300px 1fr;gap:1.6rem;align-items:start}
+  /* En escritorio los accionables vuelven a la izquierda, arriba del todo:
+     aquí sí hay columna que los sostenga y no hay que bajar a buscarlos.
+     Las columnas se fijan a mano porque el `order` del celular también
+     ordena la rejilla y mandaría el aside a la derecha. */
+  .q-side{grid-column:1;grid-row:1;order:0;align-self:start}
+  .q-main{grid-column:2;grid-row:1;order:0;min-width:0}
   .q-side .extras-row{grid-template-columns:1fr}
-  /* Nada de position:sticky aquí. La columna (perfil + Capi) mide más de
-     700 px y en una pantalla de portátil no cabe: al fijarla, el Capi
-     quedaba debajo del borde y NO había forma de llegar a él. */
-  .q-side{align-self:start}
-  /* En la barra lateral (270 px) el Capi de lado deja el texto en una
-     columna de 130 px y todo se parte en tres palabras por renglón. Ahí va
-     apilado: la ilustración arriba, el recado abajo a ancho completo. */
-  .q-side .capi{flex-direction:column;align-items:stretch;text-align:center}
-  .q-side .capi .capi-art{width:100%;height:152px}
-  .q-side .capi .capi-txt{padding-bottom:0}
   .stat-row{grid-template-columns:repeat(6,1fr);gap:.9rem}
+  /* Mi perfil: la ficha a la izquierda, el estratega a la derecha */
+  .perfil-layout{display:grid;grid-template-columns:300px 1fr;gap:1.6rem;align-items:start}
+  .perfil-layout .stat-row{grid-template-columns:repeat(3,1fr)}
   .stat{padding:1.15rem}
   .q-head{flex-wrap:nowrap}
   .save-bar{position:static;margin-top:1.6rem}
@@ -1113,6 +1253,10 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 <nav id="nav">
   <div id="nav-inner">
     <button class="tab active" data-tab="quiniela"><span class="ico">🏈</span>QUINIELA</button>
+    <!-- "PERFIL" y no "MI PERFIL": la pestaña es una columna angosta y con dos
+         palabras el texto se parte en dos renglones y desalinea toda la barra.
+         El título de adentro sí dice MI PERFIL. -->
+    <button class="tab" data-tab="perfil"><span class="ico">👤</span>PERFIL</button>
     <button class="tab" data-tab="calendario"><span class="ico">📅</span>CALENDARIO</button>
     <button class="tab" data-tab="grupos"><span class="ico">🏟️</span>GRUPOS</button>
     <button class="tab" data-tab="ranking"><span class="ico">🏆</span>RANKING</button>
@@ -1174,28 +1318,12 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
     <div id="quiniela">
       <div class="q-layout">
 
-        <!-- Columna izquierda: quién soy y qué me dice el Capi.
-             En celular esto va PRIMERO, antes de los partidos. -->
+        <!-- Los dos accionables (underdog y folio).
+             ESCRITORIO: aquí, en la columna izquierda, visibles desde el
+             primer momento sin bajar nada.
+             CELULAR: hasta abajo, después de los partidos — el CSS los manda
+             ahí con `order`, no hay marcado duplicado. -->
         <aside class="q-side">
-          <div class="card perfil-card" id="perfil-card"></div>
-
-          <!-- EL CAPI: el guía de la quiniela. La pose la elige renderCapi()
-               según lo que le falte a la persona esta semana. -->
-          <div class="card capi">
-            <div class="capi-art">
-              <img id="capi-img" src="/icons/capi/bienvenida.webp" alt="El Capi" onerror="this.remove()" />
-            </div>
-            <div class="capi-txt">
-              <div class="capi-t">Mensaje del Capi</div>
-              <p id="capi-msg">Bienvenido a la quiniela. Reparte tu confianza con cabeza.</p>
-              <div class="capi-f">— El Capi</div>
-              <button class="capi-board-btn" id="capi-board-btn" style="display:none">📖 ¿Cómo funciona?</button>
-            </div>
-          </div>
-
-          <!-- Los tres accionables van aquí arriba, no al final de la página:
-               debajo del perfil y del Capi se alcanzan sin tener que bajar
-               los 16 partidos de la semana. -->
           <div class="extras-row">
             <div id="underdog-slot"></div>
 
@@ -1208,14 +1336,6 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
                 <button onclick="canjearFolio()">CANJEAR</button>
               </div>
               <div class="folio-list" id="mis-folios"></div>
-            </div>
-
-            <div class="extra-card">
-              <div class="ex-ico">🏆</div>
-              <h3 class="display">PREMIOS DE LA TEMPORADA</h3>
-              <p id="premios-teaser">10 premios en juego.</p>
-              <div id="premios-mini"></div>
-              <button class="ex-cta" onclick="irA('premios')">Ver los 10 premios</button>
             </div>
           </div>
         </aside>
@@ -1246,10 +1366,26 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 
           <div class="stat-row" id="mis-stats"></div>
 
-          <details class="points-table">
-            <summary>📊 CÓMO SE GANAN PUNTOS</summary>
-            <table id="tabla-puntos"></table>
-          </details>
+          <!-- La ayuda: el desplegable de puntos y, pegado a él, el Capi en
+               chico. Antes el Capi era una tarjeta entera arriba de todo; se
+               volvió una burbuja porque su trabajo aquí es uno solo: estar a
+               la mano cuando alguien no entiende la mecánica. -->
+          <div class="ayuda-row">
+            <details class="points-table">
+              <summary>📊 CÓMO SE GANAN PUNTOS</summary>
+              <table id="tabla-puntos"></table>
+            </details>
+
+            <button class="capi-bubble" id="capi-bubble" onclick="preguntarAlCapi()">
+              <span class="cb-art">
+                <img id="capi-img" src="/icons/capi/bienvenida.webp" alt="El Capi" onerror="this.remove()" />
+              </span>
+              <span class="cb-txt">
+                <span class="cb-t">¿Cómo funciona?</span>
+                <span class="cb-cta">Pregúntale al Capi</span>
+              </span>
+            </button>
+          </div>
 
           <div class="week-bar">
             <button id="wk-prev" onclick="cambiarSemana(-1)">◀</button>
@@ -1264,6 +1400,33 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
           </div>
 
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== MI PERFIL ==========
+       Salió de la columna izquierda de "quiniela": ahí competía por espacio
+       con los partidos, que es a lo que la gente entra. Aparte cabe completo
+       y además le cabe El Estratega, que necesita aire para explicarse. -->
+  <section class="module" id="m-perfil">
+    <h1 class="display">MI PERFIL</h1>
+    <p class="lead-sub">Cómo vas en la temporada y qué te falta exactamente para subir.</p>
+
+    <div class="perfil-layout">
+      <aside>
+        <div class="card perfil-card" id="perfil-card"></div>
+      </aside>
+
+      <div>
+        <div class="stat-row" id="perfil-stats"></div>
+
+        <!-- EL ESTRATEGA: lo único de esta pantalla que no existía antes.
+             Tres metas (top 10 · top 5 · #1) con la distancia real en puntos
+             y, debajo, el Capi diciendo con qué jugadas concretas se cierra
+             esa distancia esta misma semana. -->
+        <h2 class="sec-t">TU CAMINO HACIA ARRIBA</h2>
+        <div class="metas" id="perfil-metas"></div>
+        <div class="card capi capi-coach" id="capi-coach"></div>
       </div>
     </div>
   </section>
@@ -2016,6 +2179,9 @@ document.querySelectorAll('.tab').forEach(b=>{
     document.getElementById('m-'+tab)?.classList.add('active');
     if(tab==='admin') renderAdmin();
     if(tab==='ranking') renderRanking();
+    // Mi perfil vive de la tabla de posiciones (la distancia al top sale de
+    // ahí). Se recarga al entrar para que no muestre números de hace rato.
+    if(tab==='perfil' && sbProfile) renderRanking();
     window.scrollTo({top:0,behavior:'smooth'});
   };
 });
@@ -2289,17 +2455,18 @@ function renderTablaPuntos(){
     <tr><td>🍔 Folio de consumo · día extraordinario</td><td>${cfgInt('pts_folio_especial',10)} pts</td></tr>`;
 }
 
-/* Un solo punto de entrada para todo el tablero personal: las 6 cifras, las
-   dos tarjetas de resumen, la ficha de perfil y el mensaje del Capi. Se llama
-   desde donde ya se llamaba renderStats(), así ninguna de las cuatro se queda
-   vieja después de canjear un folio o registrar un underdog. */
+/* Un solo punto de entrada para todo el tablero personal: las 6 cifras (que
+   ahora salen DOS veces —en quiniela y en mi perfil—), las dos tarjetas de
+   resumen, la ficha de perfil, el Capi y el estratega. Se llama desde donde
+   ya se llamaba renderStats(), así nada se queda viejo después de canjear un
+   folio o registrar un underdog. */
 function renderStats(){
   const cont = document.getElementById('mis-stats');
   if(!cont) return;
   const p = misPuntos();
   const pct = p.jugados ? Math.round(p.aciertos*100/p.jugados) : 0;
 
-  cont.innerHTML = `
+  const html = `
     <div class="stat"><div class="e">🏆</div><div class="v oro">${p.total}</div><div class="l">Puntos totales</div></div>
     <div class="stat"><div class="e">🎯</div><div class="v">${p.confianza}</div><div class="l">Confianza</div></div>
     <div class="stat"><div class="e">⚡</div><div class="v">${p.anotador}</div><div class="l">Primer anotador</div></div>
@@ -2307,9 +2474,14 @@ function renderStats(){
     <div class="stat"><div class="e">🦄</div><div class="v">${p.underdog}</div><div class="l">Underdog</div></div>
     <div class="stat"><div class="e">✅</div><div class="v">${pct}%</div><div class="l">Aciertos ${p.aciertos}/${p.jugados}</div></div>`;
 
+  cont.innerHTML = html;
+  const espejo = document.getElementById('perfil-stats');
+  if(espejo) espejo.innerHTML = html;
+
   renderResumen(p);
   renderPerfil(p);
   renderCapi(p);
+  renderEstratega(p);
 }
 
 /* Las dos tarjetas de arriba a la derecha */
@@ -2428,10 +2600,11 @@ function pintarCapiTips(){
   });
 }
 
-function renderCapi(p){
-  const el = document.getElementById('capi-msg');
-  if(!el) return;
-  p = p || misPuntos();
+/* Qué le falta a la persona AHORA MISMO, en orden de urgencia. Devuelve la
+   pose y el recado; quien lo llama decide dónde lo pinta. Antes esto escribía
+   directo en la tarjeta del Capi dentro de "quiniela"; ahora esa tarjeta es
+   una burbuja que solo lleva la pose, y el recado se usa en el estratega. */
+function estadoCapi(){
   const gs = gamesOf(currentWeek);
   const cerrada = semanaCerrada(currentWeek);
   const uw = udWeeks[currentWeek];
@@ -2469,18 +2642,236 @@ function renderCapi(p){
     pose='listo';
     msg = `Todo en orden esta semana. Vuelve el lunes: del corte sale quién juega el underdog.`;
   }
-  el.textContent = msg;
-  ponCapi(document.getElementById('capi-img'), pose);
-
-  // El botón del pizarrón siempre está: si la pose del momento no tiene
-  // lámina propia, se ofrece la de confianza, que es LA mecánica de la
-  // quiniela y la que más se pregunta.
+  // Si la pose del momento no tiene pizarrón propio se ofrece el de confianza,
+  // que es LA mecánica de la quiniela y la que más se pregunta.
   const board = CAPI_BOARDS.includes(pose) ? pose : 'confianza';
-  const btn = document.getElementById('capi-board-btn');
-  if(btn){
-    btn.style.display = '';
-    btn.onclick = ()=> abrirCapiBoard(board);
+  return {pose, msg, board};
+}
+
+/* Qué pizarrón abre la burbuja de "quiniela". Lo fija renderCapi() según el
+   momento; el onclick del HTML lo lee al vuelo. */
+let capiBoardActual = 'confianza';
+
+function renderCapi(){
+  const img = document.getElementById('capi-img');
+  if(!img) return;
+  const {pose, board} = estadoCapi();
+  ponCapi(img, pose);
+  capiBoardActual = board;
+}
+function preguntarAlCapi(){ abrirCapiBoard(capiBoardActual); }
+
+/* =====================================================
+   EL ESTRATEGA  (pestaña "mi perfil")
+
+   La idea: que nadie se sienta lejos. En una temporada de 23 semanas la
+   distancia al top 10 casi siempre se cierra con dos o tres jugadas, y sin
+   verlas escritas parece imposible.
+
+   Todo sale de datos REALES, nada se inventa:
+     · la distancia, de la vista `ranking` (posiciones y totales de todos);
+     · las jugadas, de lo que esta persona TODAVÍA puede hacer esta semana.
+   Si una jugada ya no se puede (partido cerrado, underdog no elegible, folio
+   del día ya canjeado) no se sugiere. Un consejo que no se puede seguir es
+   peor que no dar consejo.
+   ===================================================== */
+
+// Mismo criterio que puntos_por_fecha() en 001_init.sql. Si cambia allá,
+// cambia aquí: lo que se promete tiene que ser lo que se paga.
+function ptsFolioDe(iso){
+  const dow = new Date(iso+'T12:00:00').getDay();   // mediodía: sin saltos de zona
+  if(dow===1) return cfgInt('pts_folio_lunes',10);
+  if(dow===4) return cfgInt('pts_folio_jueves',5);
+  if(dow===0) return cfgInt('pts_folio_domingo',5);
+  return cfgInt('pts_folio_especial',10);           // mié / vie / sáb
+}
+
+/* Los partidos de la semana que siguen abiertos, ordenados por lo que valen
+   si se aciertan (de más a menos). Para los que aún no tienen número de
+   confianza se supone el más alto que le quede libre: es el techo real, y
+   así el consejo dice "si le pones el 16 a este" en vez de contar cero. */
+function jugadasConfianza(w){
+  const todos = gamesOf(w);
+  if(!todos.length) return [];
+  const abiertos = todos.filter(g=>!partidoCerrado(g));
+  if(!abiertos.length) return [];
+
+  const usados = new Set();
+  todos.forEach(g=>{ const c = myPicks[g.id]?.confianza; if(c) usados.add(c); });
+  const libres = [];
+  for(let v=todos.length; v>=1; v--) if(!usados.has(v)) libres.push(v);
+
+  let i = 0;
+  return abiertos.map(g=>{
+    const propia = myPicks[g.id]?.confianza;
+    const c = propia ?? (libres[i++] ?? 0);
+    return {g, conf:c, propia:!!propia, pts:ptsDeAcierto(g,{confianza:c})};
+  }).sort((a,b)=> b.pts - a.pts);
+}
+
+/* Las jugadas sueltas —underdog, folios, primer anotador— que siguen
+   disponibles esta semana, de la más segura a la más difícil. */
+function oportunidadesSemana(w){
+  const ops = [];
+  const abiertos = gamesOf(w).filter(g=>!partidoCerrado(g));
+  if(!abiertos.length) return ops;
+
+  // 1. Underdog: no cuesta nada y no resta. Siempre es la primera recomendación.
+  const uw = udWeeks[w];
+  if(uw && uw.opt_a_team && uw.abierto && puedoUnderdog(w) && !myUD[w] && !semanaCerrada(w)){
+    const pts = uw.puntos || cfgInt('pts_underdog',20);
+    ops.push({ico:'🦄', pts, txt:`Juega tu <b>underdog</b> de ${esc(weekLabel(w))}: <b>+${pts}</b> si le atinas y cero si falla.`});
   }
+
+  // 2. Folios: el punto más fácil de toda la quiniela. Solo cuentan los días
+  //    de juego que quedan y en los que aún no ha canjeado.
+  const yaCanjeados = new Set(misFolios.map(f=>f.fecha));
+  const dias = [...new Set(abiertos.map(g=>isoDay(g.kickoff)))].filter(d=>!yaCanjeados.has(d));
+  if(dias.length){
+    const pts = dias.reduce((s,d)=> s + ptsFolioDe(d), 0);
+    const n = dias.length;
+    ops.push({ico:'🍔', pts, txt:`${n===1?'Queda <b>1</b> día':'Quedan <b>'+n+'</b> días'} de juego para pedir folio en La Corte: <b>+${pts}</b> en total.`});
+  }
+
+  // 3. Primer anotador de los estelares que aún no marca.
+  const sinAnotador = abiertos.filter(g=>g.is_stellar && !myPicks[g.id]?.primero).length;
+  if(sinAnotador){
+    const pts = sinAnotador * cfgInt('pts_anotador',3);
+    ops.push({ico:'⚡', pts, txt:`Te ${sinAnotador===1?'falta 1 partido estelar':'faltan '+sinAnotador+' partidos estelares'} por marcar primer anotador: <b>+${pts}</b>.`});
+  }
+  return ops;
+}
+
+/* El corazón del asunto: cuántas jugadas hacen falta para cubrir una
+   distancia de `falta` puntos, y cuáles. Devuelve la frase ya armada. */
+function comoCerrar(falta, w){
+  const ops = oportunidadesSemana(w);
+  const jc  = jugadasConfianza(w);
+  const lista = [];
+  let suma = 0;
+
+  // Primero lo que no depende de acertar un partido (underdog, folios,
+  // anotador): es lo que la gente puede hacer hoy mismo.
+  for(const o of ops){
+    if(suma >= falta) break;
+    lista.push(o); suma += o.pts;
+  }
+  // Si aún no alcanza, se completan con los partidos que más valen.
+  if(suma < falta && jc.length){
+    let n = 0, pts = 0;
+    while(n < jc.length && suma + pts < falta){ pts += jc[n].pts; n++; }
+    const usados  = jc.slice(0,n);
+    const valores = usados.map(x=>x.pts).join(' + ');
+    // Si ya repartió su confianza, los números son SUYOS y así se le dice.
+    // Si no, todavía no hay "sus partidos de más confianza": sería mentira.
+    const yaReparte = usados.every(x=>x.propia);
+    const cuantos = n===1 ? 'el partido' : 'los '+n+' partidos';
+    const valga   = n===1 ? 'valga' : 'valgan';
+    lista.push({ico:'🎯', pts,
+      txt: yaReparte
+        ? `Acierta ${cuantos} donde pusiste más confianza (${n===1?'vale':'valen'} ${valores}): <b>+${pts}</b>.`
+        : `Reparte tu confianza y acierta ${cuantos} que más ${valga} (${valores}): <b>+${pts}</b>.`});
+    suma += pts;
+  }
+  const techo = ops.reduce((s,o)=>s+o.pts,0) + jc.reduce((s,j)=>s+j.pts,0);
+  return {lista, suma, techo, alcanza: techo >= falta};
+}
+
+/* Las tres metas + el Capi aconsejando. Se repinta con renderStats(), o sea
+   cada vez que cambia algo que mueva los puntos. */
+function renderEstratega(p){
+  const cont = document.getElementById('perfil-metas');
+  if(!cont || !sbProfile) return;
+  p = p || misPuntos();
+  const w = currentWeek;
+
+  const yo  = rankRows.findIndex(r=> r.id===sbProfile.id);
+  const pos = yo >= 0 ? yo+1 : null;
+  const mis = yo >= 0 ? rankRows[yo].total_puntos : p.total;
+
+  const METAS = [
+    {n:10, t:'TOP 10',       ico:'🎁', frase:'entrar al top 10'},
+    {n:5,  t:'TOP 5',        ico:'🥉', frase:'meterte al top 5'},
+    {n:1,  t:'PRIMER LUGAR', ico:'👑', frase:'quedar en primer lugar'},
+  ];
+
+  // Distancia real contra quien ocupa HOY ese lugar. Se suma 1 porque
+  // empatar no basta para pasar a nadie.
+  const conFalta = METAS.map(m=>{
+    const rival = rankRows[m.n-1];
+    if(pos && pos <= m.n)  return {...m, dentro:true, falta:0, meta:mis};
+    if(!rival)             return {...m, dentro:true, falta:0, meta:mis, vacio:true};
+    const falta = Math.max(1, rival.total_puntos - mis + 1);
+    return {...m, dentro:false, falta, meta:rival.total_puntos+1};
+  });
+
+  cont.innerHTML = conFalta.map(m=>{
+    const pct = m.dentro ? 100 : Math.max(3, Math.min(99, Math.round(mis*100/(m.meta||1))));
+    // Si ya está dentro, lo útil no es repetírselo tres veces: es decirle
+    // cuánta ventaja le lleva al primero que viene atrás de esa línea.
+    const persigue = m.dentro ? rankRows[m.n] : null;
+    const tip = m.dentro
+      ? (m.vacio ? `Todavía no hay ${m.n} participantes en la tabla: con jugar ya estás dentro.`
+         : persigue ? `Te sigue el <b>#${m.n+1}</b> con <b>${persigue.total_puntos}</b>: le llevas <b>${mis - persigue.total_puntos}</b> de ventaja.`
+         : `Vas <b>#${pos}</b> de ${rankRows.length}. Ya estás dentro; ahora es no soltar.`)
+      : `Quien va en el <b>#${m.n}</b> lleva <b>${rankRows[m.n-1].total_puntos}</b> puntos.`;
+    return `
+      <div class="meta-card${m.dentro?' ok':''}">
+        <div class="mt-t">${m.ico} ${m.t}</div>
+        <div class="mt-n">${m.dentro ? '✔' : m.falta}</div>
+        <div class="mt-l">${m.dentro ? 'ya estás dentro' : 'puntos te faltan'} · ${esc(weekLabel(w))}</div>
+        <div class="mt-bar"><span style="width:${pct}%"></span></div>
+        <div class="mt-tip">${tip}</div>
+      </div>`;
+  }).join('');
+
+  renderCoach(conFalta, mis, pos, w);
+}
+
+function renderCoach(metas, mis, pos, w){
+  const cont = document.getElementById('capi-coach');
+  if(!cont) return;
+  const {pose, msg, board} = estadoCapi();
+
+  // Se aconseja sobre la meta más cercana que todavía no se logra. Si ya está
+  // en el primer lugar, el consejo es el de mantenerse.
+  const objetivo = metas.find(m=>!m.dentro);
+  let titular, jugadas = [];
+
+  if(!objetivo){
+    titular = pos===1
+      ? `Vas en el primer lugar con ${mis} puntos. Aquí lo difícil no es llegar, es quedarse: no dejes semana sin jugar.`
+      : `Estás dentro de las tres metas. Sigue capturando cada semana y no sueltes el underdog cuando te toque.`;
+    const ops = oportunidadesSemana(w);
+    jugadas = ops.slice(0,3);
+  } else {
+    const plan = comoCerrar(objetivo.falta, w);
+    const semanasRestantes = [...new Set(games.map(g=>g.week))].filter(x=>x>=w).length;
+    if(!plan.lista.length){
+      titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase}. ${esc(weekLabel(w))} ya cerró; la semana que entra vuelve a haber puntos en juego.`;
+    } else if(plan.alcanza){
+      titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase} — y solo en ${esc(weekLabel(w))} hay <b>${plan.techo}</b> en juego. Sí te alcanza:`;
+    } else {
+      const semanas = Math.ceil(objetivo.falta / Math.max(1, plan.techo));
+      titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase}. En ${esc(weekLabel(w))} puedes sumar hasta <b>${plan.techo}</b>: a ese ritmo lo alcanzas en ${semanas} ${semanas===1?'semana':'semanas'}`
+              + (semanasRestantes > semanas ? `, y todavía quedan ${semanasRestantes}. Empieza por lo seguro:` : `. Empieza por lo seguro:`);
+    }
+    jugadas = plan.lista.slice(0,4);
+  }
+
+  cont.innerHTML = `
+    <div class="capi-art">
+      <img src="${capiSrc(pose)}" alt="El Capi" loading="lazy" onerror="this.remove()" />
+    </div>
+    <div class="capi-txt">
+      <div class="capi-t">El Capi te aconseja</div>
+      <p>${titular}</p>
+      ${jugadas.length ? `<ul class="coach-list">${
+        jugadas.map(j=>`<li><span class="ci">${j.ico}</span><span>${j.txt}</span></li>`).join('')
+      }</ul>` : ''}
+      <button class="coach-ir" onclick="irA('quiniela')">${esc(msg)}</button>
+      <button class="capi-board-btn" onclick="abrirCapiBoard('${esc(board)}')">📖 ¿Cómo funciona?</button>
+    </div>`;
 }
 
 function renderMisFolios(){
@@ -2541,8 +2932,6 @@ function renderQuiniela(){
   if(!gs.length){
     list.innerHTML='<div class="card" style="text-align:center;color:var(--gris)">Sin partidos cargados para esta semana.</div>';
   }
-  renderPremiosMini();
-
   document.getElementById('save-bar').style.display = (gs.length && !cerrada) ? '' : 'none';
   actualizarBotonGuardar();
 }
@@ -2732,10 +3121,24 @@ function renderUnderdog(){
   const uw = udWeeks[currentWeek];
   const topN = cfgInt('underdog_top_n',10);
 
+  // El underdog es la mecánica que más se pregunta —quién puede jugarlo y por
+  // qué a veces no aparece—, así que el Capi viene dentro de la tarjeta. Se
+  // usa la lámina `underdog`, la única donde sale el bulldog, y abre el
+  // pizarrón del ranking, que es donde se explica el corte del lunes.
+  const capi = `
+    <button class="ud-capi" onclick="abrirCapiBoard('ranking')">
+      <span class="cb-art"><img src="${capiSrc('underdog')}" alt="El Capi y su perrito" loading="lazy" onerror="this.remove()" /></span>
+      <span class="cb-txt">
+        <span class="cb-t">¿Cómo funciona el underdog?</span>
+        <span class="cb-cta">Pregúntale al Capi</span>
+      </span>
+    </button>`;
+
   const caja = (cuerpo)=> `<div class="extra-card underdog">
       <div class="ex-ico">🦄</div>
       <h3 class="display">UNDERDOG DE LA SEMANA</h3>
       ${cuerpo}
+      ${capi}
     </div>`;
 
   if(!uw || !uw.opt_a_team){
@@ -2902,22 +3305,6 @@ function renderPremios(){
       <div class="prize-desc">${esc(p.t)}</div>
       <div class="prize-sub">${esc(p.s)}</div>
     </div>`).join('');
-}
-
-/* Adelanto de premios en la tercera tarjeta de la quiniela: el podio y,
-   si ya está en la tabla, en qué lugar va la persona. */
-function renderPremiosMini(){
-  const cont = document.getElementById('premios-mini');
-  if(!cont) return;
-  const pos = rankRows.findIndex(r=> sbProfile && r.id===sbProfile.id);
-  const t = document.getElementById('premios-teaser');
-  if(t){
-    t.textContent = pos>=0
-      ? `Vas en la posición #${pos+1} de ${rankRows.length}. Los 10 primeros se llevan premio.`
-      : 'Diez premios en juego. Empieza a jugar para entrar a la tabla.';
-  }
-  cont.innerHTML = PREMIOS.slice(0,3).map(p=>`
-    <div class="premio-mini"><span class="pm-l">${p.p}°</span> ${p.icon} ${esc(p.t)}</div>`).join('');
 }
 
 /* =====================================================

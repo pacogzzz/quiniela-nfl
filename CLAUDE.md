@@ -129,22 +129,37 @@ decora.** Los tokens viven en `:root` al inicio del `<style>`; los alias viejos
 
 Móvil primero: la navegación es una barra fija abajo y solo a partir de 980 px
 sube a pestañas bajo el header. El orden de las pestañas es
-**quiniela · calendario · grupos · ranking · premios · historial · admin**, y
-la app abre en *quiniela*: a lo que entra la gente es a pronosticar.
+**quiniela · perfil · calendario · grupos · ranking · premios · historial ·
+admin**, y la app abre en *quiniela*: a lo que entra la gente es a pronosticar.
+La pestaña se llama PERFIL y no MI PERFIL porque con dos palabras el texto se
+parte en dos renglones y desalinea la barra entera.
 
-En la pantalla de quiniela la columna izquierda es perfil → Capi →
-underdog/folio/premios, y la derecha los partidos. **En celular todo eso va
-arriba de los partidos**, así que las seis cifras y los tres accionables se
-vuelven carruseles horizontales por debajo de 720 px. Apilados sumaban 1 600 px
-y el primer partido quedaba a tres pantallas de scroll; con los carruseles
-queda a 1 478 px. Si se agrega algo más a esa columna, hay que volver a medir.
+**El orden dentro de "quiniela" cambia con el ancho, y es a propósito.**
+El marcado deja `<aside class="q-side">` (underdog + folio) antes que
+`.q-main`, porque en escritorio es la columna izquierda. Debajo de 980 px el
+CSS lo invierte con `order`: primero el tablero (MI QUINIELA + las seis cifras
++ *cómo se ganan puntos*), luego los partidos, y los dos accionables **hasta
+el final**. Nada de marcado duplicado.
+
+Medido a 375 px con 8 partidos: encabezado 80 · cifras 301 · ayuda 445 ·
+selector de semana 605 · **primer partido 787**. Antes de mover el perfil a su
+pestaña el primer partido caía en 1 478. Si se vuelve a meter algo arriba de
+los partidos, hay que volver a medir.
 
 `preview-diseno.html` fue la maqueta que se usó para aprobar el diseño. Ya está
 integrado en la app; el archivo se puede borrar cuando estorbe.
 
-**El Capi** es el guía de la quiniela. `renderCapi()` elige **texto y pose
-juntos** según el estado real: faltan ganadores → pose `ganador`, falta
-confianza → `confianza`, falta underdog → `underdog`, etc. No es adorno.
+**El Capi** es el guía de la quiniela y aparece de tres formas distintas:
+
+- **Burbuja** (dentro de *quiniela*, pegada al desplegable de puntos): sólo la
+  ilustración + *¿Cómo funciona?* + *Pregúntale al Capi*. `estadoCapi()` elige
+  la pose según lo que falte —faltan ganadores → `ganador`, falta confianza →
+  `confianza`, etc.— y `renderCapi()` la pinta y fija qué pizarrón abre.
+- **Dentro de la tarjeta del underdog**: la lámina `underdog`, que es la única
+  donde sale el bulldog. Abre el pizarrón del *ranking*, que es donde se
+  explica el corte del lunes y quién puede jugarlo.
+- **Estratega** (en *mi perfil*): la tarjeta grande con las jugadas concretas.
+  Ver abajo.
 
 Las 12 poses viven en `icons/capi/<momento>.webp`. El nombre es el momento, no
 el número de lámina, y la lista está en `CAPI_POSES` dentro de `index.html`.
@@ -165,6 +180,30 @@ originales al repo es tirar el plan de datos de 200 personas.
 
 La corona de La Corte es **SVG en línea** (`#ic-corona`), no el emoji 👑:
 Windows lo pinta morado, Android amarillo y iOS con joyas, y es la marca.
+
+## "Mi perfil" y El Estratega
+
+La ficha de perfil salió de la columna izquierda de *quiniela* y ahora tiene su
+propia pestaña, junto con un espejo de las seis cifras. Lo nuevo de verdad es
+**El Estratega**: tres metas (top 10 · top 5 · #1) con la distancia real en
+puntos, y debajo el Capi diciendo con qué jugadas se cierra esa distancia.
+
+Todo sale de datos reales y **nada se inventa**:
+
+- La distancia sale de la vista `ranking`: `rankRows[9]`, `rankRows[4]` y
+  `rankRows[0]` son quienes ocupan hoy esos lugares. Se suma 1 porque empatar
+  no basta para pasar a nadie. Si ya está dentro de una meta, la tarjeta dice
+  cuánta ventaja le lleva al primero que viene atrás de esa línea.
+- Las jugadas salen de lo que esa persona **todavía puede hacer** esta semana
+  (`oportunidadesSemana()` + `jugadasConfianza()`): si ya escogió underdog, si
+  ya canjeó el folio del día o si el partido ya cerró, esa jugada no se
+  sugiere. **Un consejo que no se puede seguir es peor que no dar consejo.**
+- El orden es underdog → folios → primer anotador → aciertos, de lo más seguro
+  a lo más difícil, y se corta en cuanto la suma cubre la distancia.
+
+`comoCerrar()` es donde vive esa suma. Si el techo de la semana no alcanza,
+dice en cuántas semanas sí y cuántas quedan de temporada: el punto de todo esto
+es que nadie sienta que ya perdió en la semana 3 de 23.
 
 11. **Los logos de la NFL NO se guardan en el repo.** Son marca registrada y el
     repo es público. Se sirven del CDN de ESPN
@@ -212,6 +251,13 @@ Windows lo pinta morado, Android amarillo y iOS con joyas, y es la marca.
 16. **Si cambia `manifest.json`, sube el número de `CACHE` en `sw.js`.** El
     manifest se sirve *cache primero*, así que sin ese cambio la gente que ya
     tiene la app instalada se queda con el viejo para siempre.
+
+17. **`ptsFolioDe()` en el JS es una copia de `puntos_por_fecha()` del SQL.**
+    El Estratega necesita saber cuánto vale el folio de un día *antes* de que
+    exista el folio, así que la regla (lun 10 · jue/dom 5 · mié/vie/sáb 10)
+    está escrita en los dos lados. Si cambia en `001_init.sql`, cambia también
+    en `index.html`: si no, el Capi promete puntos que la base no paga, que es
+    exactamente la clase de error que hace que la gente deje de creerle.
 
 ## Reglas de puntaje (configurables en la tabla `config`)
 
