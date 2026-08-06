@@ -127,10 +127,22 @@ es perfil → Capi → partidos → underdog/folio/premios.
 `preview-diseno.html` fue la maqueta que se usó para aprobar el diseño. Ya está
 integrado en la app; el archivo se puede borrar cuando estorbe.
 
-**El Capi** es el guía de la quiniela. Su texto lo arma `renderCapi()` según el
-estado real (faltan partidos, falta underdog, falta folio…), no es adorno. El
-arte definitivo va en `/icons/capi.png`; mientras no exista, `onerror` deja el
-emoji de repuesto.
+**El Capi** es el guía de la quiniela. `renderCapi()` elige **texto y pose
+juntos** según el estado real: faltan ganadores → pose `ganador`, falta
+confianza → `confianza`, falta underdog → `underdog`, etc. No es adorno.
+
+Las 12 poses viven en `icons/capi/<momento>.webp`. El nombre es el momento, no
+el número de lámina, y la lista está en `CAPI_POSES` dentro de `index.html`.
+Las demás pestañas llevan una tarjeta fija que se arma sola desde
+`data-capi` / `data-txt` en el HTML (ver `pintarCapiTips()`).
+
+**Las poses nuevas se optimizan antes de subirlas:** `python
+tools/optimiza-capi.py <carpeta>`. Los PNG de Canva pesan ~700 KB cada uno y se
+ven a 100 px; el script los deja en ~25 KB de WebP (8.3 MB → 313 KB). Subir los
+originales al repo es tirar el plan de datos de 200 personas.
+
+La corona de La Corte es **SVG en línea** (`#ic-corona`), no el emoji 👑:
+Windows lo pinta morado, Android amarillo y iOS con joyas, y es la marca.
 
 11. **Los logos de la NFL NO se guardan en el repo.** Son marca registrada y el
     repo es público. Se sirven del CDN de ESPN

@@ -228,12 +228,19 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
   border-radius:var(--r);max-width:430px;width:100%;
   padding:1.8rem 1.5rem;box-shadow:0 20px 60px rgba(0,0,0,.7);
 }
-.reg-crown{
-  width:64px;height:64px;margin:0 auto .8rem;border-radius:50%;
-  display:grid;place-items:center;font-size:2rem;
-  border:1.5px solid var(--oro);
-  background:radial-gradient(circle at 35% 28%, #23262E, #0C0E12);
-  box-shadow:0 0 0 6px rgba(212,175,55,.06);
+/* En el registro el Capi es el que recibe: es su primer contacto con la app */
+.reg-capi{
+  height:150px;margin:0 auto .6rem;position:relative;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.reg-capi::before{
+  content:'';position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+  width:190px;height:110px;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 70%, rgba(212,175,55,.20), transparent 68%);
+}
+.reg-capi img{
+  position:relative;max-height:150px;max-width:100%;object-fit:contain;
+  filter:drop-shadow(0 10px 20px rgba(0,0,0,.6));
 }
 .reg-card h1{text-align:center;font-size:1.9rem;margin-bottom:.15rem}
 .reg-card h1 small{display:block;font-size:.72rem;letter-spacing:.3em;color:var(--gris);font-family:'Inter',sans-serif;font-weight:700;margin-top:.3rem}
@@ -399,19 +406,45 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 .perfil-lista li b{margin-left:auto;color:var(--txt);font-weight:700;font-variant-numeric:tabular-nums}
 .perfil-lista li b.oro{color:var(--oro2)}
 
-/* --- El Capi: el guía de la quiniela --- */
-.capi{display:flex;gap:.9rem;align-items:flex-start;border-left:3px solid var(--oro)}
+/* --- El Capi: el guía de la quiniela ---
+   Las láminas son PNG recortados al personaje, así que van SIN marco: se
+   paran sobre la tarjeta con un halo dorado detrás. Cada pose tiene una
+   proporción distinta (de 143x400 a 436x400), por eso la caja es fija y la
+   imagen se ajusta con object-fit en vez de estirarse. */
+.capi{display:flex;gap:.9rem;align-items:flex-end;border-left:3px solid var(--oro)}
 .capi .capi-art{
-  width:74px;flex:none;border-radius:var(--r-sm);overflow:hidden;
-  background:radial-gradient(circle at 50% 25%, #2A2417, #12100A);
-  border:1px solid rgba(212,175,55,.35);
-  display:grid;place-items:center;font-size:2.4rem;line-height:1;
-  aspect-ratio:3/4;
+  width:100px;height:138px;flex:none;position:relative;
+  display:flex;align-items:flex-end;justify-content:center;
+  font-size:2.6rem;line-height:1;   /* respaldo si la imagen no carga */
 }
-.capi .capi-art img{width:100%;height:100%;object-fit:contain;object-position:bottom}
+.capi .capi-art::before{
+  content:'';position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);
+  width:130%;height:75%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 65%, rgba(212,175,55,.18), transparent 68%);
+}
+.capi .capi-art img{
+  position:relative;max-width:100%;max-height:100%;object-fit:contain;
+  filter:drop-shadow(0 8px 16px rgba(0,0,0,.55));
+}
+.capi .capi-txt{flex:1;min-width:0;padding-bottom:.3rem}
 .capi .capi-t{font-size:.6rem;color:var(--oro2);letter-spacing:.2em;font-weight:700;text-transform:uppercase}
 .capi p{font-size:.82rem;line-height:1.5;margin:.35rem 0}
 .capi .capi-f{font-size:.7rem;color:var(--gris);font-style:italic}
+/* El Capi asomándose en las demás pestañas: mismo personaje, formato tira */
+.capi-tip{margin-bottom:1.3rem}
+.capi-tip .capi-art{width:96px;height:128px}
+.capi-tip p{font-size:.8rem}
+/* El recado no se estira a lo ancho de un monitor: se lee fatal */
+.capi-tip .capi-txt{max-width:640px}
+
+/* Corona de marca en SVG. El emoji 👑 se dibuja distinto en cada teléfono
+   (Windows lo pone morado, Android amarillo, iOS con joyas) y es lo primero
+   que se ve de La Corte: tiene que verse igual en todos. */
+.ic{width:1em;height:1em;fill:currentColor;display:block}
+.logo-crown .ic{width:20px;height:20px;color:var(--oro)}
+.user-pill .pill-crown .ic{width:14px;height:14px;color:var(--oro)}
+.perfil-avatar .ic{width:34px;height:34px;color:var(--oro)}
+.btn-save .ic,.btn-primary .ic{width:19px;height:19px;display:inline-block;vertical-align:-3px;margin-right:.4rem}
 
 /* --- Encabezado de la quiniela + dos tarjetas de resumen --- */
 .q-head{display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:1.3rem}
@@ -831,7 +864,16 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   main{padding:1.8rem 1.5rem 3rem}
   h1{font-size:2.6rem}
   .q-layout{display:grid;grid-template-columns:270px 1fr;gap:1.6rem;align-items:start}
-  .q-side{position:sticky;top:132px}
+  /* Nada de position:sticky aquí. La columna (perfil + Capi) mide más de
+     700 px y en una pantalla de portátil no cabe: al fijarla, el Capi
+     quedaba debajo del borde y NO había forma de llegar a él. */
+  .q-side{align-self:start}
+  /* En la barra lateral (270 px) el Capi de lado deja el texto en una
+     columna de 130 px y todo se parte en tres palabras por renglón. Ahí va
+     apilado: la ilustración arriba, el recado abajo a ancho completo. */
+  .q-side .capi{flex-direction:column;align-items:stretch;text-align:center}
+  .q-side .capi .capi-art{width:100%;height:152px}
+  .q-side .capi .capi-txt{padding-bottom:0}
   .stat-row{grid-template-columns:repeat(6,1fr);gap:.9rem}
   .stat{padding:1.15rem}
   .q-head{flex-wrap:nowrap}
@@ -864,11 +906,20 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 </head>
 <body>
 
+<!-- La corona de La Corte, una sola vez, reutilizada con <use>. En SVG y no
+     como emoji: 👑 lo dibuja cada sistema a su manera y es la marca. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="ic-corona" viewBox="0 0 24 24">
+    <path d="M2.5 7.2 7 10.9 12 3.6l5 7.3 4.5-3.7-1.7 9.9H4.2L2.5 7.2Z"/>
+    <rect x="4" y="18.6" width="16" height="2.6" rx="1.3"/>
+  </symbol>
+</svg>
+
 <!-- ========== REGISTRO ========== -->
 <div id="registro">
   <div class="reg-card">
     <div id="reg-form-step">
-      <div class="reg-crown">👑</div>
+      <div class="reg-capi"><img id="capi-reg" src="/icons/capi/bienvenida.webp" alt="El Capi te da la bienvenida" /></div>
       <h1 class="display">LA CORTE<small>QUINIELA NFL · 2026-27</small></h1>
       <p class="lead">Entra con tu usuario y contraseña.</p>
 
@@ -916,7 +967,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 
     <!-- Volver de un correo de recuperación: poner contraseña nueva -->
     <div id="reg-nueva-pass-step" style="display:none">
-      <div class="reg-crown">🔑</div>
+      <div class="reg-capi"><img src="/icons/capi/datos.webp" alt="El Capi" /></div>
       <h1 class="display">NUEVA CONTRASEÑA</h1>
       <p class="lead">Escribe la contraseña que vas a usar de ahora en adelante.</p>
       <label>CONTRASEÑA NUEVA</label>
@@ -926,7 +977,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 
     <!-- Sesión activa pero sin perfil: se completa aquí -->
     <div id="reg-perfil-step" style="display:none">
-      <div class="reg-crown">👤</div>
+      <div class="reg-capi"><img src="/icons/capi/datos.webp" alt="El Capi" /></div>
       <h1 class="display">COMPLETA TU PERFIL</h1>
       <p class="lead">Tu cuenta es <strong id="perfil-email-shown" style="color:var(--dorado)"></strong>.<br>Solo faltan estos datos para entrar.</p>
       <label>NOMBRE COMPLETO</label>
@@ -949,7 +1000,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 <header id="header">
   <div id="header-inner">
     <div class="logo">
-      <span class="logo-crown">👑</span>
+      <span class="logo-crown"><svg class="ic"><use href="#ic-corona"/></svg></span>
       <div>
         <div class="logo-title">LA <span>CORTE</span></div>
         <div class="logo-sub">QUINIELA NFL · 2026-27</div>
@@ -961,7 +1012,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
       <button class="btn-instalar-hdr" id="btn-instalar-hdr" style="display:none"
               onclick="abrirInstalacion()">📲 Instalar</button>
       <div class="user-pill" id="user-pill" style="display:none">
-        <span class="pill-crown">👑</span>
+        <span class="pill-crown"><svg class="ic"><use href="#ic-corona"/></svg></span>
         <span id="user-name">Usuario</span>
         <button onclick="cerrarSesion()">salir</button>
       </div>
@@ -988,6 +1039,8 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   <section class="module active" id="m-grupos">
     <h1 class="display">CONFERENCIAS Y DIVISIONES</h1>
     <p class="lead-sub">32 equipos · 2 conferencias · 8 divisiones. El récord se actualiza solo conforme se cargan los resultados.</p>
+    <div class="card capi capi-tip" data-capi="bienvenida"
+         data-txt="Aquí ves cómo va cada equipo. Un equipo con buen récord no siempre gana: para eso están tus puntos de confianza."></div>
     <div class="conf-toggle">
       <button class="active" data-conf="AFC">AFC</button>
       <button data-conf="NFC">NFC</button>
@@ -1000,6 +1053,8 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   <section class="module" id="m-calendario">
     <h1 class="display">CALENDARIO NFL 2026-27</h1>
     <p class="lead-sub">Filtra por semana, equipo, horario o fecha. Toca <b>reservar</b> para apartar mesa en La Corte.</p>
+    <div class="card capi capi-tip" data-capi="calendario"
+         data-txt="Busca tu partido y apártate mesa. Los días de juego hay folio de consumo, y ese folio son puntos."></div>
     <div class="filtros-wrap">
       <div class="filters">
         <select id="f-week"><option value="">Todas las semanas</option></select>
@@ -1033,15 +1088,13 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
         <aside class="q-side">
           <div class="card perfil-card" id="perfil-card"></div>
 
-          <!-- EL CAPI: el guía de la quiniela. El arte definitivo (el que
-               Oscar está haciendo en Canva) se sube como /icons/capi.png y
-               entra solo; mientras no exista, onerror deja el emoji. -->
+          <!-- EL CAPI: el guía de la quiniela. La pose la elige renderCapi()
+               según lo que le falte a la persona esta semana. -->
           <div class="card capi">
             <div class="capi-art">
-              <img src="/icons/capi.png" alt="El Capi" onerror="this.remove()" />
-              <span>🐵</span>
+              <img id="capi-img" src="/icons/capi/bienvenida.webp" alt="El Capi" onerror="this.remove()" />
             </div>
-            <div>
+            <div class="capi-txt">
               <div class="capi-t">Mensaje del Capi</div>
               <p id="capi-msg">Bienvenido a la quiniela. Reparte tu confianza con cabeza.</p>
               <div class="capi-f">— El Capi</div>
@@ -1089,7 +1142,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
           <div id="lock-banner"></div>
           <div id="quiniela-list"></div>
           <div class="save-bar" id="save-bar" style="display:none">
-            <button class="btn-save" id="btn-guardar" onclick="guardarSemana()">👑 GUARDAR MI SEMANA</button>
+            <button class="btn-save" id="btn-guardar" onclick="guardarSemana()"><svg class="ic"><use href="#ic-corona"/></svg>GUARDAR MI SEMANA</button>
           </div>
 
           <!-- Fila de tres, a ancho completo, debajo de los partidos -->
@@ -1125,6 +1178,8 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   <section class="module" id="m-ranking">
     <h1 class="display">RANKING GENERAL</h1>
     <p class="lead-sub">Clasificación en tiempo real. El corte del lunes define quién juega el Underdog la semana siguiente.</p>
+    <div class="card capi capi-tip" data-capi="ranking"
+         data-txt="Cada lunes se congela la tabla. Si quedas del lugar 11 hacia abajo, la semana siguiente juegas Underdog: 20 puntos gratis si le atinas."></div>
     <div id="rank-list"></div>
   </section>
 
@@ -1132,6 +1187,8 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   <section class="module" id="m-historial">
     <h1 class="display">HISTORIAL DE QUINIELAS</h1>
     <p class="lead-sub">Todas las quinielas que ha organizado La Corte.</p>
+    <div class="card capi capi-tip" data-capi="listo"
+         data-txt="Aquí queda guardado quién ganó cada temporada. La de este año se cierra con el Super Bowl LXI."></div>
     <div id="hist-list" class="grid grid-2"></div>
   </section>
 
@@ -1142,6 +1199,8 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
       <p class="muted small">Temporada NFL 2026-27 · La Corte</p>
       <p id="mi-pos-actual">Cargando posición...</p>
     </div>
+    <div class="card capi capi-tip" data-capi="guardar"
+         data-txt="Los 10 primeros se llevan premio, y la temporada es larguísima: 23 semanas. El que no se cae es el que gana."></div>
     <div class="grid grid-3" id="premios-top"></div>
     <h2>DEL 4° AL 10° LUGAR</h2>
     <div class="grid grid-4" id="premios-resto"></div>
@@ -1599,6 +1658,7 @@ function normUsuario(s){ return (s||'').trim().toLowerCase(); }
 function setModo(modo){
   _regModo = modo;
   const nuevo = modo==='registro';
+  ponCapi(document.getElementById('capi-reg'), nuevo ? 'registrate' : 'bienvenida');
   document.getElementById('modo-login').classList.toggle('active', !nuevo);
   document.getElementById('modo-registro').classList.toggle('active', nuevo);
   document.getElementById('campo-nombre').style.display  = nuevo?'':'none';
@@ -2174,7 +2234,7 @@ function renderPerfil(p){
 
   cont.innerHTML = `
     <div class="perfil-cab">
-      <div class="perfil-avatar">👑</div>
+      <div class="perfil-avatar"><svg class="ic"><use href="#ic-corona"/></svg></div>
       <div>
         <div class="perfil-nom">${esc(sbProfile.nombre||'')}</div>
         <div class="perfil-rol">${esc(rol)}${pos>=0?' · #'+(pos+1)+' general':''}</div>
@@ -2191,33 +2251,90 @@ function renderPerfil(p){
     </ul>`;
 }
 
-/* El Capi no adorna: dice lo único que hace falta hacer ahora mismo.
-   El orden de las reglas es el orden de urgencia. */
+/* =====================================================
+   EL CAPI
+
+   Doce ilustraciones, una por momento; el nombre del archivo ES el momento.
+   Van en WebP porque los PNG que salieron de Canva pesaban 8.3 MB entre los
+   doce y en pantalla se ven a 100 px de ancho: servirlos tal cual habría
+   costado el plan de datos de 200 personas.
+
+   El Capi no adorna. Dice lo único que hace falta hacer ahora mismo, y la
+   pose acompaña a lo que dice.
+   ===================================================== */
+const CAPI_POSES = ['bienvenida','registrate','datos','calendario','ganador',
+                    'confianza','guardar','ranking','consumo','anotador',
+                    'underdog','listo'];
+
+function capiSrc(pose){
+  return '/icons/capi/' + (CAPI_POSES.includes(pose) ? pose : 'bienvenida') + '.webp';
+}
+function ponCapi(img, pose){
+  if(!img) return;
+  const src = capiSrc(pose);
+  if(!img.getAttribute('src')?.endsWith(src)) img.setAttribute('src', src);
+}
+
+// Las tarjetas fijas (una por pestaña) se arman desde los data- del HTML,
+// para no repetir el mismo marcado seis veces. Idempotente.
+function pintarCapiTips(){
+  document.querySelectorAll('.capi-tip[data-capi]').forEach(c=>{
+    if(c.dataset.listo) return;
+    c.dataset.listo = '1';
+    c.innerHTML = `
+      <div class="capi-art">
+        <img src="${capiSrc(c.dataset.capi)}" alt="El Capi" loading="lazy" onerror="this.remove()" />
+      </div>
+      <div class="capi-txt">
+        <div class="capi-t">El Capi te dice</div>
+        <p>${esc(c.dataset.txt||'')}</p>
+      </div>`;
+  });
+}
+
 function renderCapi(p){
   const el = document.getElementById('capi-msg');
   if(!el) return;
   p = p || misPuntos();
   const gs = gamesOf(currentWeek);
-  const faltan = gs.filter(g=>!myPicks[g.id]?.ganador || !myPicks[g.id]?.confianza).length;
   const cerrada = semanaCerrada(currentWeek);
   const uw = udWeeks[currentWeek];
   const sem = weekLabel(currentWeek);
+  const sinGanador   = gs.filter(g=>!myPicks[g.id]?.ganador).length;
+  const sinConfianza = gs.filter(g=>!myPicks[g.id]?.confianza).length;
+  const sinAnotador  = gs.filter(g=>g.is_stellar && !myPicks[g.id]?.primero).length;
 
-  let msg;
+  let msg, pose;
   if(!gs.length){
+    pose='bienvenida';
     msg = `Todavía no cargan los partidos de ${sem}. En cuanto la NFL publique el calendario oficial aparecen aquí.`;
   } else if(cerrada){
+    pose='ranking';
     msg = `${sem} ya cerró. Ve el ranking para saber cómo vas, y prepárate para la que sigue.`;
-  } else if(faltan > 0){
-    msg = `Te faltan ${faltan} ${faltan===1?'partido':'partidos'} por completar en ${sem}. Guarda antes del primer kickoff o te quedas sin puntos.`;
+  } else if(sinGanador > 0){
+    pose='ganador';
+    msg = `Te faltan ${sinGanador} ${sinGanador===1?'ganador':'ganadores'} por elegir en ${sem}. Sin eso no hay puntos.`;
+  } else if(sinConfianza > 0){
+    pose='confianza';
+    msg = `Ya elegiste a todos tus ganadores. Ahora reparte la confianza: te faltan ${sinConfianza} ${sinConfianza===1?'número':'números'}. El más alto va a tu apuesta más segura.`;
+  } else if(sinAnotador > 0){
+    pose='anotador';
+    msg = `Los partidos estelares dan ${cfgInt('pts_anotador',3)} puntos extra si le atinas al primer equipo en anotar. Te ${sinAnotador===1?'falta 1':'faltan '+sinAnotador}.`;
+  } else if(dirty){
+    pose='guardar';
+    msg = `Tienes todo listo pero sin guardar. Dale al botón dorado antes del primer kickoff o no cuenta.`;
   } else if(uw && uw.opt_a_team && puedoUnderdog(currentWeek) && !myUD[currentWeek]){
+    pose='underdog';
     msg = `Ya tienes tu semana lista. Te falta el underdog: es gratis, si le atinas son +${uw.puntos} puntos y si falla no pierdes nada.`;
   } else if(!misFolios.length){
+    pose='consumo';
     msg = `Tu semana está lista. Cuando vengas a La Corte pide tu folio de consumo y captúralo: son puntos que nadie más te va a regalar.`;
   } else {
+    pose='listo';
     msg = `Todo en orden esta semana. Vuelve el lunes: del corte sale quién juega el underdog.`;
   }
   el.textContent = msg;
+  ponCapi(document.getElementById('capi-img'), pose);
 }
 
 function renderMisFolios(){
@@ -2415,17 +2532,19 @@ function actualizarBotonGuardar(){
   const asignados = gs.filter(g=>myPicks[g.id]?.confianza).length;
   const faltan = gs.length - asignados;
 
+  // innerHTML y no textContent: el botón lleva la corona en SVG dentro.
+  const corona = '<svg class="ic"><use href="#ic-corona"/></svg>';
   if(dups>0){
     btn.disabled = true;
-    btn.textContent = '⚠️ HAY '+dups+' CONFIANZAS REPETIDAS';
+    btn.innerHTML = '⚠️ HAY '+dups+' CONFIANZAS REPETIDAS';
   } else if(semanaCerrada(currentWeek)){
     btn.disabled = true;
-    btn.textContent = '🔒 SEMANA CERRADA';
+    btn.innerHTML = '🔒 SEMANA CERRADA';
   } else {
     btn.disabled = false;
-    btn.textContent = faltan>0
-      ? `👑 GUARDAR · faltan ${faltan} por asignar`
-      : `👑 GUARDAR MI SEMANA (${asignados}/${gs.length} listos)`;
+    btn.innerHTML = faltan>0
+      ? `${corona}GUARDAR · faltan ${faltan} por asignar`
+      : `${corona}GUARDAR MI SEMANA (${asignados}/${gs.length} listos)`;
   }
 }
 
@@ -3136,6 +3255,7 @@ async function revisarBonoInstalacion(){
    INIT
    ===================================================== */
 function renderAll(){
+  pintarCapiTips();
   renderDivisiones();
   renderCalendario();
   renderPremios();
@@ -3144,6 +3264,9 @@ function renderAll(){
   renderRanking();
 }
 
+// Los avisos del Capi no dependen de la base: se pintan de inmediato para que
+// estén ahí mientras carga todo lo demás.
+pintarCapiTips();
 initApp();
 </script>
 </body>
