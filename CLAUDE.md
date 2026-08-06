@@ -121,8 +121,16 @@ decora.** Los tokens viven en `:root` al inicio del `<style>`; los alias viejos
 (`--dorado`, `--azul`) siguen ahí porque el JS los escribe en estilos en línea.
 
 Móvil primero: la navegación es una barra fija abajo y solo a partir de 980 px
-sube a pestañas bajo el header. En la pantalla de quiniela el orden en celular
-es perfil → Capi → partidos → underdog/folio/premios.
+sube a pestañas bajo el header. El orden de las pestañas es
+**quiniela · calendario · grupos · ranking · premios · historial · admin**, y
+la app abre en *quiniela*: a lo que entra la gente es a pronosticar.
+
+En la pantalla de quiniela la columna izquierda es perfil → Capi →
+underdog/folio/premios, y la derecha los partidos. **En celular todo eso va
+arriba de los partidos**, así que las seis cifras y los tres accionables se
+vuelven carruseles horizontales por debajo de 720 px. Apilados sumaban 1 600 px
+y el primer partido quedaba a tres pantallas de scroll; con los carruseles
+queda a 1 478 px. Si se agrega algo más a esa columna, hay que volver a medir.
 
 `preview-diseno.html` fue la maqueta que se usó para aprobar el diseño. Ya está
 integrado en la app; el archivo se puede borrar cuando estorbe.
@@ -135,6 +143,13 @@ Las 12 poses viven en `icons/capi/<momento>.webp`. El nombre es el momento, no
 el número de lámina, y la lista está en `CAPI_POSES` dentro de `index.html`.
 Las demás pestañas llevan una tarjeta fija que se arma sola desde
 `data-capi` / `data-txt` en el HTML (ver `pintarCapiTips()`).
+
+**Tres láminas son pizarrones, no poses:** `calendario`, `confianza` y
+`ranking` traen texto explicando la mecánica. A 100 px ese texto no se lee, así
+que de cada una salen DOS archivos: `<momento>.webp` (solo el personaje,
+recortado) para la tarjeta y `board-<momento>.webp` (la lámina entera, 900 px)
+que se abre en el modal con el botón *¿Cómo funciona?*. La lista está en
+`CAPI_BOARDS`; el recorte del personaje, en `CON_PIZARRON` del optimizador.
 
 **Las poses nuevas se optimizan antes de subirlas:** `python
 tools/optimiza-capi.py <carpeta>`. Los PNG de Canva pesan ~700 KB cada uno y se

@@ -430,6 +430,25 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 .capi .capi-t{font-size:.6rem;color:var(--oro2);letter-spacing:.2em;font-weight:700;text-transform:uppercase}
 .capi p{font-size:.82rem;line-height:1.5;margin:.35rem 0}
 .capi .capi-f{font-size:.7rem;color:var(--gris);font-style:italic}
+.capi-board-btn{
+  display:inline-block;margin-top:.55rem;
+  border:1px solid var(--oro);border-radius:999px;color:var(--oro2);
+  background:var(--oro-tenue);padding:.4rem .85rem;
+  font-size:.64rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  transition:all .18s;
+}
+.capi-board-btn:hover{background:var(--oro);color:#141004}
+/* El pizarrón se abre a pantalla casi completa: si no, no se lee */
+.modal-capi{max-width:620px;padding:.9rem;background:none;border:none;box-shadow:none;max-height:92vh}
+/* Que quepa entero sin scroll: se limita por alto Y por ancho, y el
+   navegador elige el que mande. Un pizarrón a medias no explica nada. */
+.modal-capi img{
+  display:block;margin:0 auto;width:auto;height:auto;
+  max-width:100%;max-height:86vh;
+  filter:drop-shadow(0 16px 40px rgba(0,0,0,.7));
+}
+.modal-capi .modal-close{background:rgba(0,0,0,.6);top:0;right:0}
+
 /* El Capi asomándose en las demás pestañas: mismo personaje, formato tira */
 .capi-tip{margin-bottom:1.3rem}
 .capi-tip .capi-art{width:96px;height:128px}
@@ -476,6 +495,18 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 /* --- Fila de 6 estadísticas (con aire, no apretadas) --- */
 .stat-row{
   display:grid;grid-template-columns:repeat(2,1fr);gap:.85rem;margin-bottom:1.5rem;
+}
+/* En celular las seis cifras van en carrusel, como en la maqueta aprobada.
+   En dos columnas ocupaban 440 px de alto que hay que pasar cada vez para
+   llegar a los pronósticos. */
+@media (max-width:719px){
+  .stat-row{
+    display:flex;overflow-x:auto;gap:.7rem;
+    scroll-snap-type:x mandatory;scrollbar-width:none;
+    margin:0 -1rem 1.3rem;padding:0 1rem .4rem;
+  }
+  .stat-row::-webkit-scrollbar{display:none}
+  .stat{flex:0 0 42%;scroll-snap-align:start}
 }
 .stat{
   background:linear-gradient(160deg,var(--card2),var(--card));
@@ -630,8 +661,26 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
   border:1px solid var(--linea);color:var(--gris);box-shadow:none;cursor:not-allowed;
 }
 
-/* ========= FILA DE 3: underdog · folio · premios ========= */
-.extras-row{display:grid;gap:1rem;grid-template-columns:1fr;margin-top:1.6rem}
+/* ========= ACCIONABLES: underdog · folio · premios =========
+   Viven en la columna izquierda, debajo del perfil y del Capi. Antes estaban
+   al final de la página y había que pasar los 16 partidos para llegar a
+   capturar un folio. */
+.extras-row{display:grid;gap:.9rem;grid-template-columns:1fr}
+/* En celular las tres van en un carrusel que se desliza con el dedo.
+   Apiladas ocupaban 1150 px y empujaban el primer partido hasta los 2200 px
+   de scroll: la acción principal quedaba a tres pantallas. Así se ven altas
+   —el underdog cabe en la primera pantalla— sin enterrar los pronósticos.
+   La tercera asoma a la derecha para que se note que hay más. */
+@media (max-width:719px){
+  .extras-row{
+    display:flex;overflow-x:auto;gap:.7rem;
+    scroll-snap-type:x mandatory;scrollbar-width:none;
+    padding-bottom:.4rem;margin:0 -1rem;padding-left:1rem;padding-right:1rem;
+  }
+  .extras-row::-webkit-scrollbar{display:none}
+  .extras-row > *{flex:0 0 86%;scroll-snap-align:start}
+  .extra-card{height:100%}
+}
 .extra-card{
   background:linear-gradient(160deg,var(--card2),var(--card));
   border:1px solid var(--linea);border-radius:var(--r);
@@ -845,6 +894,8 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 @media (min-width:720px){
   .stat-row{grid-template-columns:repeat(3,1fr)}
   .resumen{width:auto;min-width:330px}
+  /* En tableta la columna todavía va a ancho completo: caben en fila y así
+     no empujan los partidos hacia abajo. */
   .extras-row{grid-template-columns:repeat(3,1fr)}
 }
 @media (min-width:980px){
@@ -863,7 +914,10 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   .tab.active::after{display:none}
   main{padding:1.8rem 1.5rem 3rem}
   h1{font-size:2.6rem}
-  .q-layout{display:grid;grid-template-columns:270px 1fr;gap:1.6rem;align-items:start}
+  /* 300 px y no menos: abajo van el capturador de folio y las opciones del
+     underdog, que con menos ancho se parten feo. */
+  .q-layout{display:grid;grid-template-columns:300px 1fr;gap:1.6rem;align-items:start}
+  .q-side .extras-row{grid-template-columns:1fr}
   /* Nada de position:sticky aquí. La columna (perfil + Capi) mide más de
      700 px y en una pantalla de portátil no cabe: al fijarla, el Capi
      quedaba debajo del borde y NO había forma de llegar a él. */
@@ -1023,12 +1077,12 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 <!-- ========== NAV ========== -->
 <nav id="nav">
   <div id="nav-inner">
-    <button class="tab active" data-tab="grupos"><span class="ico">🏟️</span>GRUPOS</button>
+    <button class="tab active" data-tab="quiniela"><span class="ico">🏈</span>QUINIELA</button>
     <button class="tab" data-tab="calendario"><span class="ico">📅</span>CALENDARIO</button>
-    <button class="tab" data-tab="quiniela"><span class="ico">🏈</span>QUINIELA</button>
+    <button class="tab" data-tab="grupos"><span class="ico">🏟️</span>GRUPOS</button>
     <button class="tab" data-tab="ranking"><span class="ico">🏆</span>RANKING</button>
-    <button class="tab" data-tab="historial"><span class="ico">📜</span>HISTORIAL</button>
     <button class="tab" data-tab="premios"><span class="ico">🎁</span>PREMIOS</button>
+    <button class="tab" data-tab="historial"><span class="ico">📜</span>HISTORIAL</button>
     <button class="tab" data-tab="admin" id="tab-admin" style="display:none"><span class="ico">⚙️</span>ADMIN</button>
   </div>
 </nav>
@@ -1036,10 +1090,10 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 <main>
 
   <!-- ========== GRUPOS ========== -->
-  <section class="module active" id="m-grupos">
+  <section class="module" id="m-grupos">
     <h1 class="display">CONFERENCIAS Y DIVISIONES</h1>
     <p class="lead-sub">32 equipos · 2 conferencias · 8 divisiones. El récord se actualiza solo conforme se cargan los resultados.</p>
-    <div class="card capi capi-tip" data-capi="bienvenida"
+    <div class="card capi capi-tip" data-capi="ganador"
          data-txt="Aquí ves cómo va cada equipo. Un equipo con buen récord no siempre gana: para eso están tus puntos de confianza."></div>
     <div class="conf-toggle">
       <button class="active" data-conf="AFC">AFC</button>
@@ -1079,7 +1133,9 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   </section>
 
   <!-- ========== QUINIELA ========== -->
-  <section class="module" id="m-quiniela">
+  <!-- Es la pestaña con la que abre la app: a lo que entra la gente es a poner
+       sus pronósticos, no a mirar la tabla de divisiones. -->
+  <section class="module active" id="m-quiniela">
     <div id="quiniela">
       <div class="q-layout">
 
@@ -1098,6 +1154,33 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
               <div class="capi-t">Mensaje del Capi</div>
               <p id="capi-msg">Bienvenido a la quiniela. Reparte tu confianza con cabeza.</p>
               <div class="capi-f">— El Capi</div>
+              <button class="capi-board-btn" id="capi-board-btn" style="display:none">📖 ¿Cómo funciona?</button>
+            </div>
+          </div>
+
+          <!-- Los tres accionables van aquí arriba, no al final de la página:
+               debajo del perfil y del Capi se alcanzan sin tener que bajar
+               los 16 partidos de la semana. -->
+          <div class="extras-row">
+            <div id="underdog-slot"></div>
+
+            <div class="extra-card">
+              <div class="ex-ico">🍔</div>
+              <h3 class="display">FOLIO DE CONSUMO</h3>
+              <p>Cada vez que consumas en La Corte pide tu folio y captúralo aquí. Uno por día de juego.</p>
+              <div class="folio-row">
+                <input type="text" id="folio-input" placeholder="LC0913-A1B2C" maxlength="16" />
+                <button onclick="canjearFolio()">CANJEAR</button>
+              </div>
+              <div class="folio-list" id="mis-folios"></div>
+            </div>
+
+            <div class="extra-card">
+              <div class="ex-ico">🏆</div>
+              <h3 class="display">PREMIOS DE LA TEMPORADA</h3>
+              <p id="premios-teaser">10 premios en juego.</p>
+              <div id="premios-mini"></div>
+              <button class="ex-cta" onclick="irA('premios')">Ver los 10 premios</button>
             </div>
           </div>
         </aside>
@@ -1145,30 +1228,6 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
             <button class="btn-save" id="btn-guardar" onclick="guardarSemana()"><svg class="ic"><use href="#ic-corona"/></svg>GUARDAR MI SEMANA</button>
           </div>
 
-          <!-- Fila de tres, a ancho completo, debajo de los partidos -->
-          <div class="extras-row">
-            <div id="underdog-slot"></div>
-
-            <div class="extra-card">
-              <div class="ex-ico">🍔</div>
-              <h3 class="display">FOLIO DE CONSUMO</h3>
-              <p>Cada vez que consumas en La Corte pide tu folio y captúralo aquí. Uno por día de juego.</p>
-              <div class="folio-row">
-                <input type="text" id="folio-input" placeholder="LC0913-A1B2C" maxlength="16" />
-                <button onclick="canjearFolio()">CANJEAR</button>
-              </div>
-              <div class="folio-list" id="mis-folios"></div>
-            </div>
-
-            <div class="extra-card">
-              <div class="ex-ico">🏆</div>
-              <h3 class="display">PREMIOS DE LA TEMPORADA</h3>
-              <p id="premios-teaser">10 premios en juego.</p>
-              <div id="premios-mini"></div>
-              <button class="ex-cta" onclick="irA('premios')">Ver los 10 premios</button>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
@@ -1187,7 +1246,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   <section class="module" id="m-historial">
     <h1 class="display">HISTORIAL DE QUINIELAS</h1>
     <p class="lead-sub">Todas las quinielas que ha organizado La Corte.</p>
-    <div class="card capi capi-tip" data-capi="listo"
+    <div class="card capi capi-tip" data-capi="bienvenida"
          data-txt="Aquí queda guardado quién ganó cada temporada. La de este año se cierra con el Super Bowl LXI."></div>
     <div id="hist-list" class="grid grid-2"></div>
   </section>
@@ -1199,7 +1258,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
       <p class="muted small">Temporada NFL 2026-27 · La Corte</p>
       <p id="mi-pos-actual">Cargando posición...</p>
     </div>
-    <div class="card capi capi-tip" data-capi="guardar"
+    <div class="card capi capi-tip" data-capi="listo"
          data-txt="Los 10 primeros se llevan premio, y la temporada es larguísima: 23 semanas. El que no se cae es el que gana."></div>
     <div class="grid grid-3" id="premios-top"></div>
     <h2>DEL 4° AL 10° LUGAR</h2>
@@ -1313,6 +1372,17 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
     <a href="#" id="tel-link" class="phone-big">834 314 4848</a>
     <a href="#" id="wa-link" target="_blank" rel="noopener" class="btn-primary btn-gold" style="display:block;margin-bottom:.6rem">💬 RESERVAR POR WHATSAPP</a>
     <a href="#" id="tel-btn" class="btn-primary" style="display:block">📞 LLAMAR AHORA</a>
+  </div>
+</div>
+
+<!-- Pizarrón del Capi: tres de las láminas de Canva explican la mecánica con
+     texto (elige tu partido, puntos de confianza, ranking). A 100 px no se
+     lee nada, así que en la tarjeta va solo el personaje y la lámina completa
+     se abre aquí, en grande, cuando la piden. -->
+<div class="modal-backdrop hidden" id="modal-capi">
+  <div class="modal modal-capi">
+    <button class="modal-close" onclick="cerrarCapiBoard()">✕</button>
+    <img id="capi-board-img" src="" alt="Explicación de El Capi" />
   </div>
 </div>
 
@@ -2266,9 +2336,26 @@ const CAPI_POSES = ['bienvenida','registrate','datos','calendario','ganador',
                     'confianza','guardar','ranking','consumo','anotador',
                     'underdog','listo'];
 
+// Estas tres láminas traen un pizarrón con texto explicando la mecánica. En la
+// tarjeta chica va solo el personaje (el texto no se leería) y el pizarrón
+// completo se abre en grande con el botón "¿Cómo funciona?".
+const CAPI_BOARDS = ['calendario','confianza','ranking'];
+
 function capiSrc(pose){
   return '/icons/capi/' + (CAPI_POSES.includes(pose) ? pose : 'bienvenida') + '.webp';
 }
+
+function abrirCapiBoard(pose){
+  if(!CAPI_BOARDS.includes(pose)) return;
+  document.getElementById('capi-board-img').src = '/icons/capi/board-'+pose+'.webp';
+  document.getElementById('modal-capi').classList.remove('hidden');
+}
+function cerrarCapiBoard(){
+  document.getElementById('modal-capi').classList.add('hidden');
+}
+document.getElementById('modal-capi').addEventListener('click', e=>{
+  if(e.target.id==='modal-capi') cerrarCapiBoard();
+});
 function ponCapi(img, pose){
   if(!img) return;
   const src = capiSrc(pose);
@@ -2288,6 +2375,9 @@ function pintarCapiTips(){
       <div class="capi-txt">
         <div class="capi-t">El Capi te dice</div>
         <p>${esc(c.dataset.txt||'')}</p>
+        ${CAPI_BOARDS.includes(c.dataset.capi)
+          ? `<button class="capi-board-btn" onclick="abrirCapiBoard('${esc(c.dataset.capi)}')">📖 ¿Cómo funciona?</button>`
+          : ''}
       </div>`;
   });
 }
@@ -2335,6 +2425,16 @@ function renderCapi(p){
   }
   el.textContent = msg;
   ponCapi(document.getElementById('capi-img'), pose);
+
+  // El botón del pizarrón siempre está: si la pose del momento no tiene
+  // lámina propia, se ofrece la de confianza, que es LA mecánica de la
+  // quiniela y la que más se pregunta.
+  const board = CAPI_BOARDS.includes(pose) ? pose : 'confianza';
+  const btn = document.getElementById('capi-board-btn');
+  if(btn){
+    btn.style.display = '';
+    btn.onclick = ()=> abrirCapiBoard(board);
+  }
 }
 
 function renderMisFolios(){

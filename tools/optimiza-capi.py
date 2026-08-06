@@ -2,14 +2,21 @@
 #
 # POR QUE EXISTE ESTE ARCHIVO
 # ===========================
-# Los PNG que salen de Canva pesan entre 440 KB y 1.1 MB cada uno (8.3 MB los
-# doce) y miden ~1100 px de alto. En la app el Capi se ve a 100-150 px. Subir
+# Los PNG que salen de Canva pesan entre 640 KB y 1.6 MB cada uno (12 MB los
+# doce) y miden ~1130 px de alto. En la app el Capi se ve a 100-150 px. Subir
 # los originales seria gastarse el plan de datos de 200 personas que entran
 # desde el telefono para mostrar una imagen 10 veces mas grande de lo que cabe.
 #
-# Este script recorta el margen transparente, escala a 400 px de alto (el doble
-# de lo que se ve, para pantallas retina) y guarda WebP con transparencia.
-# Resultado: 8.3 MB -> 313 KB, sin diferencia visible.
+# DOS SALIDAS POR LAMINA
+# ======================
+# Algunas laminas no son solo el personaje: traen un PIZARRON con texto que
+# explica la mecanica (elige tu partido, puntos de confianza, ranking). Ese
+# texto es ilegible a 100 px, asi que de esas se sacan dos archivos:
+#
+#   icons/capi/<momento>.webp        solo el personaje, recortado -> tarjetas
+#   icons/capi/board-<momento>.webp  la lamina completa           -> modal
+#
+# De las demas solo sale la primera, porque el personaje ES toda la lamina.
 #
 # COMO SE USA (cuando Oscar exporte poses nuevas)
 # ===============================================
@@ -26,7 +33,8 @@ from pathlib import Path
 from PIL import Image
 
 DESTINO = Path(__file__).resolve().parent.parent / "icons" / "capi"
-ALTO = 400
+ALTO_POSE = 400    # se ve a 150 px como mucho; 400 alcanza para pantallas retina
+ANCHO_BOARD = 900  # el pizarron se abre grande: el texto tiene que leerse
 
 # lamina de Canva -> momento en la app
 NOMBRES = {
@@ -44,6 +52,20 @@ NOMBRES = {
     "12_TERMINASTE_TUTORIAL": "listo",
 }
 
+# Laminas con pizarron. El valor es desde que fraccion del ancho empieza el
+# personaje, para poder recortarlo del pizarron. Se saco a ojo mirando cada
+# imagen; si Oscar reencuadra alguna, hay que revisarlo.
+CON_PIZARRON = {
+    "04_ELIGE_TU_PARTIDO": 0.52,
+    "06_USA_TU_CONFIANZA": 0.66,
+    "08_VE_EL_RANKING":    0.63,
+}
+
+
+def guarda(im, ruta, calidad=82):
+    im.save(ruta, "WEBP", quality=calidad, method=6)
+    return ruta.stat().st_size
+
 
 def main(origen: Path) -> None:
     DESTINO.mkdir(parents=True, exist_ok=True)
@@ -55,22 +77,35 @@ def main(origen: Path) -> None:
             print(f"  (salto {png.name}: no esta en NOMBRES)")
             continue
 
-        im = Image.open(png).convert("RGBA")
+        original = Image.open(png).convert("RGBA")
         peso = png.stat().st_size
-
-        # Varias laminas traen mucho aire alrededor del personaje.
-        im = im.crop(im.getbbox())
-
-        escala = ALTO / im.height
-        if escala < 1:
-            im = im.resize((max(1, round(im.width * escala)), ALTO), Image.LANCZOS)
-
-        salida = DESTINO / f"{slug}.webp"
-        im.save(salida, "WEBP", quality=82, method=6)
-
         antes += peso
-        despues += salida.stat().st_size
-        print(f"  {slug:12} {im.width:4}x{im.height}  {peso/1024:7.0f} KB -> {salida.stat().st_size/1024:6.1f} KB")
+
+        # --- lamina completa, solo si trae pizarron ---
+        if png.stem in CON_PIZARRON:
+            board = original.crop(original.getbbox())
+            if board.width > ANCHO_BOARD:
+                escala = ANCHO_BOARD / board.width
+                board = board.resize((ANCHO_BOARD, round(board.height * escala)), Image.LANCZOS)
+            peso_b = guarda(board, DESTINO / f"board-{slug}.webp", 80)
+            despues += peso_b
+            print(f"  board-{slug:8} {board.width:4}x{board.height:<5} {peso_b/1024:6.1f} KB")
+
+            # y el personaje solo, para la tarjeta chica
+            corte = original.crop((round(original.width * CON_PIZARRON[png.stem]), 0,
+                                   original.width, original.height))
+        else:
+            corte = original
+
+        # --- personaje ---
+        im = corte.crop(corte.getbbox())
+        escala = ALTO_POSE / im.height
+        if escala < 1:
+            im = im.resize((max(1, round(im.width * escala)), ALTO_POSE), Image.LANCZOS)
+
+        peso_p = guarda(im, DESTINO / f"{slug}.webp")
+        despues += peso_p
+        print(f"  {slug:14} {im.width:4}x{im.height:<5} {peso/1024:7.0f} KB -> {peso_p/1024:6.1f} KB")
 
     if antes:
         print(f"\n  TOTAL {antes/1024/1024:.1f} MB -> {despues/1024:.0f} KB")
