@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vista previa · Rediseño Quiniela NFL La Corte</title>
+<!--
+  VISTA PREVIA DEL REDISEÑO — NO ES LA APP.
+  Datos de muestra, sin conexión a Supabase. Sirve para que Paco y Oscar
+  evalúen el nuevo look (concepto "La Corte premium": carbón + dorado,
+  inspirado en el mockup de agosto 2026) en el celular antes de migrarlo
+  a index.html. Si el veredicto es bueno, este CSS se integra a la app real.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0D10;
+  --card:#13161C;
+  --card2:#181C24;
+  --line:rgba(255,255,255,.07);
+  --oro:#D4AF37;
+  --oro2:#E8C766;
+  --navy:#1B3555;
+  --txt:#EDEDEF;
+  --gris:#8A9099;
+  --verde:#2FBF71;
+  --lila:#B07CE8;
+  --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--txt);
+  min-height:100vh;
+  /* textura sutil de campo: rayas de yarda apenas visibles */
+  background-image:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.015) 0 1px, transparent 1px 120px),
+    radial-gradient(ellipse 120% 60% at 50% -10%, rgba(212,175,55,.05), transparent 60%);
+  padding-bottom:calc(76px + env(safe-area-inset-bottom)); /* espacio para la barra inferior */
+}
+.display{font-family:'Bebas Neue',sans-serif;letter-spacing:.05em}
+
+/* ====== AVISO DE VISTA PREVIA ====== */
+.preview-tag{
+  position:fixed;top:0;left:0;right:0;z-index:60;
+  background:var(--navy);color:#cfe0f5;text-align:center;
+  font-size:.68rem;padding:.3rem;letter-spacing:.08em;text-transform:uppercase;
+}
+
+/* ====== HEADER ====== */
+header{
+  position:sticky;top:0;z-index:50;margin-top:1.35rem;
+  background:rgba(11,13,16,.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--oro);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.7rem 1rem;
+}
+.brand{display:flex;align-items:center;gap:.6rem}
+.crown{
+  width:38px;height:38px;border-radius:50%;
+  border:1.5px solid var(--oro);display:grid;place-items:center;
+  font-size:1.1rem;background:radial-gradient(circle at 35% 30%, #1d2027, #0c0e12);
+}
+.brand h1{font-size:1.35rem;color:var(--txt);line-height:1}
+.brand h1 b{color:var(--oro);font-weight:400}
+.brand small{display:block;font-size:.6rem;color:var(--gris);letter-spacing:.25em;font-family:'Inter';font-weight:600}
+.avatar{
+  display:flex;align-items:center;gap:.5rem;
+  border:1px solid var(--line);border-radius:999px;padding:.3rem .8rem .3rem .4rem;
+  background:var(--card);font-size:.75rem;color:var(--txt)
+}
+.avatar .crown{width:28px;height:28px;font-size:.8rem}
+
+/* ====== NAV INFERIOR (móvil) ====== */
+nav.tabs{
+  position:fixed;bottom:0;left:0;right:0;z-index:50;
+  background:rgba(11,13,16,.96);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);
+  display:flex;justify-content:space-around;
+  padding:.45rem .2rem calc(.45rem + env(safe-area-inset-bottom));
+}
+nav.tabs a{
+  display:flex;flex-direction:column;align-items:center;gap:.15rem;
+  color:var(--gris);text-decoration:none;font-size:.58rem;
+  letter-spacing:.06em;text-transform:uppercase;font-weight:600;
+  padding:.2rem .5rem;border-radius:8px;
+}
+nav.tabs a .i{font-size:1.15rem}
+nav.tabs a.on{color:var(--oro)}
+nav.tabs a.on::after{content:'';width:16px;height:2px;background:var(--oro);border-radius:2px;margin-top:.1rem}
+
+/* ====== CONTENIDO ====== */
+main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
+.titulo{display:flex;align-items:baseline;gap:.8rem;flex-wrap:wrap;margin-bottom:.4rem}
+.titulo h2{font-size:2.3rem;color:var(--oro)}
+.chip-semana{
+  border:1px solid var(--oro);border-radius:999px;color:var(--oro2);
+  font-size:.68rem;font-weight:600;letter-spacing:.12em;padding:.3rem .9rem;text-transform:uppercase
+}
+.sub{color:var(--gris);font-size:.8rem;margin-bottom:1.1rem}
+
+/* tarjetas base "cristal" */
+.card{
+  background:linear-gradient(160deg, var(--card2), var(--card));
+  border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:0 6px 24px rgba(0,0,0,.35);
+}
+
+/* ====== ESTADÍSTICAS (carrusel en móvil) ====== */
+.stats{
+  display:flex;gap:.7rem;overflow-x:auto;padding-bottom:.5rem;margin-bottom:1.4rem;
+  scroll-snap-type:x mandatory;scrollbar-width:none;
+}
+.stats::-webkit-scrollbar{display:none}
+.stat{
+  scroll-snap-align:start;flex:0 0 120px;
+  padding:.85rem .9rem;text-align:left;
+}
+.stat .n{font-size:1.5rem;font-weight:700;color:var(--txt);line-height:1.1}
+.stat .n.oro{color:var(--oro2)}
+.stat .l{font-size:.6rem;color:var(--gris);text-transform:uppercase;letter-spacing:.1em;margin-top:.25rem;font-weight:600}
+.stat .e{font-size:1rem}
+
+/* ====== PARTIDOS ====== */
+.seccion{display:flex;align-items:center;justify-content:space-between;margin:0 0 .8rem}
+.seccion h3{font-size:1.15rem;letter-spacing:.14em;color:var(--txt)}
+.partido{padding:1rem;margin-bottom:.9rem}
+.equipos{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem}
+.equipo{display:flex;align-items:center;gap:.6rem;min-width:0}
+.equipo.der{flex-direction:row-reverse;text-align:right}
+.logo{
+  width:42px;height:42px;border-radius:50%;flex-shrink:0;
+  display:grid;place-items:center;font-weight:700;font-size:.72rem;
+  border:1px solid var(--line);color:#fff;
+}
+.equipo .nom{line-height:1.15;min-width:0}
+.equipo .nom b{display:block;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.equipo .nom span{font-size:.65rem;color:var(--gris)}
+.vs{color:var(--gris);font-size:.7rem;font-weight:700;letter-spacing:.1em;padding:0 .4rem}
+
+.campo{margin-bottom:.8rem}
+.campo label{
+  display:block;font-size:.6rem;color:var(--gris);text-transform:uppercase;
+  letter-spacing:.14em;font-weight:700;margin-bottom:.4rem
+}
+/* selector A/B tipo segmento */
+.seg{display:flex;gap:.5rem}
+.seg button{
+  flex:1;padding:.6rem;border-radius:10px;cursor:pointer;
+  background:var(--navy);border:1px solid transparent;color:#c8d6ea;
+  font-weight:700;font-size:.8rem;font-family:inherit;transition:all .15s;
+}
+.seg button.sel{
+  background:linear-gradient(160deg,#3a2f10,#2a230d);
+  border-color:var(--oro);color:var(--oro2);
+}
+.seg button.sel::after{content:' ✓'}
+/* confianza: fila de chips deslizable */
+.conf{display:flex;gap:.45rem;overflow-x:auto;padding-bottom:.3rem;scrollbar-width:none}
+.conf::-webkit-scrollbar{display:none}
+.conf button{
+  flex:0 0 44px;height:44px;border-radius:10px;cursor:pointer;
+  background:var(--card2);border:1px solid var(--line);color:var(--gris);
+  font-weight:700;font-size:.9rem;font-family:inherit;transition:all .15s;
+}
+.conf button.sel{background:var(--oro);border-color:var(--oro);color:#141004}
+.conf button:disabled{opacity:.25;cursor:default}
+
+/* ====== GUARDAR ====== */
+.guardar{
+  position:sticky;bottom:calc(72px + env(safe-area-inset-bottom));z-index:40;
+  display:block;width:100%;padding:1rem;margin:1.2rem 0;
+  border:none;border-radius:var(--radius);cursor:pointer;
+  background:linear-gradient(160deg,var(--oro2),var(--oro));
+  color:#141004;font-family:'Bebas Neue';font-size:1.3rem;letter-spacing:.12em;
+  box-shadow:0 8px 28px rgba(212,175,55,.35);
+}
+
+/* ====== EL CAPI ====== */
+.capi{
+  display:flex;gap:.9rem;align-items:center;padding:1rem;margin-bottom:1rem;
+  border-left:3px solid var(--oro);
+}
+.capi .foto{
+  width:56px;height:56px;border-radius:50%;flex-shrink:0;font-size:1.8rem;
+  display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#2a2417,#14110a);
+  border:1.5px solid var(--oro);
+}
+.capi .t{font-size:.62rem;color:var(--oro2);letter-spacing:.18em;font-weight:700;text-transform:uppercase}
+.capi p{font-size:.82rem;color:var(--txt);margin:.25rem 0;line-height:1.45}
+.capi .f{font-size:.72rem;color:var(--gris);font-style:italic}
+
+/* ====== TARJETAS INFERIORES ====== */
+.extras{display:grid;gap:.9rem;grid-template-columns:1fr}
+.extra{padding:1rem}
+.extra .t{display:flex;align-items:center;gap:.5rem;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.extra p{font-size:.78rem;color:var(--gris);margin:.45rem 0 .7rem;line-height:1.5}
+.extra .btn{
+  display:inline-block;border:1px solid var(--oro);border-radius:999px;color:var(--oro2);
+  background:none;font-size:.68rem;font-weight:700;letter-spacing:.1em;
+  padding:.5rem 1.1rem;text-transform:uppercase;cursor:pointer;font-family:inherit;
+}
+.extra.underdog{border-color:rgba(176,124,232,.35)}
+.extra.underdog .t{color:var(--lila)}
+.extra.underdog .btn{border-color:var(--lila);color:var(--lila)}
+
+/* ====== ESCRITORIO ====== */
+.solo-desktop{display:none}
+@media(min-width:960px){
+  body{padding-bottom:2rem}
+  nav.tabs{position:static;border:none;background:none;justify-content:center;gap:1.4rem;padding:.6rem 0 0}
+  nav.tabs a{flex-direction:row;font-size:.72rem;gap:.4rem}
+  nav.tabs a.on::after{display:none}
+  nav.tabs a.on{border-bottom:2px solid var(--oro);border-radius:0;padding-bottom:.4rem}
+  .layout{display:grid;grid-template-columns:250px 1fr;gap:1.4rem;align-items:start}
+  .solo-desktop{display:block}
+  .perfil{padding:1.3rem;text-align:center;position:sticky;top:90px}
+  .perfil .crown{width:70px;height:70px;font-size:2rem;margin:0 auto .8rem}
+  .perfil h3{font-size:1.4rem}
+  .perfil .r{font-size:.62rem;color:var(--gris);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem}
+  .perfil ul{list-style:none;text-align:left}
+  .perfil li{display:flex;justify-content:space-between;font-size:.76rem;padding:.5rem 0;border-top:1px solid var(--line);color:var(--gris)}
+  .perfil li b{color:var(--txt)}
+  .stats{overflow:visible;flex-wrap:wrap}
+  .stat{flex:1 1 130px}
+  .extras{grid-template-columns:repeat(3,1fr)}
+  .guardar{position:static}
+}
+</style>
+</head>
+<body>
+
+<div class="preview-tag">Vista previa del rediseño · datos de muestra · no es la app</div>
+
+<header>
+  <div class="brand">
+    <div class="crown">👑</div>
+    <h1 class="display"><b>QUINIELA</b> NFL<small>LA CORTE · 2026-27</small></h1>
+  </div>
+  <div class="avatar"><div class="crown">👑</div><span>Juan Pérez</span></div>
+</header>
+
+<nav class="tabs">
+  <a href="#"><span class="i">👥</span>Grupos</a>
+  <a href="#"><span class="i">📅</span>Calendario</a>
+  <a href="#" class="on"><span class="i">🏈</span>Quiniela</a>
+  <a href="#"><span class="i">🏆</span>Ranking</a>
+  <a href="#"><span class="i">🕐</span>Historial</a>
+  <a href="#"><span class="i">🎁</span>Premios</a>
+</nav>
+
+<main>
+<div class="layout">
+
+  <!-- Perfil: solo visible en escritorio, en móvil vive en el avatar del header -->
+  <aside class="solo-desktop">
+    <div class="card perfil">
+      <div class="crown">👑</div>
+      <h3 class="display">JUAN PÉREZ</h3>
+      <div class="r">Rango · Veterano</div>
+      <ul>
+        <li>Puntos totales <b>1,245</b></li>
+        <li>Victorias <b>18</b></li>
+        <li>Aciertos <b>72%</b></li>
+        <li>Mejor racha <b>6 sem</b></li>
+        <li>Underdogs <b>7</b></li>
+        <li>Primer anotador <b>9</b></li>
+        <li>Bonos <b>12</b></li>
+      </ul>
+    </div>
+  </aside>
+
+  <div>
+    <div class="titulo">
+      <h2 class="display">MI QUINIELA</h2>
+      <span class="chip-semana">Semana 1 · Jue 10 – Lun 14 Sep</span>
+    </div>
+    <p class="sub">Reparte tu confianza y confirma tus ganadores antes del kickoff.</p>
+
+    <div class="stats">
+      <div class="card stat"><div class="e">🏆</div><div class="n oro">1,245</div><div class="l">Total puntos</div></div>
+      <div class="card stat"><div class="e">🎯</div><div class="n" id="conf-disp">16</div><div class="l">Confianza disponible</div></div>
+      <div class="card stat"><div class="e">🏈</div><div class="n">9</div><div class="l">Anotador acertado</div></div>
+      <div class="card stat"><div class="e">🍔</div><div class="n">2</div><div class="l">Folios esta semana</div></div>
+      <div class="card stat"><div class="e">🦄</div><div class="n">7</div><div class="l">Underdogs</div></div>
+      <div class="card stat"><div class="e">✅</div><div class="n">72%</div><div class="l">Aciertos totales</div></div>
+    </div>
+
+    <div class="seccion"><h3 class="display">PARTIDOS DE LA SEMANA</h3></div>
+
+    <!-- PARTIDO 1 -->
+    <div class="card partido">
+      <div class="equipos">
+        <div class="equipo"><div class="logo" style="background:#00338D">BUF</div><div class="nom"><b>Bills</b><span>0-0 · TNF</span></div></div>
+        <span class="vs">VS</span>
+        <div class="equipo der"><div class="logo" style="background:#241773">BAL</div><div class="nom"><b>Ravens</b><span>0-0</span></div></div>
+      </div>
+      <div class="campo"><label>Selecciona ganador</label>
+        <div class="seg gana"><button class="sel">BUF</button><button>BAL</button></div></div>
+      <div class="campo"><label>Primer anotador 🏈</label>
+        <div class="seg primero"><button class="sel">BUF</button><button>BAL</button></div></div>
+      <div class="campo"><label>Confianza ⚡</label><div class="conf" data-p="1"></div></div>
+    </div>
+
+    <!-- PARTIDO 2 -->
+    <div class="card partido">
+      <div class="equipos">
+        <div class="equipo"><div class="logo" style="background:#E31837">KC</div><div class="nom"><b>Chiefs</b><span>0-0</span></div></div>
+        <span class="vs">VS</span>
+        <div class="equipo der"><div class="logo" style="background:#0080C6">LAC</div><div class="nom"><b>Chargers</b><span>0-0</span></div></div>
+      </div>
+      <div class="campo"><label>Selecciona ganador</label>
+        <div class="seg gana"><button class="sel">KC</button><button>LAC</button></div></div>
+      <div class="campo"><label>Primer anotador 🏈</label>
+        <div class="seg primero"><button>KC</button><button class="sel">LAC</button></div></div>
+      <div class="campo"><label>Confianza ⚡</label><div class="conf" data-p="2"></div></div>
+    </div>
+
+    <!-- PARTIDO 3 -->
+    <div class="card partido">
+      <div class="equipos">
+        <div class="equipo"><div class="logo" style="background:#041E42">DAL</div><div class="nom"><b>Cowboys</b><span>0-0</span></div></div>
+        <span class="vs">VS</span>
+        <div class="equipo der"><div class="logo" style="background:#0B2265">NYG</div><div class="nom"><b>Giants</b><span>0-0</span></div></div>
+      </div>
+      <div class="campo"><label>Selecciona ganador</label>
+        <div class="seg gana"><button class="sel">DAL</button><button>NYG</button></div></div>
+      <div class="campo"><label>Primer anotador 🏈</label>
+        <div class="seg primero"><button class="sel">DAL</button><button>NYG</button></div></div>
+      <div class="campo"><label>Confianza ⚡</label><div class="conf" data-p="3"></div></div>
+    </div>
+
+    <!-- PARTIDO 4 -->
+    <div class="card partido">
+      <div class="equipos">
+        <div class="equipo"><div class="logo" style="background:#AA0000">SF</div><div class="nom"><b>49ers</b><span>0-0 · SNF</span></div></div>
+        <span class="vs">VS</span>
+        <div class="equipo der"><div class="logo" style="background:#002244">SEA</div><div class="nom"><b>Seahawks</b><span>0-0</span></div></div>
+      </div>
+      <div class="campo"><label>Selecciona ganador</label>
+        <div class="seg gana"><button class="sel">SF</button><button>SEA</button></div></div>
+      <div class="campo"><label>Primer anotador 🏈</label>
+        <div class="seg primero"><button class="sel">SF</button><button>SEA</button></div></div>
+      <div class="campo"><label>Confianza ⚡</label><div class="conf" data-p="4"></div></div>
+    </div>
+
+    <button class="guardar display">👑 &nbsp;GUARDAR QUINIELA</button>
+
+    <div class="card capi">
+      <div class="foto">🐵</div>
+      <div>
+        <div class="t">Mensaje del Capi</div>
+        <p>"Esta semana vienen varios partidos cerrados. Aprovecha tu confianza, pero elige con cabeza."</p>
+        <div class="f">— El Capi</div>
+      </div>
+    </div>
+
+    <div class="extras">
+      <div class="card extra">
+        <div class="t">🏆 Premios de la temporada</div>
+        <p>TV 85" · 52 hamburguesas · consumo gratis en la final.</p>
+        <button class="btn">Ver premios</button>
+      </div>
+      <div class="card extra">
+        <div class="t">🏈 Bonus del jueves</div>
+        <p>Captura tu folio de consumo y gana puntos extra.</p>
+        <button class="btn">Introducir folio</button>
+      </div>
+      <div class="card extra underdog">
+        <div class="t">🦄 Underdog de la semana</div>
+        <p>Los underdogs de la Semana 1 se abren el miércoles.</p>
+        <button class="btn">Ver detalles</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<script>
+// Interactividad mínima para que el preview "se sienta": nada de esto toca datos.
+// Selectores A/B
+document.querySelectorAll('.seg').forEach(seg=>{
+  seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    seg.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel');
+  });
+});
+// Confianza: valores 16..1, únicos entre partidos (regla real de la quiniela)
+const usados = {};   // partido -> valor elegido
+document.querySelectorAll('.conf').forEach(fila=>{
+  const p = fila.dataset.p;
+  for(let v=16; v>=1; v--){
+    const b = document.createElement('button');
+    b.textContent = v;
+    b.onclick = ()=>{
+      if(b.disabled) return;
+      delete usados[p];
+      fila.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+      usados[p] = v;
+      refresca();
+    };
+    fila.appendChild(b);
+  }
+});
+function refresca(){
+  const tomados = Object.values(usados);
+  document.querySelectorAll('.conf').forEach(fila=>{
+    fila.querySelectorAll('button').forEach(b=>{
+      const v = +b.textContent;
+      b.disabled = tomados.includes(v) && usados[fila.dataset.p] !== v;
+    });
+  });
+  const disp = document.getElementById('conf-disp');
+  disp.textContent = 16 - tomados.length;
+}
+// estado inicial de muestra: 16, 15, 14, 13 como en el mockup
+[['1',16],['2',15],['3',14],['4',13]].forEach(([p,v])=>{
+  const fila = document.querySelector(`.conf[data-p="${p}"]`);
+  const b = [...fila.querySelectorAll('button')].find(x=>+x.textContent===v);
+  b.classList.add('sel'); usados[p]=v;
+});
+refresca();
+</script>
+</body>
+</html>
