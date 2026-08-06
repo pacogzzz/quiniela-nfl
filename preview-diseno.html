@@ -194,7 +194,10 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
 .capi p{font-size:.82rem;color:var(--txt);margin:.25rem 0;line-height:1.45}
 .capi .f{font-size:.72rem;color:var(--gris);font-style:italic}
 
-/* ====== TARJETAS INFERIORES ====== */
+/* ====== TARJETAS EXTRA (underdog → folio → premios, siempre en vertical) ====== */
+/* En móvil el <aside> va al final del flujo; en escritorio, bajo el perfil. */
+.layout{display:flex;flex-direction:column;gap:1rem}
+.layout > aside{order:2}
 .extras{display:grid;gap:.9rem;grid-template-columns:1fr}
 .extra{padding:1rem}
 .extra .t{display:flex;align-items:center;gap:.5rem;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
@@ -217,17 +220,17 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
   nav.tabs a.on::after{display:none}
   nav.tabs a.on{border-bottom:2px solid var(--oro);border-radius:0;padding-bottom:.4rem}
   .layout{display:grid;grid-template-columns:250px 1fr;gap:1.4rem;align-items:start}
+  .layout > aside{order:0}
   .solo-desktop{display:block}
-  .perfil{padding:1.3rem;text-align:center;position:sticky;top:90px}
+  .extras{margin-top:1rem}
+  .perfil{padding:1.3rem;text-align:center}
   .perfil .crown{width:70px;height:70px;font-size:2rem;margin:0 auto .8rem}
-  .perfil h3{font-size:1.4rem}
-  .perfil .r{font-size:.62rem;color:var(--gris);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem}
+  .perfil h3{font-size:1.4rem;margin-bottom:.8rem}
   .perfil ul{list-style:none;text-align:left}
   .perfil li{display:flex;justify-content:space-between;font-size:.76rem;padding:.5rem 0;border-top:1px solid var(--line);color:var(--gris)}
   .perfil li b{color:var(--txt)}
   .stats{overflow:visible;flex-wrap:wrap}
   .stat{flex:1 1 130px}
-  .extras{grid-template-columns:repeat(3,1fr)}
   .guardar{position:static}
 }
 </style>
@@ -256,12 +259,11 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
 <main>
 <div class="layout">
 
-  <!-- Perfil: solo visible en escritorio, en móvil vive en el avatar del header -->
-  <aside class="solo-desktop">
-    <div class="card perfil">
+  <!-- Perfil (solo escritorio) + tarjetas extra debajo, como pidió el PDF de cambios -->
+  <aside>
+    <div class="card perfil solo-desktop">
       <div class="crown">👑</div>
       <h3 class="display">JUAN PÉREZ</h3>
-      <div class="r">Rango · Veterano</div>
       <ul>
         <li>Puntos totales <b>1,245</b></li>
         <li>Victorias <b>18</b></li>
@@ -271,6 +273,25 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
         <li>Primer anotador <b>9</b></li>
         <li>Bonos <b>12</b></li>
       </ul>
+    </div>
+
+    <!-- Orden pedido: underdog → folio → premios, en vertical -->
+    <div class="extras">
+      <div class="card extra underdog">
+        <div class="t">🦄 Underdog de la semana</div>
+        <p>Los underdogs de la Semana 1 se abren el miércoles.</p>
+        <button class="btn">Ver detalles</button>
+      </div>
+      <div class="card extra">
+        <div class="t">🏈 Bonus del jueves</div>
+        <p>Captura tu folio de consumo y gana puntos extra.</p>
+        <button class="btn">Introducir folio</button>
+      </div>
+      <div class="card extra">
+        <div class="t">🏆 Premios de la temporada</div>
+        <p>TV 85" · 52 hamburguesas · consumo gratis en la final.</p>
+        <button class="btn">Ver premios</button>
+      </div>
     </div>
   </aside>
 
@@ -295,13 +316,13 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
     <!-- PARTIDO 1 -->
     <div class="card partido">
       <div class="equipos">
-        <div class="equipo"><div class="logo" style="background:#00338D">BUF</div><div class="nom"><b>Bills</b><span>0-0 · TNF</span></div></div>
+        <div class="equipo"><div class="logo" style="background:#00338D">BUF</div><div class="nom"><b>Bills</b><span>0-0 · TNF ⭐</span></div></div>
         <span class="vs">VS</span>
         <div class="equipo der"><div class="logo" style="background:#241773">BAL</div><div class="nom"><b>Ravens</b><span>0-0</span></div></div>
       </div>
       <div class="campo"><label>Selecciona ganador</label>
         <div class="seg gana"><button class="sel">BUF</button><button>BAL</button></div></div>
-      <div class="campo"><label>Primer anotador 🏈</label>
+      <div class="campo"><label>Primer anotador ⭐ solo en estelares</label>
         <div class="seg primero"><button class="sel">BUF</button><button>BAL</button></div></div>
       <div class="campo"><label>Confianza ⚡</label><div class="conf" data-p="1"></div></div>
     </div>
@@ -315,8 +336,6 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
       </div>
       <div class="campo"><label>Selecciona ganador</label>
         <div class="seg gana"><button class="sel">KC</button><button>LAC</button></div></div>
-      <div class="campo"><label>Primer anotador 🏈</label>
-        <div class="seg primero"><button>KC</button><button class="sel">LAC</button></div></div>
       <div class="campo"><label>Confianza ⚡</label><div class="conf" data-p="2"></div></div>
     </div>
 
@@ -329,21 +348,19 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
       </div>
       <div class="campo"><label>Selecciona ganador</label>
         <div class="seg gana"><button class="sel">DAL</button><button>NYG</button></div></div>
-      <div class="campo"><label>Primer anotador 🏈</label>
-        <div class="seg primero"><button class="sel">DAL</button><button>NYG</button></div></div>
       <div class="campo"><label>Confianza ⚡</label><div class="conf" data-p="3"></div></div>
     </div>
 
     <!-- PARTIDO 4 -->
     <div class="card partido">
       <div class="equipos">
-        <div class="equipo"><div class="logo" style="background:#AA0000">SF</div><div class="nom"><b>49ers</b><span>0-0 · SNF</span></div></div>
+        <div class="equipo"><div class="logo" style="background:#AA0000">SF</div><div class="nom"><b>49ers</b><span>0-0 · SNF ⭐</span></div></div>
         <span class="vs">VS</span>
         <div class="equipo der"><div class="logo" style="background:#002244">SEA</div><div class="nom"><b>Seahawks</b><span>0-0</span></div></div>
       </div>
       <div class="campo"><label>Selecciona ganador</label>
         <div class="seg gana"><button class="sel">SF</button><button>SEA</button></div></div>
-      <div class="campo"><label>Primer anotador 🏈</label>
+      <div class="campo"><label>Primer anotador ⭐ solo en estelares</label>
         <div class="seg primero"><button class="sel">SF</button><button>SEA</button></div></div>
       <div class="campo"><label>Confianza ⚡</label><div class="conf" data-p="4"></div></div>
     </div>
@@ -359,23 +376,6 @@ main{max-width:1200px;margin:0 auto;padding:1.1rem 1rem 2rem}
       </div>
     </div>
 
-    <div class="extras">
-      <div class="card extra">
-        <div class="t">🏆 Premios de la temporada</div>
-        <p>TV 85" · 52 hamburguesas · consumo gratis en la final.</p>
-        <button class="btn">Ver premios</button>
-      </div>
-      <div class="card extra">
-        <div class="t">🏈 Bonus del jueves</div>
-        <p>Captura tu folio de consumo y gana puntos extra.</p>
-        <button class="btn">Introducir folio</button>
-      </div>
-      <div class="card extra underdog">
-        <div class="t">🦄 Underdog de la semana</div>
-        <p>Los underdogs de la Semana 1 se abren el miércoles.</p>
-        <button class="btn">Ver detalles</button>
-      </div>
-    </div>
   </div>
 
 </div>
