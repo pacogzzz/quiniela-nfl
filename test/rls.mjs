@@ -124,7 +124,7 @@ await login(BETO);
 await allowed('Beto (#50 del corte) SI puede jugar underdog de la semana 2',
   `insert into underdog_picks(user_id,week,opcion) values($1,2,'B')`,[BETO]);
 
-console.log('\n== LOS PRONOSTICOS AJENOS SON SECRETOS HASTA EL KICKOFF ==');
+console.log('\n== LOS PRONOSTICOS AJENOS SON SECRETOS, SIEMPRE ==');
 // Este es el hueco que estuvo abierto hasta 005_privacidad_picks.sql: la
 // politica decia USING (true), asi que cualquier participante CON sesion leia
 // los pronosticos de los otros ~200 antes de que rodara la bola. Con puntos de
@@ -138,24 +138,29 @@ await q(`update games set kickoff = NOW() + interval '3 days' where id='W01-D01'
 await q(`insert into picks(user_id,game_id,ganador,confianza) values($1,'W01-D01','B',7)`,[BETO]);
 
 await login(ANA);
-chk('Ana NO ve el pronostico de Beto antes del kickoff',
+chk('Ana NO ve el pronostico de Beto',
   (await one(`select count(*)::int c from picks where user_id=$1`,[BETO])).c, 0);
 chk('  pero si ve el suyo',
   (await one(`select count(*)::int c from picks where user_id=$1`,[ANA])).c, 1);
-chk('Ana NO ve el underdog de Beto mientras la semana siga abierta',
+chk('Ana NO ve el underdog de Beto',
   (await one(`select count(*)::int c from underdog_picks where user_id=$1 and week=2`,[BETO])).c, 0);
 
 await login(ADMIN);
-chk('el admin SI ve los pronosticos de todos (los necesita para operar)',
+chk('el admin SI ve los pronosticos de todos (resuelve reclamos de puntaje)',
   (await one(`select count(*)::int c from picks where user_id=$1`,[BETO])).c, 1);
 
-// Una vez que arranca el partido el pronostico ya no se puede cambiar, asi que
-// destaparlo no da ventaja: es justo la gracia de la quiniela.
+// La privacidad es permanente: ni siquiera cuando ya arranco el partido se
+// destapan los ajenos. Decision del dueno de la quiniela.
 await db.exec(`RESET ROLE`);
 await q(`update games set kickoff = NOW() - interval '1 hour' where id='W01-D01'`);
 await login(ANA);
-chk('Ana SI ve el pronostico de Beto ya que arranco el partido',
-  (await one(`select count(*)::int c from picks where user_id=$1`,[BETO])).c, 1);
+chk('Ana SIGUE sin ver el de Beto aunque el partido ya arranco',
+  (await one(`select count(*)::int c from picks where user_id=$1`,[BETO])).c, 0);
+
+// Lo que si se sigue viendo son los TOTALES: la vista `ranking` corre como
+// dueno y no pasa por RLS. Si esto se rompe, la tabla de posiciones desaparece.
+chk('  y la tabla de posiciones sigue mostrando a todos',
+  (await one(`select count(*)::int c from ranking`)).c >= 2, true);
 
 console.log('\n== RUTAS LEGITIMAS PARA CAMBIAR ROLES ==');
 await login(ANA);
