@@ -113,6 +113,43 @@ agrega la prueba correspondiente.
     y `anon` nunca tuvo permiso — pasaba en verde sin probar nada. Toda política
     nueva se prueba desde los **dos** roles. Arreglado en `005_privacidad_picks.sql`.
 
+## Diseño: "La Corte premium" (agosto 2026)
+
+Carbón `#0B0D10` + dorado `#D4AF37`, tipografías Bebas Neue (títulos) e Inter
+(texto), ambas por CDN de Google. **El dorado marca jerarquía y acción — nunca
+decora.** Los tokens viven en `:root` al inicio del `<style>`; los alias viejos
+(`--dorado`, `--azul`) siguen ahí porque el JS los escribe en estilos en línea.
+
+Móvil primero: la navegación es una barra fija abajo y solo a partir de 980 px
+sube a pestañas bajo el header. En la pantalla de quiniela el orden en celular
+es perfil → Capi → partidos → underdog/folio/premios.
+
+`preview-diseno.html` fue la maqueta que se usó para aprobar el diseño. Ya está
+integrado en la app; el archivo se puede borrar cuando estorbe.
+
+**El Capi** es el guía de la quiniela. Su texto lo arma `renderCapi()` según el
+estado real (faltan partidos, falta underdog, falta folio…), no es adorno. El
+arte definitivo va en `/icons/capi.png`; mientras no exista, `onerror` deja el
+emoji de repuesto.
+
+11. **Los logos de la NFL NO se guardan en el repo.** Son marca registrada y el
+    repo es público. Se sirven del CDN de ESPN
+    (`a.espncdn.com/i/teamlogos/nfl/500/<code>.png`), que usa nuestro mismo
+    código de tres letras salvo Washington (`WAS` → `wsh`, ver `ESPN_SLUG`).
+    Si la imagen no carga, `onerror` la borra y queda el círculo con las
+    iniciales: el diseño nunca se rompe, ni sin red.
+
+12. **Nada de `background-attachment:fixed`.** Con 16 partidos la página mide
+    ~7000 px y el navegador tiene que repintar el fondo en cada cuadro del
+    scroll. Se probó y congelaba el render. Si hace falta un fondo que no se
+    mueva, se usa un pseudo-elemento con `position:fixed`, no esa propiedad.
+
+13. **Las variables del JS son `let`, así que NO están en `window`.** Al depurar
+    desde la consola, `sbProfile = {...}` (sin prefijo) sí toca la variable real,
+    pero `iframe.contentWindow.sbProfile = {...}` no hace nada: hay que usar
+    `contentWindow.eval('...')`. Las funciones sí son accesibles porque son
+    declaraciones de función.
+
 ## Reglas de puntaje (configurables en la tabla `config`)
 
 | Forma | Puntos |

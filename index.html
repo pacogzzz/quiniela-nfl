@@ -9,7 +9,7 @@
      Sin app instalada NO hay notificaciones, que es de lo que depende que
      la gente no se caiga de la quiniela por falta de aviso. -->
 <link rel="manifest" href="/manifest.json" />
-<meta name="theme-color" content="#013369" />
+<meta name="theme-color" content="#0B0D10" />
 <link rel="icon" type="image/png" href="/icons/icon-192.png" />
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 <!-- iOS ignora el manifest por completo: pantalla completa, nombre del icono
@@ -20,335 +20,845 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 <meta name="apple-mobile-web-app-title" content="Quiniela LC" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
-/* ========= RESET & BASE ========= */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
+/* =====================================================================
+   QUINIELA NFL · LA CORTE — sistema visual "corte premium"
+   Carbón + dorado. El dorado marca jerarquía y acción, nunca decora.
+   Móvil primero: casi todos entran desde el teléfono, así que la
+   navegación vive abajo (al alcance del pulgar) y solo en escritorio
+   sube al header.
+   ===================================================================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+html,body{min-height:100%}
 :root{
-  --azul:#013369;
-  --azul-claro:#0a5bb5;
-  --azul-osc:#00172f;
-  --rojo:#D50A0A;
-  --rojo-claro:#ff3838;
-  --dorado:#FFB612;
-  --dorado-osc:#c98a00;
-  --plata:#c0c0c0;
-  --bronce:#cd7f32;
-  --verde:#1a8c3c;
-  --acero:#0b1218;
-  --acero2:#111c26;
-  --linea:#1e3247;
+  --bg:#0B0D10;
+  --card:#13161C;
+  --card2:#181C24;
+  --linea:rgba(255,255,255,.07);
+  --linea2:rgba(255,255,255,.15);
+  --oro:#D4AF37;
+  --oro2:#E8C766;
+  --oro-tenue:rgba(212,175,55,.10);
+  --navy:#1B3555;
+  --txt:#EDEDEF;
+  --gris:#8A9099;
+  --verde:#2FBF71;
+  --rojo:#E5484D;
+  --lila:#B07CE8;
+  --plata:#C6CBD1;
+  --bronce:#CD7F32;
+  --r:16px;
+  --r-sm:11px;
+  --nav-h:70px;
+  /* Alias del diseño anterior: el JS todavía escribe var(--dorado) en
+     estilos en línea, así que tiene que seguir existiendo. */
+  --dorado:#D4AF37;
+  --dorado-osc:#A8862A;
+  --azul:#1B3555;
+  --azul-claro:#2C5687;
+  --linea-vieja:var(--linea);
 }
 body{
-  font-family:'Oswald','Bebas Neue','Arial Narrow',system-ui,-apple-system,sans-serif;
-  background:
-    radial-gradient(circle at 15% 5%, rgba(255,182,18,.07), transparent 42%),
-    radial-gradient(circle at 85% 95%, rgba(213,10,10,.09), transparent 42%),
-    linear-gradient(180deg,#070d12 0%, #0d1c2b 100%);
-  color:#eef3f7;
-  min-height:100vh;
+  font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:var(--bg);
+  color:var(--txt);
+  /* Textura de campo: rayas de yarda apenas perceptibles, más un halo
+     dorado arriba. Sin esto el carbón plano se siente barato. */
+  background-image:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.014) 0 1px, transparent 1px 120px),
+    radial-gradient(ellipse 120% 55% at 50% -8%, rgba(212,175,55,.06), transparent 62%);
+  /* Ojo: nada de background-attachment:fixed. En un celular obliga a
+     repintar el fondo en cada cuadro del scroll y la página de 16 partidos
+     se arrastra. Ya se probó: congelaba el navegador. */
+  background-repeat:no-repeat;
   overflow-x:hidden;
+  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + .5rem);
+  -webkit-font-smoothing:antialiased;
 }
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-input,select,textarea{font-family:inherit}
+input,select,textarea{font-family:inherit;color:inherit}
 a{color:inherit;text-decoration:none}
-::-webkit-scrollbar{width:9px;height:9px}
-::-webkit-scrollbar-thumb{background:#24384d;border-radius:9px}
+img{max-width:100%}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#252a33;border-radius:9px}
+.display{font-family:'Bebas Neue','Oswald',sans-serif;letter-spacing:.05em;font-weight:400}
+.muted{color:var(--gris)}
+.small{font-size:.8rem}
+.nowrap{white-space:nowrap}
 
-/* ========= HEADER ========= */
+/* ========= HEADER: corona + wordmark LA CORTE ========= */
 #header{
   position:sticky;top:0;z-index:100;
-  background:linear-gradient(90deg,var(--azul-osc) 0%, var(--azul) 55%, var(--rojo) 100%);
-  border-bottom:4px solid var(--dorado);
-  box-shadow:0 4px 20px rgba(0,0,0,.6);
+  background:rgba(11,13,16,.93);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--oro);
   padding:.6rem 1rem;
 }
 #header-inner{
-  max-width:1200px;margin:0 auto;
-  display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+  max-width:1240px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;gap:.75rem;
 }
-.logo{display:flex;align-items:center;gap:.6rem}
-.logo-ball{font-size:2rem;display:inline-block;animation:wobble 4s ease-in-out infinite}
-@keyframes wobble{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}}
-.logo-title{font-weight:900;letter-spacing:1px;font-size:1.15rem;line-height:1;text-shadow:2px 2px 0 #000}
-.logo-title span{color:var(--dorado)}
-.logo-sub{font-size:.7rem;opacity:.85;letter-spacing:3px}
+.logo{display:flex;align-items:center;gap:.65rem;min-width:0}
+.logo-crown{
+  width:42px;height:42px;flex:none;border-radius:50%;
+  display:grid;place-items:center;font-size:1.25rem;
+  border:1.5px solid var(--oro);
+  background:radial-gradient(circle at 35% 28%, #23262E, #0C0E12);
+  box-shadow:0 0 0 4px rgba(212,175,55,.07);
+}
+.logo-title{
+  font-family:'Bebas Neue','Oswald',sans-serif;font-weight:400;
+  font-size:1.4rem;line-height:.95;letter-spacing:.06em;
+}
+.logo-title span{color:var(--oro)}
+.logo-sub{
+  font-size:.58rem;letter-spacing:.28em;color:var(--gris);
+  font-weight:700;margin-top:.15rem;
+}
+/* Chip de usuario: tarjeta con borde y corona, no texto suelto */
 .user-pill{
-  background:rgba(0,0,0,.4);border:1px solid var(--dorado);
-  padding:.35rem .8rem;border-radius:99px;font-size:.85rem;
-  display:flex;align-items:center;gap:.4rem;
+  display:flex;align-items:center;gap:.5rem;flex:none;
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea2);border-radius:999px;
+  padding:.28rem .75rem .28rem .3rem;
+  font-size:.78rem;font-weight:600;max-width:52vw;
 }
-.user-pill button{color:#ff9d9d;font-size:.75rem;margin-left:.3rem}
-.btn-instalar-hdr{background:var(--dorado);color:#1a1206;font-weight:800;font-size:.78rem;padding:.4rem .7rem;border-radius:99px;white-space:nowrap}
+.user-pill .pill-crown{
+  width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;
+  font-size:.82rem;border:1px solid var(--oro);
+  background:radial-gradient(circle at 35% 28%, #2A2417, #14110A);
+}
+.user-pill #user-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-pill button{color:var(--gris);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}
+.user-pill button:hover{color:var(--oro2)}
+.btn-instalar-hdr{
+  background:linear-gradient(160deg,var(--oro2),var(--oro));color:#141004;
+  font-weight:800;font-size:.72rem;letter-spacing:.04em;
+  padding:.45rem .8rem;border-radius:999px;white-space:nowrap;
+  box-shadow:0 4px 16px rgba(212,175,55,.28);
+}
 
-/* ========= NAV ========= */
-#nav{background:#05090d;border-bottom:2px solid var(--dorado);position:sticky;top:63px;z-index:99;overflow-x:auto}
-#nav-inner{max-width:1200px;margin:0 auto;display:flex}
-.tab{
-  flex:1;min-width:96px;padding:.75rem .4rem;text-align:center;font-weight:700;
-  font-size:.8rem;letter-spacing:1px;border-bottom:3px solid transparent;
-  transition:all .25s;white-space:nowrap;
+/* ========= NAV: barra inferior en celular, pestañas arriba en escritorio ========= */
+#nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:99;
+  background:rgba(11,13,16,.97);backdrop-filter:blur(14px);
+  border-top:1px solid var(--linea);
 }
-.tab:hover{background:#0e1720;color:var(--dorado)}
-.tab.active{background:linear-gradient(180deg, rgba(255,182,18,.14), transparent);color:var(--dorado);border-bottom-color:var(--dorado)}
-.tab .ico{display:block;font-size:1.15rem;margin-bottom:.2rem}
+#nav-inner{
+  max-width:1240px;margin:0 auto;display:flex;
+  padding:.4rem .2rem calc(.4rem + env(safe-area-inset-bottom));
+  overflow-x:auto;scrollbar-width:none;
+}
+#nav-inner::-webkit-scrollbar{display:none}
+.tab{
+  flex:1 0 auto;min-width:62px;
+  display:flex;flex-direction:column;align-items:center;gap:.12rem;
+  padding:.3rem .35rem;border-radius:10px;
+  color:var(--gris);font-size:.56rem;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;transition:color .2s;
+}
+.tab .ico{font-size:1.2rem;line-height:1}
+.tab.active{color:var(--oro2)}
+.tab.active::after{content:'';width:16px;height:2px;background:var(--oro);border-radius:2px}
 
 /* ========= LAYOUT ========= */
-main{max-width:1200px;margin:0 auto;padding:1rem;padding-bottom:4rem}
-.module{display:none;animation:fadeUp .45s ease}
+main{max-width:1240px;margin:0 auto;padding:1.2rem 1rem 2rem}
+.module{display:none;animation:aparece .35s ease}
 .module.active{display:block}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-h1,h2,h3{font-weight:900;letter-spacing:1px}
-h1{font-size:1.6rem;margin-bottom:1rem;color:var(--dorado);text-shadow:2px 2px 0 #000}
-h2{font-size:1.15rem;margin:1rem 0 .6rem;color:#fff}
-h3{font-size:1rem;color:var(--dorado)}
-.muted{opacity:.7}
-.small{font-size:.8rem}
+@keyframes aparece{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-/* ========= REGISTRO ========= */
+h1,h2,h3{font-family:'Bebas Neue','Oswald',sans-serif;font-weight:400;letter-spacing:.05em}
+h1{font-size:2.1rem;color:var(--oro);line-height:1.05;margin-bottom:.3rem}
+h2{font-size:1.2rem;color:var(--txt);margin:1.4rem 0 .7rem;letter-spacing:.13em}
+h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
+.lead-sub{color:var(--gris);font-size:.82rem;line-height:1.5;margin-bottom:1.3rem}
+
+/* Tarjeta base "cristal" */
+.card{
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);border-radius:var(--r);
+  padding:1.15rem;margin-bottom:.9rem;
+  box-shadow:0 8px 28px rgba(0,0,0,.38);
+}
+.grid{display:grid;gap:1rem}
+.grid-2{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(225px,1fr))}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.chip{
+  display:inline-block;border:1px solid var(--linea2);border-radius:999px;
+  background:rgba(255,255,255,.04);color:var(--gris);
+  padding:.2rem .65rem;font-size:.64rem;font-weight:700;letter-spacing:.09em;
+}
+.chip.gold{border-color:var(--oro);color:var(--oro2);background:var(--oro-tenue)}
+.chip.red{border-color:rgba(229,72,77,.55);color:#FF9DA0;background:rgba(229,72,77,.12)}
+.chip.grey{color:var(--gris)}
+
+/* ========= LOGOS DE EQUIPO =========
+   El arte oficial se sirve del CDN de ESPN; el repo no guarda marcas
+   registradas. Si la imagen no carga (sin red, CDN caído), el onerror la
+   quita y queda el círculo con las iniciales de siempre. */
+.tlogo{
+  position:relative;flex:none;display:grid;place-items:center;
+  width:44px;height:44px;border-radius:50%;
+  background:radial-gradient(circle at 35% 28%, #1E222A, #0D0F14);
+  border:1.5px solid var(--tc,var(--linea2));
+  font-size:.68rem;font-weight:800;letter-spacing:.02em;color:#fff;
+}
+.tlogo img{position:absolute;inset:8%;width:84%;height:84%;object-fit:contain}
+.tlogo.tbd{color:var(--gris);border-style:dashed}
+.tlogo.sm{width:32px;height:32px;font-size:.55rem}
+.tlogo.xs{width:26px;height:26px;font-size:.5rem}
+.tlogo.lg{width:56px;height:56px;font-size:.8rem}
+
+/* ========= REGISTRO / LOGIN ========= */
 #registro{
-  position:fixed;inset:0;z-index:1000;
+  position:fixed;inset:0;z-index:1000;overflow-y:auto;
   background:
-    linear-gradient(180deg, rgba(0,0,0,.92), rgba(0,0,0,.75)),
-    repeating-linear-gradient(90deg, #0d2137 0 58px, #10293f 58px 116px);
-  display:flex;align-items:center;justify-content:center;padding:1rem;
+    radial-gradient(ellipse 90% 50% at 50% 0%, rgba(212,175,55,.10), transparent 60%),
+    linear-gradient(180deg,#0B0D10,#06070A);
+  display:flex;align-items:center;justify-content:center;padding:1.2rem;
 }
 #registro.hidden{display:none}
 .reg-card{
-  background:#08131e;border:3px solid var(--dorado);
-  border-radius:14px;max-width:420px;width:100%;
-  padding:1.6rem;box-shadow:0 10px 40px rgba(0,0,0,.85);
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea2);border-top:2px solid var(--oro);
+  border-radius:var(--r);max-width:430px;width:100%;
+  padding:1.8rem 1.5rem;box-shadow:0 20px 60px rgba(0,0,0,.7);
 }
-.reg-card h1{text-align:center;margin-bottom:.3rem}
-.reg-card p.lead{text-align:center;font-size:.85rem;opacity:.8;margin-bottom:1.2rem}
-.reg-card label{display:block;font-size:.75rem;letter-spacing:2px;margin-top:.8rem;margin-bottom:.3rem;color:var(--dorado)}
-.reg-card input{width:100%;padding:.7rem .8rem;border-radius:8px;background:#020a12;border:1px solid #24486e;color:#fff;font-size:1rem}
-.reg-card input:focus{outline:2px solid var(--dorado);border-color:var(--dorado)}
+.reg-crown{
+  width:64px;height:64px;margin:0 auto .8rem;border-radius:50%;
+  display:grid;place-items:center;font-size:2rem;
+  border:1.5px solid var(--oro);
+  background:radial-gradient(circle at 35% 28%, #23262E, #0C0E12);
+  box-shadow:0 0 0 6px rgba(212,175,55,.06);
+}
+.reg-card h1{text-align:center;font-size:1.9rem;margin-bottom:.15rem}
+.reg-card h1 small{display:block;font-size:.72rem;letter-spacing:.3em;color:var(--gris);font-family:'Inter',sans-serif;font-weight:700;margin-top:.3rem}
+.reg-card p.lead{text-align:center;font-size:.8rem;color:var(--gris);margin-bottom:1.3rem}
+.reg-card label{
+  display:block;font-size:.62rem;letter-spacing:.16em;font-weight:700;
+  margin:.9rem 0 .35rem;color:var(--oro2);text-transform:uppercase;
+}
+.reg-card input{
+  width:100%;padding:.8rem .85rem;border-radius:var(--r-sm);
+  background:#080A0E;border:1px solid var(--linea2);color:#fff;font-size:1rem;
+}
+.reg-card input:focus{outline:none;border-color:var(--oro);box-shadow:0 0 0 3px rgba(212,175,55,.13)}
 .btn-primary{
-  width:100%;margin-top:1.2rem;
-  background:linear-gradient(90deg,var(--rojo) 0%, #ff3a3a 50%, var(--rojo) 100%);
-  color:#fff;font-weight:900;letter-spacing:2px;padding:.9rem;border-radius:8px;font-size:1rem;
-  box-shadow:0 4px 0 #7a0808;transition:transform .1s;
+  width:100%;margin-top:1.3rem;
+  background:linear-gradient(160deg,var(--oro2),var(--oro));color:#141004;
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.2rem;letter-spacing:.12em;
+  padding:.85rem;border-radius:var(--r-sm);
+  box-shadow:0 8px 26px rgba(212,175,55,.3);transition:transform .12s;
 }
-.btn-primary:hover{transform:translateY(-2px)}
-.btn-primary:active{transform:translateY(2px);box-shadow:0 2px 0 #7a0808}
-.btn-gold{background:linear-gradient(90deg,var(--dorado-osc),var(--dorado),var(--dorado-osc));color:#000;font-weight:900}
-.mode-toggle{display:flex;gap:.4rem;margin:1rem 0 .4rem;background:#020a12;padding:.3rem;border-radius:8px;border:1px solid #24486e}
-.mode-toggle button{flex:1;padding:.55rem .4rem;border-radius:6px;font-size:.75rem;font-weight:800;letter-spacing:1px;color:#8fa8c4;transition:all .2s}
-.mode-toggle button.active{background:linear-gradient(180deg,var(--azul-claro),var(--azul));color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.4)}
-
-/* ========= CARDS ========= */
-.card{
-  background:linear-gradient(180deg,#0f1c28 0%, #0a1420 100%);
-  border:1px solid var(--linea);border-left:4px solid var(--dorado);
-  border-radius:10px;padding:1rem;margin-bottom:.8rem;
-  box-shadow:0 2px 10px rgba(0,0,0,.45);
+.btn-primary:hover{transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(1px)}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.btn-gold{background:linear-gradient(160deg,var(--oro2),var(--oro));color:#141004}
+.mode-toggle{
+  display:flex;gap:.35rem;margin:1.1rem 0 .3rem;
+  background:#080A0E;padding:.3rem;border-radius:var(--r-sm);border:1px solid var(--linea);
 }
-.grid{display:grid;gap:.8rem}
-.grid-2{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
-.grid-3{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
-.grid-4{grid-template-columns:repeat(auto-fit,minmax(165px,1fr))}
-.chip{display:inline-block;background:var(--azul);padding:.12rem .5rem;border-radius:99px;font-size:.65rem;letter-spacing:1px}
-.chip.gold{background:var(--dorado);color:#000;font-weight:900}
-.chip.red{background:var(--rojo)}
-.chip.grey{background:#2b3a49}
+.mode-toggle button{
+  flex:1;padding:.6rem .3rem;border-radius:9px;font-size:.7rem;font-weight:800;
+  letter-spacing:.09em;color:var(--gris);transition:all .2s;
+}
+.mode-toggle button.active{
+  background:linear-gradient(160deg,#3A2F10,#2A230D);
+  border:1px solid var(--oro);color:var(--oro2);
+}
 
 /* ========= GRUPOS / DIVISIONES ========= */
-.conf-toggle{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
-.conf-toggle button{background:#0c1620;border:1px solid #24384d;padding:.5rem 1rem;border-radius:6px;color:#93a7ba;font-weight:700;letter-spacing:1px;font-size:.8rem}
-.conf-toggle button.active{background:var(--azul);color:#fff;border-color:var(--dorado)}
-.div-card{background:linear-gradient(180deg,#0b1926,#060e16);border:1px solid var(--linea);border-top:5px solid var(--dorado);border-radius:8px;padding:.8rem}
-.div-title{background:var(--azul);color:#fff;padding:.35rem .8rem;border-radius:4px;font-weight:900;letter-spacing:2px;font-size:.85rem;margin-bottom:.6rem;display:inline-block}
-table{width:100%;border-collapse:collapse;font-size:.8rem}
-th,td{padding:.35rem .3rem;text-align:center}
-th{background:#000;color:var(--dorado);font-weight:700;letter-spacing:1px;font-size:.68rem}
-tr:nth-child(even) td{background:rgba(255,255,255,.03)}
-td.team{text-align:left;font-weight:700;white-space:nowrap}
-td.pts{color:var(--dorado);font-weight:900}
-.dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:.4rem;vertical-align:middle}
+.conf-toggle{display:flex;gap:.5rem;margin-bottom:1.2rem}
+.conf-toggle button{
+  flex:1;background:var(--navy);border:1px solid transparent;
+  padding:.6rem 1rem;border-radius:var(--r-sm);color:#C8D6EA;
+  font-weight:700;letter-spacing:.09em;font-size:.76rem;
+}
+.conf-toggle button.active{
+  background:linear-gradient(160deg,#3A2F10,#2A230D);
+  border-color:var(--oro);color:var(--oro2);
+}
+.div-card{
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);border-radius:var(--r);padding:1.1rem;
+  box-shadow:0 8px 28px rgba(0,0,0,.35);
+}
+.div-title{
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:.95rem;
+  letter-spacing:.2em;color:var(--oro2);margin-bottom:.7rem;
+}
+.eq-row{
+  display:flex;align-items:center;gap:.7rem;
+  padding:.55rem 0;border-top:1px solid var(--linea);font-size:.85rem;
+}
+.eq-row .eq-nom{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eq-row .eq-nom span{display:block;font-size:.62rem;color:var(--gris);font-weight:400}
+.eq-row .eq-rec{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums;font-size:.8rem}
+.eq-row .eq-rec b{color:var(--oro2);font-weight:700}
+.eq-row .eq-dif{display:block;font-size:.62rem;color:var(--gris)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:.4rem;vertical-align:middle}
 
 /* ========= CALENDARIO ========= */
-.filters{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;background:#0a141d;padding:.6rem;border-radius:8px;border:1px solid var(--linea)}
-.filters select,.filters input{background:#020a12;border:1px solid #24486e;color:#fff;padding:.4rem .6rem;border-radius:6px;font-size:.85rem}
-.match-card{display:grid;grid-template-columns:auto 1fr auto;gap:.8rem;align-items:center}
-.match-date{text-align:center;background:#000;padding:.4rem .6rem;border-radius:6px;min-width:82px;border:1px solid var(--dorado)}
-.match-date .d{font-size:1.4rem;font-weight:900;color:var(--dorado);line-height:1}
-.match-date .m{font-size:.68rem;letter-spacing:1px;opacity:.8}
-.match-date .t{font-size:.72rem;color:#8fc3ff;margin-top:.2rem;border-top:1px solid #333;padding-top:.2rem}
-.match-teams{font-size:1.02rem;font-weight:700}
-.match-meta{font-size:.72rem;opacity:.72;margin-top:.25rem}
-.btn-reserve{
-  background:linear-gradient(90deg,var(--verde),#25c257);color:#fff;padding:.5rem .8rem;border-radius:6px;
-  font-weight:800;font-size:.75rem;letter-spacing:1px;white-space:nowrap;box-shadow:0 3px 0 #0d5a25;transition:transform .15s;
+.filtros-wrap{
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);border-radius:var(--r);
+  padding:.9rem;margin-bottom:1.2rem;
 }
-.btn-reserve:hover{transform:scale(1.05)}
+.filters{display:flex;gap:.5rem;flex-wrap:wrap}
+.filters select,.filters input{
+  flex:1;min-width:132px;background:#080A0E;border:1px solid var(--linea2);
+  padding:.55rem .65rem;border-radius:var(--r-sm);font-size:.82rem;
+}
+.filters select:focus,.filters input:focus{outline:none;border-color:var(--oro)}
+.dia-sep{
+  font-size:.64rem;color:var(--gris);letter-spacing:.2em;text-transform:uppercase;
+  font-weight:700;margin:1.5rem 0 .6rem;display:flex;align-items:center;gap:.8rem;
+}
+.dia-sep::after{content:'';flex:1;height:1px;background:var(--linea)}
+.match-card{
+  display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;
+  padding:.9rem 1rem;margin-bottom:.7rem;
+}
+.match-date{
+  text-align:center;flex:none;min-width:60px;
+  border-right:1px solid var(--linea);padding-right:.85rem;
+}
+.match-date .d{font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.6rem;color:var(--oro2);line-height:1}
+.match-date .m{font-size:.6rem;letter-spacing:.16em;color:var(--gris);font-weight:700}
+.match-date .t{font-size:.72rem;color:var(--txt);margin-top:.25rem;font-weight:600}
+.match-body{flex:1;min-width:170px}
+.match-teams{display:flex;align-items:center;gap:.5rem;font-size:.92rem;font-weight:600}
+.match-teams .at{color:var(--gris);font-size:.72rem}
+.match-meta{font-size:.68rem;color:var(--gris);margin-top:.45rem;display:flex;gap:.35rem;flex-wrap:wrap;align-items:center}
+.btn-reserve{
+  flex:none;border:1px solid var(--oro);border-radius:999px;color:var(--oro2);
+  background:var(--oro-tenue);padding:.55rem 1.1rem;
+  font-size:.68rem;font-weight:700;letter-spacing:.1em;white-space:nowrap;
+  transition:all .18s;
+}
+.btn-reserve:hover{background:var(--oro);color:#141004}
 
-/* Modal */
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:500;padding:1rem;animation:fadeUp .3s}
+/* ========= MODAL ========= */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(4,5,7,.9);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;z-index:500;padding:1rem;
+  animation:aparece .25s;
+}
 .modal-backdrop.hidden{display:none}
-.modal{position:relative;background:linear-gradient(180deg,#08131e,#03080d);border:3px solid var(--dorado);border-radius:14px;padding:1.6rem;max-width:430px;width:100%;text-align:center;box-shadow:0 0 60px rgba(255,182,18,.3);max-height:88vh;overflow-y:auto}
-.modal h2{color:var(--dorado);margin-bottom:.3rem}
-.modal .phone-big{display:block;font-size:2rem;font-weight:900;color:var(--dorado);padding:.8rem;background:#000;border-radius:8px;margin:1rem 0;letter-spacing:2px}
-.modal-close{position:absolute;top:.8rem;right:.8rem;background:#000;border:1px solid #444;width:30px;height:30px;border-radius:50%;color:#fff}
+.modal{
+  position:relative;background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea2);border-top:2px solid var(--oro);
+  border-radius:var(--r);padding:1.8rem 1.4rem;max-width:430px;width:100%;
+  text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.75);max-height:88vh;overflow-y:auto;
+}
+.modal h2{color:var(--oro);font-size:1.5rem;margin:.3rem 0}
+.modal .phone-big{
+  display:block;font-family:'Bebas Neue','Oswald',sans-serif;font-size:2rem;
+  color:var(--oro2);padding:.8rem;background:#080A0E;border:1px solid var(--linea2);
+  border-radius:var(--r-sm);margin:1rem 0;letter-spacing:.1em;
+}
+.modal-close{
+  position:absolute;top:.8rem;right:.8rem;width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.05);border:1px solid var(--linea2);color:var(--gris);
+}
 
 /* ========= QUINIELA ========= */
-#quiniela{
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.6), rgba(0,0,0,.78)),
-    repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 78px, rgba(255,255,255,.05) 78px 80px),
-    linear-gradient(160deg, #0d3b1e 0%, #082514 100%);
-  background-attachment:fixed;
-  padding:1rem;border-radius:10px;margin:-1rem;padding-bottom:3rem;position:relative;
-}
-#quiniela > *{position:relative;z-index:1}
-.week-bar{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;background:rgba(0,0,0,.6);border:1px solid var(--dorado);border-radius:10px;padding:.6rem;margin-bottom:1rem}
-.week-bar select{flex:1;min-width:150px;background:#000;color:var(--dorado);border:1px solid var(--dorado);border-radius:6px;padding:.5rem;font-weight:900;font-size:1rem;letter-spacing:1px}
-.week-bar button{background:#0d1c2b;border:1px solid #2a4761;color:#fff;padding:.5rem .8rem;border-radius:6px;font-weight:900}
-.week-bar button:disabled{opacity:.3;cursor:not-allowed}
-.lock-banner{border-radius:8px;padding:.6rem .8rem;margin-bottom:1rem;font-weight:700;font-size:.85rem;text-align:center;letter-spacing:1px}
-.lock-banner.open{background:rgba(26,140,60,.25);border:1px solid var(--verde);color:#8ff0ac}
-.lock-banner.shut{background:rgba(213,10,10,.2);border:1px solid var(--rojo);color:#ffb0b0}
-.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:.5rem;margin-bottom:1rem}
-.stat{background:rgba(0,0,0,.6);border:1px solid var(--linea);border-radius:8px;padding:.6rem;text-align:center}
-.stat .v{font-size:1.5rem;font-weight:900;color:var(--dorado);line-height:1}
-.stat .l{font-size:.65rem;letter-spacing:1px;opacity:.75;margin-top:.25rem}
-.points-table{background:rgba(0,0,0,.6);border:1px solid var(--dorado);border-radius:8px;padding:.8rem;margin-bottom:1rem}
-.points-table td{text-align:left;font-size:.82rem}
-.points-table td:last-child{text-align:right;color:var(--dorado);font-weight:900;white-space:nowrap}
+#quiniela{position:relative}
+.q-layout{display:flex;flex-direction:column;gap:1rem}
+.q-side{display:flex;flex-direction:column;gap:.9rem}
+.q-side .card{margin-bottom:0}
 
-.qgame{background:rgba(0,0,0,.68);border:1px solid #2a4761;border-radius:10px;padding:.85rem;margin-bottom:.7rem}
-.qgame.special{border-color:var(--dorado);box-shadow:0 0 14px rgba(255,182,18,.18)}
-.qgame.hit{border-color:var(--verde)}
-.qgame.miss{border-color:#5b2020}
-.qgame.locked{opacity:.7}
-.qg-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem;font-size:.7rem;opacity:.85;margin-bottom:.55rem;padding-bottom:.4rem;border-bottom:1px dashed #2a4761}
-.qg-versus{display:grid;grid-template-columns:1fr auto 1fr;gap:.4rem;align-items:stretch}
+/* --- Tarjeta de perfil (con ícono por dato y anillo dorado) --- */
+.perfil-card{text-align:center;padding:1.4rem 1.2rem}
+.perfil-avatar{
+  width:78px;height:78px;margin:0 auto .7rem;border-radius:50%;
+  display:grid;place-items:center;font-size:2.1rem;
+  background:radial-gradient(circle at 35% 28%, #23262E, #0C0E12);
+  border:2px solid var(--oro);
+  box-shadow:0 0 0 6px rgba(212,175,55,.08), 0 8px 24px rgba(0,0,0,.5);
+}
+.perfil-card .perfil-nom{
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.45rem;
+  letter-spacing:.06em;line-height:1.1;
+}
+.perfil-card .perfil-rol{font-size:.6rem;letter-spacing:.2em;color:var(--gris);font-weight:700;text-transform:uppercase;margin-top:.15rem}
+.perfil-lista{list-style:none;text-align:left;margin-top:1rem;display:grid;gap:0}
+.perfil-lista li{
+  display:flex;align-items:center;gap:.6rem;
+  font-size:.78rem;color:var(--gris);
+  padding:.6rem 0;border-top:1px solid var(--linea);
+}
+.perfil-lista li .pi{
+  width:26px;height:26px;flex:none;border-radius:8px;display:grid;place-items:center;
+  background:rgba(255,255,255,.045);border:1px solid var(--linea);font-size:.85rem;
+}
+.perfil-lista li b{margin-left:auto;color:var(--txt);font-weight:700;font-variant-numeric:tabular-nums}
+.perfil-lista li b.oro{color:var(--oro2)}
+
+/* --- El Capi: el guía de la quiniela --- */
+.capi{display:flex;gap:.9rem;align-items:flex-start;border-left:3px solid var(--oro)}
+.capi .capi-art{
+  width:74px;flex:none;border-radius:var(--r-sm);overflow:hidden;
+  background:radial-gradient(circle at 50% 25%, #2A2417, #12100A);
+  border:1px solid rgba(212,175,55,.35);
+  display:grid;place-items:center;font-size:2.4rem;line-height:1;
+  aspect-ratio:3/4;
+}
+.capi .capi-art img{width:100%;height:100%;object-fit:contain;object-position:bottom}
+.capi .capi-t{font-size:.6rem;color:var(--oro2);letter-spacing:.2em;font-weight:700;text-transform:uppercase}
+.capi p{font-size:.82rem;line-height:1.5;margin:.35rem 0}
+.capi .capi-f{font-size:.7rem;color:var(--gris);font-style:italic}
+
+/* --- Encabezado de la quiniela + dos tarjetas de resumen --- */
+.q-head{display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:1.3rem}
+.q-head-txt{flex:1;min-width:200px}
+.q-head h1{margin-bottom:.35rem}
+.resumen{display:grid;grid-template-columns:repeat(2,1fr);gap:.8rem;flex:none;width:100%}
+.resumen-card{
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);border-radius:var(--r);
+  padding:1rem 1.1rem;box-shadow:0 8px 28px rgba(0,0,0,.35);
+}
+.resumen-card .rc-l{
+  font-size:.58rem;letter-spacing:.14em;color:var(--gris);
+  font-weight:700;text-transform:uppercase;display:flex;align-items:center;gap:.35rem;
+}
+.resumen-card .rc-n{
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:2rem;line-height:1.05;margin-top:.3rem;
+}
+.resumen-card .rc-p{font-size:.66rem;color:var(--gris);margin-top:.1rem}
+/* La de confianza es accionable: se destaca con borde y halo dorado */
+.resumen-card.destacada{
+  border-color:var(--oro);
+  box-shadow:0 0 0 1px rgba(212,175,55,.25), 0 10px 32px rgba(212,175,55,.15);
+  background:linear-gradient(160deg,#201B0C,var(--card));
+}
+.resumen-card.destacada .rc-n{color:var(--oro2)}
+.resumen-card.destacada .rc-l{color:var(--oro2)}
+
+/* --- Fila de 6 estadísticas (con aire, no apretadas) --- */
+.stat-row{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:.85rem;margin-bottom:1.5rem;
+}
+.stat{
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);border-radius:var(--r);
+  padding:1.05rem 1.1rem;box-shadow:0 6px 22px rgba(0,0,0,.32);
+}
+.stat .e{font-size:1.1rem;line-height:1}
+.stat .v{
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.9rem;
+  line-height:1.05;margin-top:.35rem;
+}
+.stat .v.oro{color:var(--oro2)}
+.stat .l{
+  font-size:.58rem;letter-spacing:.13em;color:var(--gris);
+  font-weight:700;text-transform:uppercase;margin-top:.25rem;
+}
+
+/* --- Selector de semana --- */
+.week-bar{
+  display:flex;align-items:center;gap:.6rem;
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);border-radius:var(--r);
+  padding:.6rem;margin-bottom:1rem;
+}
+.week-bar select{
+  flex:1;background:#080A0E;color:var(--oro2);border:1px solid var(--linea2);
+  border-radius:var(--r-sm);padding:.6rem;
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.15rem;letter-spacing:.1em;
+}
+.week-bar select:focus{outline:none;border-color:var(--oro)}
+.week-bar button{
+  width:40px;height:40px;flex:none;border-radius:50%;
+  background:var(--navy);color:#C8D6EA;font-weight:800;
+}
+.week-bar button:disabled{opacity:.28;cursor:not-allowed}
+.lock-banner{
+  border-radius:var(--r-sm);padding:.65rem .9rem;margin-bottom:1.1rem;
+  font-size:.76rem;font-weight:600;text-align:center;letter-spacing:.03em;
+}
+.lock-banner.open{background:rgba(47,191,113,.1);border:1px solid rgba(47,191,113,.45);color:#8FE9BB}
+.lock-banner.shut{background:rgba(229,72,77,.1);border:1px solid rgba(229,72,77,.45);color:#FFB0B2}
+
+/* --- Tabla "cómo se ganan puntos" (plegable: ocupa mucho) --- */
+.points-table{
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);border-radius:var(--r);
+  padding:0 1.1rem;margin-bottom:1.1rem;overflow:hidden;
+}
+.points-table summary{
+  list-style:none;cursor:pointer;padding:1rem 0;
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:1rem;letter-spacing:.12em;
+  display:flex;align-items:center;gap:.5rem;
+}
+.points-table summary::-webkit-details-marker{display:none}
+.points-table summary::after{content:'▾';margin-left:auto;color:var(--oro);transition:transform .2s}
+.points-table[open] summary::after{transform:rotate(180deg)}
+.points-table table{width:100%;border-collapse:collapse;margin-bottom:1rem}
+.points-table td{padding:.5rem 0;font-size:.78rem;border-top:1px solid var(--linea);color:var(--gris)}
+.points-table td:last-child{text-align:right;color:var(--oro2);font-weight:700;white-space:nowrap}
+
+/* --- Tarjeta de partido --- */
+.qgame{
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);border-radius:var(--r);
+  padding:1.15rem;margin-bottom:.9rem;box-shadow:0 8px 28px rgba(0,0,0,.35);
+}
+.qgame.special{border-color:rgba(212,175,55,.5)}
+.qgame.hit{border-color:rgba(47,191,113,.5)}
+.qgame.miss{border-color:rgba(229,72,77,.35)}
+.qgame.locked{opacity:.72}
+.qg-head{
+  display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;
+  font-size:.66rem;color:var(--gris);letter-spacing:.06em;
+  padding-bottom:.8rem;margin-bottom:.95rem;border-bottom:1px solid var(--linea);
+}
+/* Los dos equipos, mismo peso visual a ambos lados */
+.qg-versus{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:1rem}
+.qg-team{display:flex;align-items:center;gap:.65rem;min-width:0;flex:1}
+.qg-team.der{flex-direction:row-reverse;text-align:right}
+.qg-team .qt-nom{min-width:0;line-height:1.2}
+.qg-team .qt-nom b{display:block;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qg-team .qt-nom span{font-size:.63rem;color:var(--gris)}
+.qg-versus .vs{
+  flex:none;font-family:'Bebas Neue','Oswald',sans-serif;font-size:.8rem;
+  color:var(--gris);letter-spacing:.1em;padding:0 .2rem;
+}
+.campo{margin-bottom:.85rem}
+.campo:last-child{margin-bottom:0}
+.campo .lbl{
+  display:block;font-size:.58rem;color:var(--gris);text-transform:uppercase;
+  letter-spacing:.15em;font-weight:700;margin-bottom:.45rem;
+}
+.campo .lbl b{color:var(--oro2);font-weight:700}
+/* Toggle compacto de ganador: abreviación + palomita */
+.seg{display:flex;gap:.5rem}
 .team-btn{
-  background:#050d15;border:2px solid #24384d;color:#fff;border-radius:8px;padding:.55rem .4rem;
-  font-weight:800;font-size:.85rem;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:.15rem;
+  flex:1;padding:.62rem .5rem;border-radius:var(--r-sm);
+  background:var(--navy);border:1px solid transparent;color:#C8D6EA;
+  font-weight:800;font-size:.82rem;letter-spacing:.04em;transition:all .16s;
+  display:flex;align-items:center;justify-content:center;gap:.35rem;
 }
-.team-btn small{font-size:.62rem;opacity:.65;font-weight:400;letter-spacing:1px}
-.team-btn:hover:not(:disabled){border-color:var(--dorado)}
-.team-btn.sel{background:linear-gradient(180deg,var(--azul),#012247);border-color:var(--dorado);color:var(--dorado);box-shadow:inset 0 0 12px rgba(255,182,18,.2)}
+.team-btn:hover:not(:disabled){border-color:var(--linea2)}
+.team-btn.sel{
+  background:linear-gradient(160deg,#3A2F10,#2A230D);
+  border-color:var(--oro);color:var(--oro2);
+}
+.team-btn.sel::after{content:'✓';font-size:.9rem}
 .team-btn:disabled{cursor:not-allowed}
-.vs{display:flex;align-items:center;font-size:.7rem;opacity:.45;font-weight:900}
-.conf-row{display:flex;align-items:center;gap:.5rem;margin-top:.6rem;flex-wrap:wrap}
-.conf-row label{font-size:.7rem;letter-spacing:1px;color:var(--dorado);font-weight:700}
-.conf-row select{background:#000;color:var(--dorado);border:2px solid var(--dorado);border-radius:6px;padding:.35rem .5rem;font-weight:900;font-size:1rem;min-width:74px}
-.conf-row select.dup{border-color:var(--rojo);color:var(--rojo-claro);animation:shake .4s}
-@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
-.anot-row{margin-top:.6rem;padding-top:.55rem;border-top:1px dashed #2a4761}
-.anot-row .lbl{font-size:.7rem;letter-spacing:1px;color:var(--dorado);font-weight:700;display:block;margin-bottom:.35rem}
-.mini-group{display:flex;gap:.4rem;flex-wrap:wrap}
-.mini-btn{flex:1;min-width:90px;background:#050d15;border:2px solid #24384d;color:#fff;padding:.4rem;border-radius:6px;font-weight:700;font-size:.75rem}
-.mini-btn.sel{background:var(--rojo);border-color:var(--dorado);color:#fff}
-.mini-btn:disabled{cursor:not-allowed;opacity:.75}
-.earned{margin-top:.55rem;text-align:center;padding:.35rem;border-radius:6px;background:linear-gradient(90deg,transparent,rgba(255,182,18,.2),transparent);border:1px solid var(--dorado);color:var(--dorado);font-weight:900;letter-spacing:1px;font-size:.8rem}
-.earned.zero{background:none;border-color:#4a2020;color:#c98a8a}
-.save-bar{position:sticky;bottom:0;z-index:20;background:linear-gradient(180deg,rgba(0,0,0,.2),rgba(0,0,0,.9));padding:.7rem 0;margin-top:.5rem}
-.btn-save{width:100%;background:var(--dorado);color:#000;font-weight:900;padding:.8rem;border-radius:8px;letter-spacing:2px;box-shadow:0 3px 0 var(--dorado-osc);font-size:.95rem}
-.btn-save:disabled{background:#3a4652;color:#8a97a3;box-shadow:none;cursor:not-allowed}
+/* Confianza: fila de fichas deslizable, sin desplegables */
+.conf-chips{display:flex;gap:.42rem;overflow-x:auto;padding-bottom:.35rem;scrollbar-width:none}
+.conf-chips::-webkit-scrollbar{display:none}
+.conf-chips button{
+  flex:0 0 44px;height:44px;border-radius:var(--r-sm);
+  background:rgba(255,255,255,.035);border:1px solid var(--linea);color:var(--gris);
+  font-weight:800;font-size:.92rem;transition:all .14s;
+}
+.conf-chips button.sel{background:linear-gradient(160deg,var(--oro2),var(--oro));border-color:var(--oro);color:#141004}
+.conf-chips button.dup{border-color:var(--rojo);color:#FFB0B2;animation:tiembla .35s}
+.conf-chips button.usado{opacity:.26}
+.conf-chips button:disabled{cursor:not-allowed}
+@keyframes tiembla{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+/* Primer anotador: desplegable */
+.anot-select{
+  width:100%;background:#080A0E;border:1px solid var(--linea2);
+  border-radius:var(--r-sm);padding:.62rem .7rem;font-size:.85rem;font-weight:600;
+}
+.anot-select:focus{outline:none;border-color:var(--oro)}
+.anot-select.sel{border-color:var(--oro);color:var(--oro2)}
+.anot-select:disabled{cursor:not-allowed;opacity:.7}
+.earned{
+  margin-top:.9rem;text-align:center;padding:.5rem;border-radius:var(--r-sm);
+  background:var(--oro-tenue);border:1px solid rgba(212,175,55,.4);
+  color:var(--oro2);font-weight:700;letter-spacing:.08em;font-size:.76rem;
+}
+.earned.zero{background:none;border-color:var(--linea);color:var(--gris)}
 
-/* Underdog */
-.underdog-box{background:linear-gradient(135deg,#2a0f3d,#12061c);border:2px solid #a05cff;border-radius:12px;padding:1rem;margin-bottom:1rem;box-shadow:0 0 22px rgba(160,92,255,.22)}
-.underdog-box h3{color:#d8b3ff}
-.ud-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-top:.7rem}
-.ud-opt{background:#0d0616;border:2px solid #4a2a6b;border-radius:8px;padding:.7rem;text-align:center;font-weight:800;transition:all .2s}
-.ud-opt:hover:not(:disabled){border-color:#a05cff}
-.ud-opt.sel{background:linear-gradient(180deg,#6b2fa8,#3a1560);border-color:#d8b3ff;color:#fff;box-shadow:0 0 14px rgba(216,179,255,.35)}
-.ud-opt small{display:block;font-size:.62rem;opacity:.7;font-weight:400;margin-top:.2rem}
-.ud-locked{background:rgba(0,0,0,.4);border:1px dashed #4a2a6b;border-radius:8px;padding:.8rem;font-size:.85rem;text-align:center;opacity:.9}
+/* --- Botón de guardar: pastilla dorada a ancho completo --- */
+.save-bar{
+  position:sticky;z-index:40;
+  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + .4rem);
+  padding:.4rem 0;margin-top:1.2rem;
+}
+.btn-save{
+  width:100%;padding:1rem;border-radius:999px;
+  background:linear-gradient(160deg,var(--oro2),var(--oro));color:#141004;
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.25rem;letter-spacing:.12em;
+  box-shadow:0 10px 30px rgba(212,175,55,.35);transition:transform .12s;
+}
+.btn-save:hover:not(:disabled){transform:translateY(-1px)}
+.btn-save:disabled{
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);color:var(--gris);box-shadow:none;cursor:not-allowed;
+}
 
-/* Folio */
-.folio-box{background:rgba(0,0,0,.68);border:2px dashed var(--dorado);border-radius:10px;padding:1rem;margin-bottom:1rem}
-.folio-box .row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
-.folio-box input{flex:1;min-width:170px;padding:.6rem;border-radius:6px;background:#000;color:var(--dorado);border:1px solid var(--dorado);font-weight:900;letter-spacing:2px;text-transform:uppercase;font-size:1rem}
-.folio-box button{background:var(--rojo);color:#fff;padding:.6rem 1.1rem;border-radius:6px;font-weight:900;letter-spacing:1px}
-.folio-list{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.6rem}
-.folio-tag{background:#04121f;border:1px solid var(--verde);color:#8ff0ac;border-radius:99px;padding:.2rem .6rem;font-size:.7rem}
+/* ========= FILA DE 3: underdog · folio · premios ========= */
+.extras-row{display:grid;gap:1rem;grid-template-columns:1fr;margin-top:1.6rem}
+.extra-card{
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);border-radius:var(--r);
+  padding:1.3rem;box-shadow:0 8px 28px rgba(0,0,0,.35);
+  display:flex;flex-direction:column;
+}
+.extra-card .ex-ico{font-size:2rem;line-height:1;margin-bottom:.55rem}
+.extra-card h3{color:var(--oro2);font-size:1.05rem;margin-bottom:.4rem}
+.extra-card p{font-size:.78rem;color:var(--gris);line-height:1.55}
+.extra-card .ex-cta{
+  margin-top:auto;padding-top:.9rem;
+  display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
+  border:1px solid var(--oro);border-radius:999px;color:var(--oro2);
+  background:var(--oro-tenue);padding:.62rem 1.1rem;
+  font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  transition:all .18s;
+}
+button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
+.extra-card .ex-cta:hover{background:var(--oro);color:#141004}
+.extra-card.underdog{border-color:rgba(176,124,232,.35)}
+.extra-card.underdog h3{color:var(--lila)}
+.extra-card.underdog .ex-cta{border-color:var(--lila);color:var(--lila);background:rgba(176,124,232,.1)}
+.extra-card.underdog .ex-cta:hover{background:var(--lila);color:#150A1F}
+.ud-options{display:grid;gap:.5rem;margin-top:.8rem}
+.ud-opt{
+  background:rgba(255,255,255,.03);border:1px solid rgba(176,124,232,.28);
+  border-radius:var(--r-sm);padding:.7rem;text-align:left;
+  font-weight:700;font-size:.82rem;transition:all .18s;
+}
+.ud-opt:hover:not(:disabled){border-color:var(--lila)}
+.ud-opt.sel{background:linear-gradient(160deg,#2E1A44,#1A0E28);border-color:var(--lila);color:#E6D2FB}
+.ud-opt small{display:block;font-size:.64rem;color:var(--gris);font-weight:400;margin-top:.15rem}
+.ud-opt:disabled{cursor:not-allowed;opacity:.6}
+.ud-locked{
+  background:rgba(255,255,255,.03);border:1px dashed rgba(176,124,232,.35);
+  border-radius:var(--r-sm);padding:.9rem;font-size:.78rem;line-height:1.55;margin-top:.7rem;
+}
+.folio-row{display:flex;gap:.5rem;margin-top:.9rem;flex-wrap:wrap}
+.folio-row input{
+  flex:1;min-width:130px;padding:.65rem .7rem;border-radius:var(--r-sm);
+  background:#080A0E;border:1px solid var(--linea2);color:var(--oro2);
+  font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:.92rem;
+}
+.folio-row input:focus{outline:none;border-color:var(--oro)}
+.folio-row button{
+  flex:none;background:linear-gradient(160deg,var(--oro2),var(--oro));color:#141004;
+  padding:.65rem 1.1rem;border-radius:var(--r-sm);font-weight:800;font-size:.76rem;letter-spacing:.08em;
+}
+.folio-list{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.7rem}
+.folio-tag{
+  border:1px solid rgba(47,191,113,.4);background:rgba(47,191,113,.08);
+  color:#8FE9BB;border-radius:999px;padding:.2rem .6rem;font-size:.66rem;font-weight:600;
+}
+.premio-mini{display:flex;align-items:center;gap:.55rem;font-size:.78rem;padding:.4rem 0;border-top:1px solid var(--linea)}
+.premio-mini .pm-l{font-family:'Bebas Neue','Oswald',sans-serif;color:var(--oro2);font-size:1rem;width:2.2rem}
 
 /* ========= RANKING ========= */
-.rank-row{display:grid;grid-template-columns:52px 1fr auto;gap:.8rem;align-items:center;padding:.7rem;border-radius:8px;margin-bottom:.5rem;background:#0b1926;border:1px solid var(--linea);transition:transform .2s}
-.rank-row:hover{transform:translateX(4px)}
-.rank-row.me{background:linear-gradient(90deg,rgba(255,182,18,.16),rgba(0,0,0,.2));border-color:var(--dorado)}
-.rank-row.gold{background:linear-gradient(90deg,rgba(255,182,18,.22),rgba(0,0,0,.2));border-left:4px solid var(--dorado)}
-.rank-row.silver{background:linear-gradient(90deg,rgba(192,192,192,.18),rgba(0,0,0,.2));border-left:4px solid var(--plata)}
-.rank-row.bronze{background:linear-gradient(90deg,rgba(205,127,50,.2),rgba(0,0,0,.2));border-left:4px solid var(--bronce)}
-.rank-row.prize{border-left:4px solid var(--azul-claro)}
-.rank-pos{font-size:1.5rem;font-weight:900;text-align:center}
-.rank-name{font-weight:700}
-.rank-breakdown{font-size:.68rem;opacity:.72;margin-top:.15rem}
-.rank-points{font-size:1.45rem;font-weight:900;color:var(--dorado);background:#000;padding:.3rem .6rem;border-radius:6px;min-width:72px;text-align:center}
-.cutline{display:flex;align-items:center;gap:.6rem;margin:.9rem 0;color:#a05cff;font-size:.7rem;letter-spacing:2px;font-weight:900}
-.cutline::before,.cutline::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,#a05cff,transparent)}
+.rank-row{
+  display:flex;align-items:center;gap:.85rem;
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);border-radius:var(--r);
+  padding:.85rem 1.05rem;margin-bottom:.6rem;transition:transform .18s;
+}
+.rank-row:hover{transform:translateX(3px)}
+.rank-pos{
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.5rem;
+  width:2.4rem;text-align:center;color:var(--gris);flex:none;
+}
+.rank-row.gold{border-color:rgba(212,175,55,.55);background:linear-gradient(160deg,#201B0C,var(--card))}
+.rank-row.silver{border-color:rgba(198,203,209,.4)}
+.rank-row.bronze{border-color:rgba(205,127,50,.4)}
+.rank-row.gold .rank-pos,.rank-row.silver .rank-pos,.rank-row.bronze .rank-pos{font-size:1.35rem}
+.rank-row.me{border-color:var(--oro);box-shadow:0 0 0 1px var(--oro) inset}
+.rank-row.me .rank-points{color:var(--oro2)}
+.rank-quien{flex:1;min-width:0}
+.rank-name{font-weight:700;font-size:.9rem}
+.rank-breakdown{font-size:.63rem;color:var(--gris);margin-top:.2rem;line-height:1.5}
+.rank-points{
+  margin-left:auto;flex:none;font-family:'Bebas Neue','Oswald',sans-serif;
+  font-size:1.6rem;line-height:1;font-variant-numeric:tabular-nums;
+}
+.cutline{
+  display:flex;align-items:center;gap:.8rem;margin:1.2rem 0;
+  color:var(--lila);font-size:.62rem;letter-spacing:.2em;font-weight:700;text-transform:uppercase;
+}
+.cutline::before,.cutline::after{content:'';flex:1;height:1px;background:rgba(176,124,232,.3)}
 
 /* ========= HISTORIAL ========= */
-.hist-card{background:linear-gradient(180deg,#0f1c28,#070f18);border:1px solid var(--linea);border-radius:12px;padding:1.1rem;position:relative;overflow:hidden}
-.hist-card::after{content:"";position:absolute;top:-30px;right:-30px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(255,182,18,.14),transparent 70%)}
-.hist-emoji{font-size:2.4rem}
-.hist-win{font-size:.78rem;margin-top:.5rem;padding-top:.5rem;border-top:1px dashed #2a4761}
+.hist-card{
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);border-radius:var(--r);
+  padding:1.4rem;position:relative;overflow:hidden;
+  box-shadow:0 8px 28px rgba(0,0,0,.35);
+}
+.hist-card::after{
+  content:'';position:absolute;top:-40px;right:-40px;width:130px;height:130px;border-radius:50%;
+  background:radial-gradient(circle, rgba(212,175,55,.12), transparent 70%);
+}
+.hist-emoji{font-size:2.4rem;line-height:1}
+.hist-card h2{margin:.5rem 0 .35rem;color:var(--txt)}
+.hist-win{font-size:.78rem;margin-top:.8rem;padding-top:.7rem;border-top:1px solid var(--linea);line-height:1.7;color:var(--oro2)}
 
 /* ========= PREMIOS ========= */
-.prizes-hero{text-align:center;padding:2rem 1rem;background:radial-gradient(ellipse at center, rgba(255,182,18,.1), transparent 70%),linear-gradient(180deg,#000,#0b1c2c);border-radius:14px;margin-bottom:1.5rem;border:2px solid var(--dorado)}
-.prizes-hero h1{font-size:2.1rem;margin-bottom:.5rem}
-.prize-card{position:relative;padding:1.6rem 1rem;border-radius:14px;text-align:center;overflow:hidden;transform:translateY(18px);opacity:0;animation:reveal .8s forwards}
-@keyframes reveal{to{transform:none;opacity:1}}
-.prize-card.gold{background:radial-gradient(circle at 50% 28%, #ffd766, #9c6f00 72%, #000);border:3px solid var(--dorado);color:#000;box-shadow:0 0 30px rgba(255,182,18,.5)}
-.prize-card.silver{background:radial-gradient(circle at 50% 28%, #ededed, #7a7a7a 72%, #000);border:3px solid var(--plata);color:#000;box-shadow:0 0 26px rgba(192,192,192,.4)}
-.prize-card.bronze{background:radial-gradient(circle at 50% 28%, #eaa46c, #7a4a22 72%, #000);border:3px solid var(--bronce);color:#000;box-shadow:0 0 26px rgba(205,127,50,.4)}
-.prize-card.plain{background:linear-gradient(180deg,#0f1c28,#070f18);border:1px solid var(--linea);color:#eef3f7}
-.prize-icon{font-size:3.4rem;display:block;margin-bottom:.4rem;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5))}
-.prize-card.gold .prize-icon,.prize-card.silver .prize-icon,.prize-card.bronze .prize-icon{font-size:4.4rem}
-.prize-medal{font-size:1.4rem;font-weight:900;letter-spacing:2px}
+.prizes-hero{
+  text-align:center;padding:2.2rem 1.2rem;border-radius:var(--r);margin-bottom:1.6rem;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(212,175,55,.14), transparent 65%),
+    linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid rgba(212,175,55,.4);
+}
+.prizes-hero h1{font-size:2.4rem}
+#mi-pos-actual{color:var(--oro2);font-weight:700;font-size:.9rem;margin-top:.8rem}
+.prize-card{
+  position:relative;padding:1.8rem 1.1rem;border-radius:var(--r);text-align:center;
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);box-shadow:0 8px 28px rgba(0,0,0,.35);
+  transform:translateY(16px);opacity:0;animation:revela .7s forwards;
+}
+@keyframes revela{to{transform:none;opacity:1}}
+.prize-card.gold{border-color:var(--oro);background:linear-gradient(160deg,#241D0B,var(--card));box-shadow:0 12px 40px rgba(212,175,55,.18)}
+.prize-card.silver{border-color:rgba(198,203,209,.45)}
+.prize-card.bronze{border-color:rgba(205,127,50,.45)}
+.prize-icon{font-size:3rem;display:block;margin-bottom:.6rem}
+.prize-card.gold .prize-icon,.prize-card.silver .prize-icon,.prize-card.bronze .prize-icon{font-size:3.8rem}
+.prize-medal{font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.3rem;letter-spacing:.12em;color:var(--oro2)}
+.prize-card.silver .prize-medal{color:var(--plata)}
+.prize-card.bronze .prize-medal{color:var(--bronce)}
 .prize-desc{font-size:1rem;font-weight:700;margin-top:.4rem}
-.prize-sub{font-size:.75rem;margin-top:.25rem;opacity:.82}
+.prize-sub{font-size:.74rem;color:var(--gris);margin-top:.25rem}
+.todos-ganan{
+  text-align:center;margin-top:2rem;padding:1.8rem 1.2rem;
+  border:1px dashed var(--oro);border-radius:var(--r);
+}
+.todos-ganan h2{color:var(--oro2);font-size:1.5rem;margin:0 0 .6rem}
+.todos-ganan p{font-size:.82rem;color:var(--gris);line-height:1.65;max-width:640px;margin:0 auto}
 
 /* ========= ADMIN ========= */
-.admin-panel{background:#160b0b;border:2px solid var(--rojo);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.admin-panel{
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid rgba(229,72,77,.35);border-radius:var(--r);padding:1.3rem;
+}
 .admin-panel h1{color:var(--rojo)}
-.admin-section{border-top:1px dashed #522;padding-top:.8rem;margin-top:1rem}
-.admin-section input,.admin-section select,.admin-section textarea{background:#000;color:#fff;border:1px solid #444;padding:.35rem .5rem;border-radius:4px;font-size:.82rem}
+.admin-section{border-top:1px solid var(--linea);padding-top:1rem;margin-top:1.3rem}
+.admin-section h3{color:var(--oro2);margin-bottom:.5rem}
+.admin-section input,.admin-section select,.admin-section textarea{
+  background:#080A0E;border:1px solid var(--linea2);padding:.45rem .6rem;
+  border-radius:8px;font-size:.82rem;
+}
+.admin-section input:focus,.admin-section select:focus,.admin-section textarea:focus{outline:none;border-color:var(--oro)}
 .admin-section textarea{width:100%;min-height:130px;font-family:ui-monospace,Consolas,monospace;font-size:.75rem}
-.admin-game-row{display:grid;grid-template-columns:74px 1fr 1fr 56px 12px 56px 1fr 34px;gap:.3rem;align-items:center;margin-bottom:.35rem;font-size:.75rem;padding:.3rem;background:rgba(0,0,0,.35);border-radius:4px}
+.admin-game-row{
+  display:grid;grid-template-columns:78px 1fr 1fr 56px 12px 56px 1fr 38px;
+  gap:.35rem;align-items:center;margin-bottom:.4rem;font-size:.75rem;
+  padding:.4rem;background:rgba(255,255,255,.025);border-radius:8px;
+}
 .admin-game-row input[type=number]{width:100%}
-.btn-danger{background:var(--rojo);color:#fff;padding:.4rem .8rem;border-radius:4px;font-weight:700;font-size:.8rem}
-.btn-ok{background:var(--verde);color:#fff;padding:.4rem .8rem;border-radius:4px;font-weight:700;font-size:.8rem}
-.btn-blue{background:var(--azul-claro);color:#fff;padding:.4rem .8rem;border-radius:4px;font-weight:700;font-size:.8rem}
-.cfg-row{display:grid;grid-template-columns:1fr 120px;gap:.5rem;align-items:center;margin-bottom:.4rem;font-size:.8rem}
-#codes-out{font-family:ui-monospace,Consolas,monospace;font-size:.72rem;background:#000;border:1px solid #444;border-radius:6px;padding:.6rem;max-height:180px;overflow:auto;margin-top:.5rem;white-space:pre-wrap;word-break:break-all}
+.btn-danger{background:rgba(229,72,77,.15);border:1px solid var(--rojo);color:#FFB0B2;padding:.5rem .9rem;border-radius:8px;font-weight:700;font-size:.78rem}
+.btn-ok{background:rgba(47,191,113,.13);border:1px solid rgba(47,191,113,.5);color:#8FE9BB;padding:.5rem .9rem;border-radius:8px;font-weight:700;font-size:.78rem}
+.btn-blue{background:var(--navy);border:1px solid transparent;color:#C8D6EA;padding:.5rem .9rem;border-radius:8px;font-weight:700;font-size:.78rem}
+.cfg-row{display:grid;grid-template-columns:1fr 130px;gap:.5rem;align-items:center;margin-bottom:.45rem;font-size:.8rem}
+#codes-out{
+  font-family:ui-monospace,Consolas,monospace;font-size:.72rem;background:#080A0E;
+  border:1px solid var(--linea2);border-radius:8px;padding:.7rem;max-height:180px;
+  overflow:auto;margin-top:.6rem;white-space:pre-wrap;word-break:break-all;
+}
 
 /* ========= INSTALAR LA APP (PWA) ========= */
-#install-sheet{position:fixed;left:0;right:0;bottom:0;z-index:1500;background:linear-gradient(180deg,var(--acero2) 0%,#0a1520 100%);border-top:3px solid var(--dorado);box-shadow:0 -8px 30px rgba(0,0,0,.75);padding:1rem 1rem 1.3rem;transform:translateY(115%);transition:transform .35s ease;max-height:88vh;overflow-y:auto}
+#install-sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:1500;
+  background:linear-gradient(180deg,var(--card2),#0A0C10);
+  border-top:1px solid var(--oro);box-shadow:0 -12px 40px rgba(0,0,0,.75);
+  border-radius:var(--r) var(--r) 0 0;
+  padding:1.2rem 1.2rem calc(1.4rem + env(safe-area-inset-bottom));
+  transform:translateY(115%);transition:transform .35s ease;max-height:88vh;overflow-y:auto;
+}
 #install-sheet.show{transform:translateY(0)}
-#install-sheet h3{color:var(--dorado);font-size:1.05rem;margin-bottom:.15rem}
-.inst-top{display:flex;align-items:center;gap:.75rem;margin-bottom:.7rem}
-.inst-top img{width:58px;height:58px;border-radius:12px;flex:none;border:2px solid var(--dorado)}
-.inst-cerrar{position:absolute;top:.5rem;right:.6rem;font-size:1.3rem;color:var(--plata);line-height:1;padding:.2rem .4rem}
-.inst-premio{background:rgba(255,182,18,.13);border:2px solid var(--dorado);border-radius:10px;padding:.75rem;margin-bottom:.55rem;font-size:2rem;font-weight:900;letter-spacing:1px;color:var(--dorado);text-align:center;line-height:1}
-.inst-pie{text-align:center;font-size:.9rem;font-weight:700;margin-bottom:.7rem}
-.inst-pasos{list-style:none;counter-reset:p;margin:.2rem 0 .8rem}
-.inst-pasos li{counter-increment:p;position:relative;padding:.3rem 0 .3rem 1.9rem;font-size:.87rem;line-height:1.35}
-.inst-pasos li::before{content:counter(p);position:absolute;left:0;top:.35rem;width:1.35rem;height:1.35rem;border-radius:50%;background:var(--azul-claro);color:#fff;font-size:.72rem;font-weight:700;display:grid;place-items:center}
-.inst-tecla{display:inline-block;background:#000;border:1px solid #456;border-radius:4px;padding:0 .32rem;font-weight:700}
+#install-sheet h3{color:var(--oro2);font-size:1.15rem;margin-bottom:.15rem}
+.inst-top{display:flex;align-items:center;gap:.8rem;margin-bottom:.9rem}
+.inst-top img{width:58px;height:58px;border-radius:14px;flex:none;border:1px solid var(--oro)}
+.inst-cerrar{position:absolute;top:.7rem;right:.8rem;font-size:1.2rem;color:var(--gris);line-height:1;padding:.2rem .4rem}
+.inst-premio{
+  background:var(--oro-tenue);border:1px solid var(--oro);border-radius:var(--r-sm);
+  padding:.85rem;margin-bottom:.7rem;text-align:center;
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:2.1rem;letter-spacing:.08em;color:var(--oro2);line-height:1;
+}
+.inst-pie{text-align:center;font-size:.9rem;font-weight:600;margin-bottom:.8rem}
+.inst-pasos{list-style:none;counter-reset:p;margin:.2rem 0 .9rem}
+.inst-pasos li{counter-increment:p;position:relative;padding:.35rem 0 .35rem 2rem;font-size:.85rem;line-height:1.45}
+.inst-pasos li::before{
+  content:counter(p);position:absolute;left:0;top:.42rem;width:1.4rem;height:1.4rem;
+  border-radius:50%;background:var(--navy);color:#C8D6EA;font-size:.7rem;font-weight:700;
+  display:grid;place-items:center;
+}
+.inst-tecla{display:inline-block;background:#080A0E;border:1px solid var(--linea2);border-radius:5px;padding:0 .35rem;font-weight:700}
 
 /* ========= TOAST ========= */
-#toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%) translateY(120px);background:var(--verde);color:#fff;padding:.8rem 1.4rem;border-radius:99px;font-weight:700;z-index:2000;opacity:0;transition:all .35s;border:2px solid var(--dorado);box-shadow:0 4px 20px rgba(0,0,0,.6);max-width:92vw;text-align:center}
+#toast{
+  position:fixed;left:50%;z-index:2000;
+  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 1rem);
+  transform:translateX(-50%) translateY(140px);
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--oro);color:var(--txt);
+  padding:.8rem 1.3rem;border-radius:999px;font-weight:600;font-size:.85rem;
+  opacity:0;transition:all .35s;max-width:92vw;text-align:center;
+  box-shadow:0 12px 40px rgba(0,0,0,.7);
+}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-#toast.err{background:var(--rojo)}
+#toast.err{border-color:var(--rojo);color:#FFB0B2}
 
-/* ========= RESPONSIVE ========= */
-@media (max-width:640px){
-  .logo-title{font-size:.95rem}
-  .logo-sub{display:none}
+/* ========= ESCRITORIO ========= */
+@media (min-width:720px){
+  .stat-row{grid-template-columns:repeat(3,1fr)}
+  .resumen{width:auto;min-width:330px}
+  .extras-row{grid-template-columns:repeat(3,1fr)}
+}
+@media (min-width:980px){
+  body{padding-bottom:2.5rem}
+  #nav{
+    position:sticky;top:63px;bottom:auto;
+    border-top:none;border-bottom:1px solid var(--linea);
+  }
+  #nav-inner{padding:.2rem 1rem;justify-content:center;gap:.4rem;overflow:visible}
+  .tab{
+    flex:0 0 auto;flex-direction:row;gap:.45rem;font-size:.72rem;
+    padding:.75rem .95rem;border-radius:0;border-bottom:2px solid transparent;
+  }
   .tab .ico{font-size:1rem}
-  .tab{font-size:.66rem;padding:.6rem .25rem;min-width:74px}
-  .match-card{grid-template-columns:auto 1fr;gap:.5rem}
-  .btn-reserve{grid-column:1/-1;justify-self:stretch}
-  h1{font-size:1.25rem}
-  #nav{top:58px}
+  .tab.active{border-bottom-color:var(--oro)}
+  .tab.active::after{display:none}
+  main{padding:1.8rem 1.5rem 3rem}
+  h1{font-size:2.6rem}
+  .q-layout{display:grid;grid-template-columns:270px 1fr;gap:1.6rem;align-items:start}
+  .q-side{position:sticky;top:132px}
+  .stat-row{grid-template-columns:repeat(6,1fr);gap:.9rem}
+  .stat{padding:1.15rem}
+  .q-head{flex-wrap:nowrap}
+  .save-bar{position:static;margin-top:1.6rem}
+  .save-bar .btn-save{max-width:520px;margin:0 auto;display:block}
+  #toast{bottom:1.5rem}
+}
+/* En celular la ficha de perfil se aplana: si va vertical como en el
+   escritorio se come la primera pantalla entera y los partidos —que es a lo
+   que la gente entra— quedan debajo del pliegue. Mismos datos, la mitad de alto. */
+@media (max-width:979px){
+  .perfil-card{text-align:left;padding:1.1rem}
+  .perfil-cab{display:flex;align-items:center;gap:.85rem}
+  .perfil-avatar{width:54px;height:54px;font-size:1.5rem;margin:0;box-shadow:0 0 0 4px rgba(212,175,55,.08)}
+  .perfil-nom{font-size:1.25rem}
+  .perfil-lista{grid-template-columns:1fr 1fr;column-gap:1rem;margin-top:.85rem}
+  .perfil-lista li{font-size:.72rem;padding:.5rem 0;gap:.45rem}
+  .perfil-lista li .pi{width:22px;height:22px;font-size:.72rem;border-radius:6px}
+}
+@media (max-width:480px){
+  .logo-title{font-size:1.15rem}
+  .logo-sub{font-size:.5rem;letter-spacing:.22em}
+  .logo-crown{width:36px;height:36px;font-size:1.05rem}
+  h1{font-size:1.75rem}
   .admin-game-row{grid-template-columns:1fr 1fr;font-size:.7rem}
-  .rank-row{grid-template-columns:42px 1fr auto;gap:.5rem}
-  .rank-points{font-size:1.2rem;min-width:60px}
+  .match-date{min-width:52px;padding-right:.7rem}
+  .rank-points{font-size:1.35rem}
 }
 </style>
 </head>
@@ -358,9 +868,9 @@ td.pts{color:var(--dorado);font-weight:900}
 <div id="registro">
   <div class="reg-card">
     <div id="reg-form-step">
-      <div style="text-align:center;font-size:3rem">🏈🏆</div>
-      <h1 style="text-align:center">QUINIELA <span style="color:#fff">NFL</span><br><span style="color:#fff;font-size:1rem">EN LA CORTE</span></h1>
-      <p class="lead">Temporada 2026-27</p>
+      <div class="reg-crown">👑</div>
+      <h1 class="display">LA CORTE<small>QUINIELA NFL · 2026-27</small></h1>
+      <p class="lead">Entra con tu usuario y contraseña.</p>
 
       <div class="mode-toggle">
         <button id="modo-login"    class="active" onclick="setModo('login')">YA TENGO CUENTA</button>
@@ -376,7 +886,7 @@ td.pts{color:var(--dorado);font-weight:900}
       <label id="lbl-ident">USUARIO</label>
       <input type="text" id="reg-usuario" placeholder="juanp" autocomplete="username"
              autocapitalize="none" spellcheck="false" />
-      <p id="ayuda-usuario" class="small muted" style="display:none;margin:-.3rem 0 .5rem">
+      <p id="ayuda-usuario" class="small muted" style="display:none;margin:.4rem 0 0">
         Con este entrarás. Sin espacios, de 3 a 20 letras o números.
       </p>
 
@@ -396,18 +906,18 @@ td.pts{color:var(--dorado);font-weight:900}
       <button class="btn-primary" id="reg-btn">🏈 ENTRAR</button>
 
       <button id="link-olvide" onclick="pedirRecuperacion()"
-              style="width:100%;margin-top:.7rem;font-size:.8rem;opacity:.75;text-decoration:underline;background:transparent">
+              style="width:100%;margin-top:.9rem;font-size:.78rem;color:var(--gris);text-decoration:underline">
         ¿Olvidaste tu contraseña?
       </button>
-      <p id="reg-pie" style="text-align:center;font-size:.7rem;opacity:.6;margin-top:.8rem">
+      <p id="reg-pie" class="small muted" style="text-align:center;margin-top:.9rem;font-size:.7rem">
         Entra con tu usuario y contraseña
       </p>
     </div>
 
     <!-- Volver de un correo de recuperación: poner contraseña nueva -->
     <div id="reg-nueva-pass-step" style="display:none">
-      <div style="text-align:center;font-size:3rem">🔑</div>
-      <h1 style="text-align:center">NUEVA CONTRASEÑA</h1>
+      <div class="reg-crown">🔑</div>
+      <h1 class="display">NUEVA CONTRASEÑA</h1>
       <p class="lead">Escribe la contraseña que vas a usar de ahora en adelante.</p>
       <label>CONTRASEÑA NUEVA</label>
       <input type="password" id="pass-nueva" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
@@ -416,8 +926,8 @@ td.pts{color:var(--dorado);font-weight:900}
 
     <!-- Sesión activa pero sin perfil: se completa aquí -->
     <div id="reg-perfil-step" style="display:none">
-      <div style="text-align:center;font-size:3rem">👤</div>
-      <h1 style="text-align:center">COMPLETA TU PERFIL</h1>
+      <div class="reg-crown">👤</div>
+      <h1 class="display">COMPLETA TU PERFIL</h1>
       <p class="lead">Tu cuenta es <strong id="perfil-email-shown" style="color:var(--dorado)"></strong>.<br>Solo faltan estos datos para entrar.</p>
       <label>NOMBRE COMPLETO</label>
       <input type="text" id="perfil-nombre" placeholder="Juan Pérez" autocomplete="name" />
@@ -427,7 +937,8 @@ td.pts{color:var(--dorado);font-weight:900}
       <label>TELÉFONO</label>
       <input type="tel" id="perfil-tel" placeholder="834 123 4567" autocomplete="tel" />
       <button class="btn-primary" id="perfil-btn">✅ GUARDAR Y ENTRAR</button>
-      <button onclick="cerrarSesion(true)" style="width:100%;margin-top:.6rem;opacity:.65;font-size:.85rem;padding:.5rem;border-radius:6px;background:transparent;border:1px solid #333">
+      <button onclick="cerrarSesion(true)" class="small muted"
+              style="width:100%;margin-top:.7rem;padding:.55rem;border-radius:11px;border:1px solid var(--linea)">
         ← Usar otra cuenta
       </button>
     </div>
@@ -438,10 +949,10 @@ td.pts{color:var(--dorado);font-weight:900}
 <header id="header">
   <div id="header-inner">
     <div class="logo">
-      <span class="logo-ball">🏈</span>
+      <span class="logo-crown">👑</span>
       <div>
-        <div class="logo-title">QUINIELA <span>NFL</span></div>
-        <div class="logo-sub">EN LA CORTE · 2026-27</div>
+        <div class="logo-title">LA <span>CORTE</span></div>
+        <div class="logo-sub">QUINIELA NFL · 2026-27</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:.5rem">
@@ -450,7 +961,7 @@ td.pts{color:var(--dorado);font-weight:900}
       <button class="btn-instalar-hdr" id="btn-instalar-hdr" style="display:none"
               onclick="abrirInstalacion()">📲 Instalar</button>
       <div class="user-pill" id="user-pill" style="display:none">
-        <span>👤</span>
+        <span class="pill-crown">👑</span>
         <span id="user-name">Usuario</span>
         <button onclick="cerrarSesion()">salir</button>
       </div>
@@ -463,7 +974,7 @@ td.pts{color:var(--dorado);font-weight:900}
   <div id="nav-inner">
     <button class="tab active" data-tab="grupos"><span class="ico">🏟️</span>GRUPOS</button>
     <button class="tab" data-tab="calendario"><span class="ico">📅</span>CALENDARIO</button>
-    <button class="tab" data-tab="quiniela"><span class="ico">🎯</span>QUINIELA</button>
+    <button class="tab" data-tab="quiniela"><span class="ico">🏈</span>QUINIELA</button>
     <button class="tab" data-tab="ranking"><span class="ico">🏆</span>RANKING</button>
     <button class="tab" data-tab="historial"><span class="ico">📜</span>HISTORIAL</button>
     <button class="tab" data-tab="premios"><span class="ico">🎁</span>PREMIOS</button>
@@ -475,8 +986,8 @@ td.pts{color:var(--dorado);font-weight:900}
 
   <!-- ========== GRUPOS ========== -->
   <section class="module active" id="m-grupos">
-    <h1>🏟️ CONFERENCIAS Y DIVISIONES</h1>
-    <p class="muted" style="margin-bottom:1rem">32 equipos · 2 conferencias · 8 divisiones · Récord actualizado con los resultados cargados</p>
+    <h1 class="display">CONFERENCIAS Y DIVISIONES</h1>
+    <p class="lead-sub">32 equipos · 2 conferencias · 8 divisiones. El récord se actualiza solo conforme se cargan los resultados.</p>
     <div class="conf-toggle">
       <button class="active" data-conf="AFC">AFC</button>
       <button data-conf="NFC">NFC</button>
@@ -487,22 +998,27 @@ td.pts{color:var(--dorado);font-weight:900}
 
   <!-- ========== CALENDARIO ========== -->
   <section class="module" id="m-calendario">
-    <h1>📅 CALENDARIO NFL 2026-27</h1>
-    <div class="filters">
-      <select id="f-week"><option value="">Todas las semanas</option></select>
-      <select id="f-team"><option value="">Todos los equipos</option></select>
-      <select id="f-slot">
-        <option value="">Todos los horarios</option>
-        <option value="TNF">Thursday Night</option>
-        <option value="SUN">Domingo temprano</option>
-        <option value="SUN_LATE">Domingo tarde</option>
-        <option value="SNF">Sunday Night</option>
-        <option value="MNF">Monday Night</option>
-        <option value="ESPECIAL">Extraordinarios</option>
-      </select>
-      <input type="date" id="f-date" />
-      <button class="btn-ok" onclick="renderCalendario()">Filtrar</button>
-      <button class="btn-blue" onclick="limpiarFiltros()">Limpiar</button>
+    <h1 class="display">CALENDARIO NFL 2026-27</h1>
+    <p class="lead-sub">Filtra por semana, equipo, horario o fecha. Toca <b>reservar</b> para apartar mesa en La Corte.</p>
+    <div class="filtros-wrap">
+      <div class="filters">
+        <select id="f-week"><option value="">Todas las semanas</option></select>
+        <select id="f-team"><option value="">Todos los equipos</option></select>
+        <select id="f-slot">
+          <option value="">Todos los horarios</option>
+          <option value="TNF">Thursday Night</option>
+          <option value="SUN">Domingo temprano</option>
+          <option value="SUN_LATE">Domingo tarde</option>
+          <option value="SNF">Sunday Night</option>
+          <option value="MNF">Monday Night</option>
+          <option value="ESPECIAL">Extraordinarios</option>
+        </select>
+        <input type="date" id="f-date" />
+      </div>
+      <div class="filters" style="margin-top:.5rem">
+        <button class="btn-ok" onclick="renderCalendario()">Filtrar</button>
+        <button class="btn-blue" onclick="limpiarFiltros()">Limpiar</button>
+      </div>
     </div>
     <div id="cal-list"></div>
   </section>
@@ -510,74 +1026,135 @@ td.pts{color:var(--dorado);font-weight:900}
   <!-- ========== QUINIELA ========== -->
   <section class="module" id="m-quiniela">
     <div id="quiniela">
-      <h1>🎯 MI QUINIELA</h1>
+      <div class="q-layout">
 
-      <div class="stat-row" id="mis-stats"></div>
+        <!-- Columna izquierda: quién soy y qué me dice el Capi.
+             En celular esto va PRIMERO, antes de los partidos. -->
+        <aside class="q-side">
+          <div class="card perfil-card" id="perfil-card"></div>
 
-      <div class="points-table">
-        <h3 style="margin-bottom:.5rem">📊 CÓMO SE GANAN PUNTOS</h3>
-        <table id="tabla-puntos"></table>
-      </div>
+          <!-- EL CAPI: el guía de la quiniela. El arte definitivo (el que
+               Oscar está haciendo en Canva) se sube como /icons/capi.png y
+               entra solo; mientras no exista, onerror deja el emoji. -->
+          <div class="card capi">
+            <div class="capi-art">
+              <img src="/icons/capi.png" alt="El Capi" onerror="this.remove()" />
+              <span>🐵</span>
+            </div>
+            <div>
+              <div class="capi-t">Mensaje del Capi</div>
+              <p id="capi-msg">Bienvenido a la quiniela. Reparte tu confianza con cabeza.</p>
+              <div class="capi-f">— El Capi</div>
+            </div>
+          </div>
+        </aside>
 
-      <div class="folio-box">
-        <h3>🍔 FOLIO DE CONSUMO</h3>
-        <p class="small muted" style="margin-top:.3rem">Cada vez que consumas en La Corte pide tu folio y captúralo aquí. Uno por día de juego.</p>
-        <div class="row">
-          <input type="text" id="folio-input" placeholder="LC0913-A1B2C" maxlength="16" />
-          <button onclick="canjearFolio()">CANJEAR</button>
+        <!-- Columna derecha: la quiniela como tal -->
+        <div class="q-main">
+
+          <div class="q-head">
+            <div class="q-head-txt">
+              <h1 class="display">MI QUINIELA</h1>
+              <p class="lead-sub" style="margin-bottom:0">Reparte tu confianza y confirma tus ganadores antes del primer kickoff.</p>
+            </div>
+            <!-- Las dos tarjetas de resumen del mockup. La de confianza va
+                 destacada en dorado porque es la que exige una acción. -->
+            <div class="resumen">
+              <div class="resumen-card">
+                <div class="rc-l">🍔 Folios de consumo</div>
+                <div class="rc-n" id="rc-folios">0</div>
+                <div class="rc-p" id="rc-folios-p">puntos canjeados</div>
+              </div>
+              <div class="resumen-card destacada">
+                <div class="rc-l">🎯 Confianza disponible</div>
+                <div class="rc-n" id="rc-confianza">0</div>
+                <div class="rc-p" id="rc-confianza-p">valores por asignar</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-row" id="mis-stats"></div>
+
+          <details class="points-table">
+            <summary>📊 CÓMO SE GANAN PUNTOS</summary>
+            <table id="tabla-puntos"></table>
+          </details>
+
+          <div class="week-bar">
+            <button id="wk-prev" onclick="cambiarSemana(-1)">◀</button>
+            <select id="wk-select" onchange="setSemana(parseInt(this.value))"></select>
+            <button id="wk-next" onclick="cambiarSemana(1)">▶</button>
+          </div>
+
+          <div id="lock-banner"></div>
+          <div id="quiniela-list"></div>
+          <div class="save-bar" id="save-bar" style="display:none">
+            <button class="btn-save" id="btn-guardar" onclick="guardarSemana()">👑 GUARDAR MI SEMANA</button>
+          </div>
+
+          <!-- Fila de tres, a ancho completo, debajo de los partidos -->
+          <div class="extras-row">
+            <div id="underdog-slot"></div>
+
+            <div class="extra-card">
+              <div class="ex-ico">🍔</div>
+              <h3 class="display">FOLIO DE CONSUMO</h3>
+              <p>Cada vez que consumas en La Corte pide tu folio y captúralo aquí. Uno por día de juego.</p>
+              <div class="folio-row">
+                <input type="text" id="folio-input" placeholder="LC0913-A1B2C" maxlength="16" />
+                <button onclick="canjearFolio()">CANJEAR</button>
+              </div>
+              <div class="folio-list" id="mis-folios"></div>
+            </div>
+
+            <div class="extra-card">
+              <div class="ex-ico">🏆</div>
+              <h3 class="display">PREMIOS DE LA TEMPORADA</h3>
+              <p id="premios-teaser">10 premios en juego.</p>
+              <div id="premios-mini"></div>
+              <button class="ex-cta" onclick="irA('premios')">Ver los 10 premios</button>
+            </div>
+          </div>
+
         </div>
-        <div class="folio-list" id="mis-folios"></div>
-      </div>
-
-      <div class="week-bar">
-        <button id="wk-prev" onclick="cambiarSemana(-1)">◀</button>
-        <select id="wk-select" onchange="setSemana(parseInt(this.value))"></select>
-        <button id="wk-next" onclick="cambiarSemana(1)">▶</button>
-      </div>
-
-      <div id="lock-banner"></div>
-      <div id="underdog-slot"></div>
-      <div id="quiniela-list"></div>
-      <div class="save-bar" id="save-bar" style="display:none">
-        <button class="btn-save" id="btn-guardar" onclick="guardarSemana()">💾 GUARDAR MI SEMANA</button>
       </div>
     </div>
   </section>
 
   <!-- ========== RANKING ========== -->
   <section class="module" id="m-ranking">
-    <h1>🏆 RANKING GENERAL</h1>
-    <p class="muted" style="margin-bottom:1rem">Clasificación en tiempo real · Del #1 hacia abajo</p>
+    <h1 class="display">RANKING GENERAL</h1>
+    <p class="lead-sub">Clasificación en tiempo real. El corte del lunes define quién juega el Underdog la semana siguiente.</p>
     <div id="rank-list"></div>
   </section>
 
   <!-- ========== HISTORIAL ========== -->
   <section class="module" id="m-historial">
-    <h1>📜 HISTORIAL DE QUINIELAS</h1>
-    <p class="muted" style="margin-bottom:1rem">Todas las quinielas que ha organizado La Corte</p>
+    <h1 class="display">HISTORIAL DE QUINIELAS</h1>
+    <p class="lead-sub">Todas las quinielas que ha organizado La Corte.</p>
     <div id="hist-list" class="grid grid-2"></div>
   </section>
 
   <!-- ========== PREMIOS ========== -->
   <section class="module" id="m-premios">
     <div class="prizes-hero">
-      <h1>🎁 LOS 10 GRANDES PREMIOS</h1>
-      <p class="muted">Temporada NFL 2026-27 · La Corte</p>
-      <p style="margin-top:.6rem;color:var(--dorado);font-weight:900" id="mi-pos-actual">Cargando posición...</p>
+      <h1 class="display">LOS 10 GRANDES PREMIOS</h1>
+      <p class="muted small">Temporada NFL 2026-27 · La Corte</p>
+      <p id="mi-pos-actual">Cargando posición...</p>
     </div>
     <div class="grid grid-3" id="premios-top"></div>
-    <h2 style="margin-top:1.5rem">🎖️ DEL 4° AL 10° LUGAR</h2>
+    <h2>DEL 4° AL 10° LUGAR</h2>
     <div class="grid grid-4" id="premios-resto"></div>
-    <div style="text-align:center;margin-top:2rem;padding:1.5rem;background:rgba(0,0,0,.5);border-radius:10px;border:1px dashed var(--dorado)">
-      <h2 style="color:var(--dorado)">🔥 ¡TODOS PUEDEN GANAR!</h2>
-      <p style="margin-top:.5rem;opacity:.9">Reparte tus puntos de confianza cada semana, acierta el primer anotador de los partidos estelares, canjea tus folios de consumo y — si vienes abajo del top 10 — aprovecha el multiplicador Underdog.</p>
+    <div class="todos-ganan">
+      <h2 class="display">🔥 ¡TODOS PUEDEN GANAR!</h2>
+      <p>Reparte tus puntos de confianza cada semana, acierta el primer anotador de los partidos estelares, canjea tus folios de consumo y — si vienes abajo del top 10 — aprovecha el multiplicador Underdog.</p>
     </div>
   </section>
 
   <!-- ========== ADMIN ========== -->
   <section class="module" id="m-admin">
     <div class="admin-panel">
-      <h1>⚙️ PANEL DE ADMINISTRADOR</h1>
+      <h1 class="display">⚙️ PANEL DE ADMINISTRADOR</h1>
 
       <div class="admin-section">
         <h3>🏈 PARTIDOS Y RESULTADOS</h3>
@@ -670,9 +1247,9 @@ td.pts{color:var(--dorado);font-weight:900}
 <div class="modal-backdrop hidden" id="modal-reserva">
   <div class="modal">
     <button class="modal-close" onclick="cerrarModal()">✕</button>
-    <div style="font-size:3rem">🍻</div>
-    <h2>¡RESERVA TU MESA!</h2>
-    <p id="modal-match" style="margin:.5rem 0;font-weight:700"></p>
+    <div style="font-size:2.8rem">🍻</div>
+    <h2 class="display">¡RESERVA TU MESA!</h2>
+    <p id="modal-match" style="margin:.6rem 0;font-weight:600"></p>
     <p class="small muted">Vive este partido con el mejor ambiente en La Corte. Aparta tu lugar:</p>
     <a href="#" id="tel-link" class="phone-big">834 314 4848</a>
     <a href="#" id="wa-link" target="_blank" rel="noopener" class="btn-primary btn-gold" style="display:block;margin-bottom:.6rem">💬 RESERVAR POR WHATSAPP</a>
@@ -695,10 +1272,11 @@ td.pts{color:var(--dorado);font-weight:900}
   <div class="inst-premio" id="inst-premio"></div>
   <div id="inst-cuerpo"></div>
   <button class="btn-primary" id="inst-accion" style="display:none;width:100%" onclick="instalarAhora()">INSTALAR</button>
-  <button class="small muted" style="display:block;margin:.6rem auto 0;text-decoration:underline" onclick="posponerInstalacion()">Ahora no</button>
+  <button class="small muted" style="display:block;margin:.7rem auto 0;text-decoration:underline" onclick="posponerInstalacion()">Ahora no</button>
 </div>
 
 <div id="toast"></div>
+
 
 <script>
 /* =====================================================
@@ -772,6 +1350,34 @@ function tname(code){
 function tshort(code){
   const t = TEAMS[code];
   return t ? t.nombre : (code || 'TBD');
+}
+
+/* ---------- Logos de equipo ----------
+
+   El arte oficial de la NFL NO se guarda en el repo (es marca registrada y
+   el repo es público). Se sirve del CDN de ESPN, que publica los 32 logos en
+   PNG transparente. Si no carga —sin red, o si ESPN cambia las rutas— el
+   onerror borra la imagen y queda el círculo con las iniciales, que es
+   exactamente lo que la app enseñaba antes. Nunca se rompe el diseño.
+
+   ESPN usa el mismo código de tres letras que nosotros salvo Washington. */
+const ESPN_SLUG = { WAS:'wsh' };
+function logoURL(code){
+  const c = (ESPN_SLUG[code] || code || '').toLowerCase();
+  return 'https://a.espncdn.com/i/teamlogos/nfl/500/'+c+'.png';
+}
+function teamLogo(code, extra){
+  const t = TEAMS[code];
+  const cls = 'tlogo'+(extra?' '+extra:'');
+  if(!code || !t) return `<span class="${cls} tbd">?</span>`;
+  return `<span class="${cls}" style="--tc:${esc(t.color)}">`
+       + `<img src="${logoURL(code)}" alt="${esc(t.nombre)}" loading="lazy" onerror="this.remove()" />`
+       + `${esc(code)}</span>`;
+}
+
+/* Cambiar de pestaña por código (lo usan las tarjetas con "ver más") */
+function irA(tab){
+  document.querySelector('.tab[data-tab="'+tab+'"]')?.click();
 }
 function esc(s){
   return String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1252,6 +1858,16 @@ document.querySelectorAll('.conf-toggle button').forEach(b=>{
 /* =====================================================
    RENDER: DIVISIONES (GRUPOS)
    ===================================================== */
+let RECORDS = {};   // code → {g,p,e,pf,pc}; lo llena calcularRecords()
+
+// Récord corto para las tarjetas de partido ("2-1", "3-0-1"). Vacío mientras
+// no haya resultados cargados: un "0-0" en todos lados es ruido.
+function recordTxt(code){
+  const r = RECORDS[code];
+  if(!r || (!r.g && !r.p && !r.e)) return '';
+  return r.g+'-'+r.p+(r.e?'-'+r.e:'');
+}
+
 function calcularRecords(){
   const rec = {};
   Object.keys(TEAMS).forEach(c=> rec[c]={g:0,p:0,e:0,pf:0,pc:0});
@@ -1264,6 +1880,7 @@ function calcularRecords(){
     else if(g.score_a>g.score_b){ rec[g.team_a].g++; rec[g.team_b].p++; }
     else { rec[g.team_b].g++; rec[g.team_a].p++; }
   });
+  RECORDS = rec;
   return rec;
 }
 
@@ -1289,19 +1906,19 @@ function renderDivisiones(){
       box.className='div-card';
       box.innerHTML = `
         <div class="div-title">${cf} ${dv.toUpperCase()}</div>
-        <table>
-          <tr><th style="text-align:left">EQUIPO</th><th>G</th><th>P</th><th>E</th><th>PF</th><th>PC</th><th>DIF</th></tr>
-          ${list.map(t=>{
-            const r=rec[t.code];
-            const dif=r.pf-r.pc;
-            return `<tr>
-              <td class="team"><span class="dot" style="background:${esc(t.color)}"></span>${esc(t.nombre)}</td>
-              <td class="pts">${r.g}</td><td>${r.p}</td><td>${r.e}</td>
-              <td>${r.pf}</td><td>${r.pc}</td>
-              <td style="color:${dif>0?'#8ff0ac':dif<0?'#ffb0b0':'#aaa'}">${dif>0?'+':''}${dif}</td>
-            </tr>`;
-          }).join('')}
-        </table>`;
+        ${list.map(t=>{
+          const r=rec[t.code];
+          const dif=r.pf-r.pc;
+          const color = dif>0?'var(--verde)':dif<0?'#FFB0B2':'var(--gris)';
+          return `<div class="eq-row">
+            ${teamLogo(t.code,'sm')}
+            <span class="eq-nom">${esc(t.nombre)}<span>${esc(t.ciudad)}</span></span>
+            <span class="eq-rec">
+              <b>${r.g}-${r.p}${r.e?'-'+r.e:''}</b>
+              <span class="eq-dif">${r.pf}:${r.pc} · <span style="color:${color}">${dif>0?'+':''}${dif}</span></span>
+            </span>
+          </div>`;
+        }).join('')}`;
       cont.appendChild(box);
     });
   });
@@ -1350,15 +1967,15 @@ function renderCalendario(){
     const dia = fechaLarga(g.kickoff);
     if(dia!==ultimaFecha){
       ultimaFecha=dia;
-      const h=document.createElement('h2');
-      h.textContent=dia.toUpperCase();
-      h.style.marginTop='1.2rem';
+      const h=document.createElement('div');
+      h.className='dia-sep';
+      h.textContent=dia;
       list.appendChild(h);
     }
 
     const d = new Date(g.kickoff);
     const res = (g.score_a!==null && g.score_a!==undefined)
-      ? `<span class="chip gold">${g.score_a} - ${g.score_b}</span> ` : '';
+      ? `<span class="chip gold">FINAL ${g.score_a} - ${g.score_b}</span>` : '';
     const card = document.createElement('div');
     card.className='card match-card';
     card.innerHTML = `
@@ -1367,14 +1984,18 @@ function renderCalendario(){
         <div class="m">${d.toLocaleDateString('es-MX',{timeZone:TZ,month:'short'}).toUpperCase()}</div>
         <div class="t">${hora(g.kickoff)}</div>
       </div>
-      <div>
-        <div class="match-teams">${esc(tname(g.team_a))} <span style="opacity:.5">@</span> ${esc(tname(g.team_b))}</div>
+      <div class="match-body">
+        <div class="match-teams">
+          ${teamLogo(g.team_a,'sm')}<span>${esc(tshort(g.team_a))}</span>
+          <span class="at">en</span>
+          ${teamLogo(g.team_b,'sm')}<span>${esc(tshort(g.team_b))}</span>
+        </div>
         <div class="match-meta">
           ${res}
           <span class="chip">${esc(weekLabel(g.week))}</span>
           <span class="chip grey">${esc(slotLabel(g.slot))}</span>
           ${g.is_special?'<span class="chip red">⭐ EXTRAORDINARIO · '+cfgInt('pts_win_especial',15)+' PTS</span>':''}
-          ${g.venue?'<br>📍 '+esc(g.venue):''}
+          ${g.venue?'<span>📍 '+esc(g.venue)+'</span>':''}
         </div>
       </div>
       <button class="btn-reserve" data-gid="${esc(g.id)}" onclick="abrirReserva(this.dataset.gid)">🍻 RESERVAR</button>`;
@@ -1412,7 +2033,10 @@ document.getElementById('modal-reserva').addEventListener('click',e=>{
    ===================================================== */
 function misPuntos(){
   let confianza=0, anotador=0, aciertos=0, jugados=0;
+  let anotadorHits=0, racha=0, rachaMax=0;
   const detalle={};
+  // `games` viene ordenado por kickoff, así que recorrerlo en orden da la
+  // racha real de aciertos seguidos.
   games.forEach(g=>{
     const real = ganadorReal(g);
     if(real===null) return;
@@ -1420,15 +2044,22 @@ function misPuntos(){
     if(!p) return;
     jugados++;
     let pts=0;
-    if(p.ganador && real!=='E' && p.ganador===real){ pts += ptsDeAcierto(g,p); aciertos++; }
+    if(p.ganador && real!=='E' && p.ganador===real){
+      pts += ptsDeAcierto(g,p); aciertos++;
+      racha++; if(racha>rachaMax) rachaMax=racha;
+    } else {
+      racha=0;
+    }
     confianza += pts;
     let ap=0;
-    if(g.is_stellar && g.first_scorer && p.primero===g.first_scorer){ ap = cfgInt('pts_anotador',3); }
+    if(g.is_stellar && g.first_scorer && p.primero===g.first_scorer){
+      ap = cfgInt('pts_anotador',3); anotadorHits++;
+    }
     anotador += ap;
     detalle[g.id] = pts+ap;
   });
   const consumo = misFolios.reduce((s,f)=>s+(f.puntos||0),0);
-  let underdog = 0;
+  let underdog = 0, underdogHits = 0;
   Object.entries(myUD).forEach(([w,op])=>{
     const uw = udWeeks[w];
     if(!uw) return;
@@ -1437,10 +2068,16 @@ function misPuntos(){
     const g = games.find(x=>x.id===gid);
     if(!g || g.score_a===null || g.score_a===undefined || g.score_a===g.score_b) return;
     const win = g.score_a>g.score_b ? g.team_a : g.team_b;
-    if(win===tm) underdog += (uw.puntos||0);
+    if(win===tm){ underdog += (uw.puntos||0); underdogHits++; }
   });
-  return {confianza, anotador, consumo, underdog, aciertos, jugados,
-          total: confianza+anotador+consumo+underdog, detalle};
+  // Los bonos (instalación y los que da ADMIN a mano) solo los conoce la
+  // vista `ranking`. Se suman aquí para que el total de "Mi quiniela" y el
+  // de la tabla de posiciones digan lo mismo; antes no coincidían.
+  const yo = rankRows.find(r=> sbProfile && r.id===sbProfile.id);
+  const bono = yo ? (yo.pts_bono || 0) : 0;
+  return {confianza, anotador, consumo, underdog, bono,
+          aciertos, jugados, anotadorHits, underdogHits, rachaMax,
+          total: confianza+anotador+consumo+underdog+bono, detalle};
 }
 
 /* =====================================================
@@ -1480,17 +2117,107 @@ function renderTablaPuntos(){
     <tr><td>🍔 Folio de consumo · día extraordinario</td><td>${cfgInt('pts_folio_especial',10)} pts</td></tr>`;
 }
 
+/* Un solo punto de entrada para todo el tablero personal: las 6 cifras, las
+   dos tarjetas de resumen, la ficha de perfil y el mensaje del Capi. Se llama
+   desde donde ya se llamaba renderStats(), así ninguna de las cuatro se queda
+   vieja después de canjear un folio o registrar un underdog. */
 function renderStats(){
   const cont = document.getElementById('mis-stats');
   if(!cont) return;
   const p = misPuntos();
+  const pct = p.jugados ? Math.round(p.aciertos*100/p.jugados) : 0;
+
   cont.innerHTML = `
-    <div class="stat"><div class="v">${p.total}</div><div class="l">TOTAL</div></div>
-    <div class="stat"><div class="v">${p.confianza}</div><div class="l">CONFIANZA</div></div>
-    <div class="stat"><div class="v">${p.anotador}</div><div class="l">ANOTADOR</div></div>
-    <div class="stat"><div class="v">${p.consumo}</div><div class="l">CONSUMO</div></div>
-    <div class="stat"><div class="v">${p.underdog}</div><div class="l">UNDERDOG</div></div>
-    <div class="stat"><div class="v">${p.aciertos}/${p.jugados}</div><div class="l">ACIERTOS</div></div>`;
+    <div class="stat"><div class="e">🏆</div><div class="v oro">${p.total}</div><div class="l">Puntos totales</div></div>
+    <div class="stat"><div class="e">🎯</div><div class="v">${p.confianza}</div><div class="l">Confianza</div></div>
+    <div class="stat"><div class="e">⚡</div><div class="v">${p.anotador}</div><div class="l">Primer anotador</div></div>
+    <div class="stat"><div class="e">🍔</div><div class="v">${p.consumo}</div><div class="l">Folios</div></div>
+    <div class="stat"><div class="e">🦄</div><div class="v">${p.underdog}</div><div class="l">Underdog</div></div>
+    <div class="stat"><div class="e">✅</div><div class="v">${pct}%</div><div class="l">Aciertos ${p.aciertos}/${p.jugados}</div></div>`;
+
+  renderResumen(p);
+  renderPerfil(p);
+  renderCapi(p);
+}
+
+/* Las dos tarjetas de arriba a la derecha */
+function renderResumen(p){
+  p = p || misPuntos();
+  const gs = gamesOf(currentWeek);
+  const asignados = gs.filter(g=>myPicks[g.id]?.confianza).length;
+  const libres = Math.max(0, gs.length - asignados);
+  const cerrada = semanaCerrada(currentWeek);
+
+  const f = document.getElementById('rc-folios');
+  if(f){
+    f.textContent = misFolios.length;
+    document.getElementById('rc-folios-p').textContent =
+      misFolios.length ? `${p.consumo} puntos canjeados` : 'aún no canjeas ninguno';
+  }
+  const c = document.getElementById('rc-confianza');
+  if(c){
+    c.textContent = cerrada ? '—' : libres;
+    document.getElementById('rc-confianza-p').textContent = cerrada
+      ? 'la semana ya cerró'
+      : (libres ? `de ${gs.length} valores por repartir` : '¡ya repartiste todos!');
+  }
+}
+
+/* Ficha de perfil de la barra lateral: cada dato con su ícono */
+function renderPerfil(p){
+  const cont = document.getElementById('perfil-card');
+  if(!cont || !sbProfile) return;
+  p = p || misPuntos();
+  const pct = p.jugados ? Math.round(p.aciertos*100/p.jugados) : 0;
+  const rol = {admin:'Administrador', manager:'Manager'}[sbProfile.role] || 'Participante';
+  const pos = rankRows.findIndex(r=>r.id===sbProfile.id);
+
+  cont.innerHTML = `
+    <div class="perfil-cab">
+      <div class="perfil-avatar">👑</div>
+      <div>
+        <div class="perfil-nom">${esc(sbProfile.nombre||'')}</div>
+        <div class="perfil-rol">${esc(rol)}${pos>=0?' · #'+(pos+1)+' general':''}</div>
+      </div>
+    </div>
+    <ul class="perfil-lista">
+      <li><span class="pi">🏆</span> Puntos totales   <b class="oro">${p.total}</b></li>
+      <li><span class="pi">✅</span> Victorias        <b>${p.aciertos}</b></li>
+      <li><span class="pi">🎯</span> Aciertos         <b>${pct}%</b></li>
+      <li><span class="pi">🔥</span> Mejor racha      <b>${p.rachaMax}</b></li>
+      <li><span class="pi">🦄</span> Underdogs        <b>${p.underdogHits}</b></li>
+      <li><span class="pi">⚡</span> Primer anotador  <b>${p.anotadorHits}</b></li>
+      <li><span class="pi">🎁</span> Bonos            <b>${p.bono}</b></li>
+    </ul>`;
+}
+
+/* El Capi no adorna: dice lo único que hace falta hacer ahora mismo.
+   El orden de las reglas es el orden de urgencia. */
+function renderCapi(p){
+  const el = document.getElementById('capi-msg');
+  if(!el) return;
+  p = p || misPuntos();
+  const gs = gamesOf(currentWeek);
+  const faltan = gs.filter(g=>!myPicks[g.id]?.ganador || !myPicks[g.id]?.confianza).length;
+  const cerrada = semanaCerrada(currentWeek);
+  const uw = udWeeks[currentWeek];
+  const sem = weekLabel(currentWeek);
+
+  let msg;
+  if(!gs.length){
+    msg = `Todavía no cargan los partidos de ${sem}. En cuanto la NFL publique el calendario oficial aparecen aquí.`;
+  } else if(cerrada){
+    msg = `${sem} ya cerró. Ve el ranking para saber cómo vas, y prepárate para la que sigue.`;
+  } else if(faltan > 0){
+    msg = `Te faltan ${faltan} ${faltan===1?'partido':'partidos'} por completar en ${sem}. Guarda antes del primer kickoff o te quedas sin puntos.`;
+  } else if(uw && uw.opt_a_team && puedoUnderdog(currentWeek) && !myUD[currentWeek]){
+    msg = `Ya tienes tu semana lista. Te falta el underdog: es gratis, si le atinas son +${uw.puntos} puntos y si falla no pierdes nada.`;
+  } else if(!misFolios.length){
+    msg = `Tu semana está lista. Cuando vengas a La Corte pide tu folio de consumo y captúralo: son puntos que nadie más te va a regalar.`;
+  } else {
+    msg = `Todo en orden esta semana. Vuelve el lunes: del corte sale quién juega el underdog.`;
+  }
+  el.textContent = msg;
 }
 
 function renderMisFolios(){
@@ -1504,6 +2231,7 @@ function renderMisFolios(){
 
 function renderQuiniela(){
   if(!sbProfile) return;
+  calcularRecords();   // las tarjetas de partido muestran el récord de cada equipo
   renderTablaPuntos(); renderStats(); renderMisFolios();
 
   const wSel = document.getElementById('wk-select');
@@ -1540,13 +2268,17 @@ function renderQuiniela(){
     const dia = fechaLarga(g.kickoff);
     if(dia!==ultimoDia){
       ultimoDia=dia;
-      const h=document.createElement('h2');
-      h.textContent=dia.toUpperCase();
-      h.style.marginTop='1rem';
+      const h=document.createElement('div');
+      h.className='dia-sep';
+      h.textContent=dia;
       list.appendChild(h);
     }
     list.appendChild(renderGamePick(g, N, det));
   });
+  if(!gs.length){
+    list.innerHTML='<div class="card" style="text-align:center;color:var(--gris)">Sin partidos cargados para esta semana.</div>';
+  }
+  renderPremiosMini();
 
   document.getElementById('save-bar').style.display = (gs.length && !cerrada) ? '' : 'none';
   actualizarBotonGuardar();
@@ -1565,45 +2297,59 @@ function renderGamePick(g, N, det){
 
   const jugado = real!==null;
   const dis = locked ? 'disabled' : '';
-  const opts = [`<option value="">–</option>`].concat(
-    Array.from({length:N},(_,i)=>{
-      const v=N-i;
-      return `<option value="${v}"${p.confianza===v?' selected':''}>${v}</option>`;
-    })
-  ).join('');
-
   const marcador = jugado
     ? `<span class="chip gold">FINAL ${g.score_a} - ${g.score_b}</span>` : '';
+
+  // Las fichas de confianza sustituyen al desplegable: se ve de un vistazo
+  // qué números quedan libres, que es justo lo que cuesta trabajo recordar.
+  const chips = Array.from({length:N},(_,i)=>{
+    const v = N-i;
+    return `<button type="button" data-v="${v}" ${dis}
+              onclick="pickConfianza('${esc(g.id)}',${v})">${v}</button>`;
+  }).join('');
+
+  const lado = (code, quien, der)=>
+    `<div class="qg-team${der?' der':''}">
+       ${teamLogo(code)}
+       <div class="qt-nom">
+         <b>${esc(tshort(code))}</b>
+         <span>${esc(TEAMS[code]?TEAMS[code].ciudad:'Por definir')}${recordTxt(code)?' · '+recordTxt(code):''} · ${quien}</span>
+       </div>
+     </div>`;
 
   div.innerHTML = `
     <div class="qg-head">
       <span>${esc(hora(g.kickoff))} hrs · ${esc(slotLabel(g.slot))}${g.is_special?' · <b style="color:var(--dorado)">⭐ '+cfgInt('pts_win_especial',15)+' PTS</b>':' · '+cfgInt('pts_win_normal',5)+' pts'}</span>
-      <span>${marcador}${g.is_stellar?'<span class="chip red" style="margin-left:.3rem">ESTELAR</span>':''}</span>
+      <span>${marcador}${g.is_stellar?'<span class="chip red" style="margin-left:.3rem">⭐ ESTELAR</span>':''}</span>
     </div>
     <div class="qg-versus">
-      <button class="team-btn ${p.ganador==='A'?'sel':''}" ${dis}
-        onclick="pickGanador('${esc(g.id)}','A',this)">
-        ${esc(tshort(g.team_a))}<small>VISITA</small>
-      </button>
-      <div class="vs">@</div>
-      <button class="team-btn ${p.ganador==='B'?'sel':''}" ${dis}
-        onclick="pickGanador('${esc(g.id)}','B',this)">
-        ${esc(tshort(g.team_b))}<small>LOCAL</small>
-      </button>
+      ${lado(g.team_a,'visita',false)}
+      <span class="vs">VS</span>
+      ${lado(g.team_b,'local',true)}
     </div>
-    <div class="conf-row">
-      <label>🔢 CONFIANZA</label>
-      <select id="cf-${esc(g.id)}" ${dis} onchange="pickConfianza('${esc(g.id)}',this.value)">${opts}</select>
-      <span class="small muted">${N>0?'de 1 a '+N+', sin repetir':''}</span>
+    <div class="campo">
+      <span class="lbl">Selecciona ganador</span>
+      <div class="seg">
+        <button class="team-btn ${p.ganador==='A'?'sel':''}" ${dis}
+          onclick="pickGanador('${esc(g.id)}','A',this)">${esc(g.team_a||'TBD')}</button>
+        <button class="team-btn ${p.ganador==='B'?'sel':''}" ${dis}
+          onclick="pickGanador('${esc(g.id)}','B',this)">${esc(g.team_b||'TBD')}</button>
+      </div>
     </div>
     ${g.is_stellar ? `
-    <div class="anot-row">
-      <span class="lbl">⚡ PRIMER EQUIPO EN ANOTAR (+${cfgInt('pts_anotador',3)})</span>
-      <div class="mini-group">
-        <button class="mini-btn ${p.primero==='A'?'sel':''}" ${dis} onclick="pickPrimero('${esc(g.id)}','A',this)">${esc(tshort(g.team_a))}</button>
-        <button class="mini-btn ${p.primero==='B'?'sel':''}" ${dis} onclick="pickPrimero('${esc(g.id)}','B',this)">${esc(tshort(g.team_b))}</button>
-      </div>
+    <div class="campo">
+      <span class="lbl">⚡ Primer equipo en anotar <b>+${cfgInt('pts_anotador',3)} · solo estelares</b></span>
+      <select class="anot-select ${p.primero?'sel':''}" ${dis}
+              onchange="pickPrimero('${esc(g.id)}',this.value,this)">
+        <option value="">— elige equipo —</option>
+        <option value="A"${p.primero==='A'?' selected':''}>${esc(tname(g.team_a))}</option>
+        <option value="B"${p.primero==='B'?' selected':''}>${esc(tname(g.team_b))}</option>
+      </select>
     </div>` : ''}
+    <div class="campo">
+      <span class="lbl">🎯 Confianza <b>${N>0?'de 1 a '+N+', sin repetir':''}</b></span>
+      <div class="conf-chips" id="cf-${esc(g.id)}">${chips}</div>
+    </div>
     ${jugado ? `<div class="earned ${det[g.id]?'':'zero'}">${det[g.id] ? '🎉 +'+det[g.id]+' PUNTOS' : 'Sin puntos en este partido'}</div>` : ''}
   `;
   return div;
@@ -1614,19 +2360,50 @@ function pickGanador(gid, val, btn){
   myPicks[gid].ganador = (myPicks[gid].ganador===val) ? null : val;
   btn.parentElement.querySelectorAll('.team-btn').forEach(b=>b.classList.remove('sel'));
   if(myPicks[gid].ganador) btn.classList.add('sel');
-  dirty=true; actualizarBotonGuardar();
+  dirty=true; actualizarBotonGuardar(); renderCapi();
 }
-function pickPrimero(gid, val, btn){
+function pickPrimero(gid, val, el){
   myPicks[gid] = myPicks[gid] || {};
-  myPicks[gid].primero = (myPicks[gid].primero===val) ? null : val;
-  btn.parentElement.querySelectorAll('.mini-btn').forEach(b=>b.classList.remove('sel'));
-  if(myPicks[gid].primero) btn.classList.add('sel');
+  myPicks[gid].primero = val || null;
+  if(el) el.classList.toggle('sel', !!val);
   dirty=true; actualizarBotonGuardar();
 }
 function pickConfianza(gid, val){
   myPicks[gid] = myPicks[gid] || {};
-  myPicks[gid].confianza = val==='' ? null : parseInt(val);
-  dirty=true; actualizarBotonGuardar();
+  const v = parseInt(val);
+  myPicks[gid].confianza = (myPicks[gid].confianza===v) ? null : v;
+  dirty=true; actualizarBotonGuardar(); renderResumen(); renderCapi();
+}
+
+/* Pinta el estado de TODAS las fichas de confianza de la semana y devuelve
+   cuántos valores quedaron repetidos. Un valor que ya usó otro partido se
+   deshabilita, así el repetido solo puede venir de datos viejos —y se ve en
+   rojo para que se pueda corregir. */
+function refrescarConfianza(){
+  const gs = gamesOf(currentWeek);
+  const usados = {};
+  gs.forEach(g=>{
+    const c = myPicks[g.id]?.confianza;
+    if(c) (usados[c] = usados[c] || []).push(g.id);
+  });
+  let dups = 0;
+  gs.forEach(g=>{
+    const fila = document.getElementById('cf-'+g.id);
+    if(!fila) return;
+    const mio = myPicks[g.id]?.confianza || null;
+    const repetido = !!(mio && usados[mio].length > 1);
+    if(repetido) dups++;
+    const locked = partidoCerrado(g);
+    fila.querySelectorAll('button').forEach(b=>{
+      const v = parseInt(b.dataset.v);
+      const ajeno = !!(usados[v] && !usados[v].includes(g.id));
+      b.classList.toggle('sel', v===mio);
+      b.classList.toggle('dup', repetido && v===mio);
+      b.classList.toggle('usado', ajeno);
+      b.disabled = locked || ajeno;
+    });
+  });
+  return dups;
 }
 
 function actualizarBotonGuardar(){
@@ -1634,24 +2411,9 @@ function actualizarBotonGuardar(){
   const btn = document.getElementById('btn-guardar');
   if(!btn) return;
 
-  // Detectar confianzas repetidas
-  const usados = {};
-  gs.forEach(g=>{
-    const c = myPicks[g.id]?.confianza;
-    if(c) (usados[c]=usados[c]||[]).push(g.id);
-  });
-  let dups = 0;
-  gs.forEach(g=>{
-    const el = document.getElementById('cf-'+g.id);
-    if(!el) return;
-    const c = myPicks[g.id]?.confianza;
-    const isDup = c && usados[c].length>1;
-    el.classList.toggle('dup', !!isDup);
-    if(isDup) dups++;
-  });
-
-  const asignados = Object.keys(usados).length;
-  const faltan = gs.length - gs.filter(g=>myPicks[g.id]?.confianza).length;
+  const dups = refrescarConfianza();
+  const asignados = gs.filter(g=>myPicks[g.id]?.confianza).length;
+  const faltan = gs.length - asignados;
 
   if(dups>0){
     btn.disabled = true;
@@ -1662,8 +2424,8 @@ function actualizarBotonGuardar(){
   } else {
     btn.disabled = false;
     btn.textContent = faltan>0
-      ? `💾 GUARDAR · faltan ${faltan} por asignar`
-      : `💾 GUARDAR MI SEMANA (${asignados}/${gs.length} listos)`;
+      ? `👑 GUARDAR · faltan ${faltan} por asignar`
+      : `👑 GUARDAR MI SEMANA (${asignados}/${gs.length} listos)`;
   }
 }
 
@@ -1705,11 +2467,15 @@ function renderUnderdog(){
   const uw = udWeeks[currentWeek];
   const topN = cfgInt('underdog_top_n',10);
 
-  if(!uw || !uw.opt_a_team){
-    slot.innerHTML = `<div class="underdog-box">
-      <h3>🦄 MULTIPLICADOR DE PUNTOS: UNDERDOG</h3>
-      <p class="small" style="margin-top:.4rem;opacity:.85">Los underdogs de ${esc(weekLabel(currentWeek))} aún no se publican. Se abren cada miércoles.</p>
+  const caja = (cuerpo)=> `<div class="extra-card underdog">
+      <div class="ex-ico">🦄</div>
+      <h3 class="display">UNDERDOG DE LA SEMANA</h3>
+      ${cuerpo}
     </div>`;
+
+  if(!uw || !uw.opt_a_team){
+    slot.innerHTML = caja(
+      `<p>Los underdogs de ${esc(weekLabel(currentWeek))} aún no se publican. Se abren cada miércoles.</p>`);
     return;
   }
 
@@ -1718,13 +2484,12 @@ function renderUnderdog(){
   const mio = myUD[currentWeek];
 
   if(!elegible){
-    slot.innerHTML = `<div class="underdog-box">
-      <h3>🦄 MULTIPLICADOR DE PUNTOS: UNDERDOG</h3>
-      <div class="ud-locked" style="margin-top:.6rem">
-        🔒 Cerraste la semana pasada en el <b>#${miPosPrevia(currentWeek)}</b>.<br>
-        El Underdog es exclusivo para quienes vienen del lugar #${topN+1} hacia abajo. ¡Vas muy bien, defiéndelo!
-      </div>
-    </div>`;
+    slot.innerHTML = caja(
+      `<p>Es exclusivo para quienes vienen del lugar #${topN+1} hacia abajo.</p>
+       <div class="ud-locked">
+         🔒 Cerraste la semana pasada en el <b>#${miPosPrevia(currentWeek)}</b>.
+         ¡Vas muy bien, ahora defiéndelo!
+       </div>`);
     return;
   }
 
@@ -1741,15 +2506,11 @@ function renderUnderdog(){
             </button>`;
   }).join('');
 
-  slot.innerHTML = `<div class="underdog-box">
-    <h3>🦄 MULTIPLICADOR DE PUNTOS: UNDERDOG</h3>
-    <p class="small" style="margin-top:.4rem;opacity:.9">
-      Estás fuera del top ${topN}: elige <b>un</b> underdog de ${esc(weekLabel(currentWeek))}.
-      Si gana su partido te llevas <b style="color:#d8b3ff">+${uw.puntos} puntos</b>. No pierdes nada si falla.
-    </p>
-    <div class="ud-options">${opciones}</div>
-    ${cerrado ? '<p class="small" style="margin-top:.6rem;opacity:.7">🔒 Ventana cerrada para esta semana.</p>' : ''}
-  </div>`;
+  slot.innerHTML = caja(
+    `<p>Estás fuera del top ${topN}: elige <b>un</b> underdog de ${esc(weekLabel(currentWeek))}.
+       Si gana su partido son <b style="color:var(--lila)">+${uw.puntos} puntos</b>. No pierdes nada si falla.</p>
+     <div class="ud-options">${opciones}</div>
+     ${cerrado ? '<p style="margin-top:.7rem">🔒 Ventana cerrada para esta semana.</p>' : ''}`);
 }
 
 async function pickUnderdog(op){
@@ -1806,13 +2567,17 @@ async function renderRanking(){
     row.className='rank-row '+cls+(isMe?' me':'');
     row.innerHTML=`
       <div class="rank-pos">${medal}</div>
-      <div>
+      <div class="rank-quien">
         <div class="rank-name">${esc(r.nombre)}${isMe?' <span style="color:var(--dorado)">(tú)</span>':''}</div>
         <div class="rank-breakdown">🎯 ${r.pts_confianza} confianza · ⚡ ${r.pts_anotador} anotador · 🍔 ${r.pts_consumo} consumo · 🦄 ${r.pts_underdog} underdog · 📲 ${r.pts_bono??0} app</div>
       </div>
       <div class="rank-points">${r.total_puntos}</div>`;
     list.appendChild(row);
   });
+
+  // El ranking es lo único que conoce los bonos, así que en cuanto llega se
+  // repintan el tablero personal y la ficha de perfil con el total correcto.
+  if(sbProfile) renderStats();
 
   const my = rankRows.findIndex(r=>sbProfile && r.id===sbProfile.id);
   const el = document.getElementById('mi-pos-actual');
@@ -1868,10 +2633,26 @@ function renderPremios(){
   resto.innerHTML = PREMIOS.slice(3).map((p,i)=>`
     <div class="prize-card plain" style="animation-delay:${(i+1)*.08}s">
       <span class="prize-icon">${p.icon}</span>
-      <div class="prize-medal" style="color:var(--dorado);font-size:1.1rem">${p.p}° LUGAR</div>
+      <div class="prize-medal" style="font-size:1.1rem">${p.p}° LUGAR</div>
       <div class="prize-desc">${esc(p.t)}</div>
       <div class="prize-sub">${esc(p.s)}</div>
     </div>`).join('');
+}
+
+/* Adelanto de premios en la tercera tarjeta de la quiniela: el podio y,
+   si ya está en la tabla, en qué lugar va la persona. */
+function renderPremiosMini(){
+  const cont = document.getElementById('premios-mini');
+  if(!cont) return;
+  const pos = rankRows.findIndex(r=> sbProfile && r.id===sbProfile.id);
+  const t = document.getElementById('premios-teaser');
+  if(t){
+    t.textContent = pos>=0
+      ? `Vas en la posición #${pos+1} de ${rankRows.length}. Los 10 primeros se llevan premio.`
+      : 'Diez premios en juego. Empieza a jugar para entrar a la tabla.';
+  }
+  cont.innerHTML = PREMIOS.slice(0,3).map(p=>`
+    <div class="premio-mini"><span class="pm-l">${p.p}°</span> ${p.icon} ${esc(p.t)}</div>`).join('');
 }
 
 /* =====================================================
