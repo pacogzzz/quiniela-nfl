@@ -111,7 +111,35 @@ await blocked('un jugador NO puede borrar el bono de otro',
   `delete from bonos where user_id=$1`,[ANA]);
 await blocked('ni inflarle los puntos a un bono',
   `update bonos set puntos=9999 where user_id=$1`,[ANA]);
+// Esta comprobacion va como ADMIN a proposito: desde la sesion de Beto ahora
+// devuelve 0 porque no puede ver bonos ajenos, y un 0 aqui no probaria que el
+// bono sigue existiendo — solo que no lo ve.
+await login(ADMIN);
 chk('  el bono de Ana sigue ahi',
+  (await one(`select count(*)::int c from bonos where user_id=$1`,[ANA])).c, 1);
+
+console.log('\n== LOS BONOS AJENOS TAMBIEN SON PRIVADOS ==');
+// Mismo hueco que tenian los pronosticos: USING (true). Cerrado en
+// 006_privacidad_bonos.sql.
+//
+// Lo que se filtraba aqui no eran los puntos —el ranking ya publica la columna
+// pts_bono de todo el mundo— sino el MOTIVO, que lo escribe ADMIN a mano y
+// puede decir cualquier cosa: "por ayudar en la cocina", "disculpa por el error
+// del lunes". Eso no es dato para que lo lea la banca entera.
+await login(BETO);
+chk('Beto NO ve los bonos de Ana',
+  (await one(`select count(*)::int c from bonos where user_id=$1`,[ANA])).c, 0);
+chk('  ni el motivo de nadie mas',
+  (await one(`select count(*)::int c from bonos where user_id <> $1`,[BETO])).c, 0);
+// La vista `ranking` corre como su dueno y NO pasa por RLS: los totales de
+// todos se siguen viendo. Si esto se rompe, desaparece el desglose de puntos.
+chk('  pero el ranking SI le muestra los puntos de bono de Ana',
+  (await one(`select pts_bono from ranking where id=$1`,[ANA])).pts_bono, 25);
+await login(ANA);
+chk('Ana si ve los suyos',
+  (await one(`select count(*)::int c from bonos where user_id=$1`,[ANA])).c, 1);
+await login(ADMIN);
+chk('el admin SI ve los de todos (los otorga y responde los reclamos)',
   (await one(`select count(*)::int c from bonos where user_id=$1`,[ANA])).c, 1);
 
 console.log('\n== EL UNDERDOG RESPETA EL TOP 10 ==');

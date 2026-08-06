@@ -113,6 +113,13 @@ agrega la prueba correspondiente.
     y `anon` nunca tuvo permiso — pasaba en verde sin probar nada. Toda política
     nueva se prueba desde los **dos** roles. Arreglado en `005_privacidad_picks.sql`.
 
+    **El mismo `USING (true)` estaba en `bonos`** y se encontró después, por la
+    misma vía. Ahí no se filtraban los puntos (el ranking ya publica `pts_bono`
+    de todos) sino el **motivo**, que lo escribe ADMIN a mano. Cerrado en
+    `006_privacidad_bonos.sql`. Si aparece otra tabla con `USING (true)` para
+    `authenticated`, la pregunta correcta es *¿qué columna de aquí no debería
+    ver el de al lado?*, no *¿son públicos los totales?*.
+
 ## Diseño: "La Corte premium" (agosto 2026)
 
 Carbón `#0B0D10` + dorado `#D4AF37`, tipografías Bebas Neue (títulos) e Inter

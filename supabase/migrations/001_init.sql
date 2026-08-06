@@ -851,14 +851,23 @@ CREATE POLICY "up upd"  ON underdog_picks FOR UPDATE TO authenticated
 DROP POLICY IF EXISTS "ws read" ON week_snapshots;
 CREATE POLICY "ws read" ON week_snapshots FOR SELECT TO authenticated USING (true);
 
--- bonos: todos leen (el ranking los suma y el desglose los muestra), pero solo
--- admin/manager los otorgan a mano. El bono de instalación NO entra por aquí:
+-- bonos: cada quien ve SOLO los suyos; admin y manager ven todos porque los
+-- otorgan y tienen que auditarlos. El motivo lo escribe ADMIN a mano y puede
+-- decir cualquier cosa ("por ayudar en la cocina"), así que no es dato para
+-- que lo lean los otros ~200. Los totales sí siguen siendo públicos: salen de
+-- la vista `ranking`, que corre como su dueño y no pasa por RLS.
+--
+-- Solo admin/manager los otorgan. El bono de instalación NO entra por aquí:
 -- entra por otorgar_bono_instalacion(), que es SECURITY DEFINER.
 -- Sin UPDATE a propósito: un bono se da o se quita, no se edita.
 DROP POLICY IF EXISTS "bonos read" ON bonos;
 DROP POLICY IF EXISTS "bonos ins"  ON bonos;
 DROP POLICY IF EXISTS "bonos del"  ON bonos;
-CREATE POLICY "bonos read" ON bonos FOR SELECT TO authenticated USING (true);
+CREATE POLICY "bonos read" ON bonos FOR SELECT TO authenticated
+  USING (
+    user_id = auth.uid()
+    OR mi_rol() IN ('admin','manager')
+  );
 CREATE POLICY "bonos ins"  ON bonos FOR INSERT TO authenticated
   WITH CHECK (mi_rol() IN ('admin','manager'));
 CREATE POLICY "bonos del"  ON bonos FOR DELETE TO authenticated
