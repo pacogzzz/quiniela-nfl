@@ -2533,19 +2533,19 @@ function renderTablaPuntos(){
 
   t.innerHTML =
     fila('🔢','Puntos de confianza',
-         `Repartes del 1 al ${n} sin repetir. Si le atinas, te llevas ese número tal cual. El tope cambia según los partidos que traiga la week.`,
+         'Repartes del 1 al 16 sin opción a repetir. Si aciertas el ganador, esos serán tus puntos en el partido. El máximo de puntos cambia conforme a los partidos en las weeks.',
          `Máximo ${topeConfianza(currentWeek)} pts`) +
     fila('⚡','Primer equipo en anotar',
-         'Solo en los estelares: Thursday, Sunday y Monday Night. En los demás partidos no se juega.',
+         'Exclusivo Partidos Estelares. Thursday Night, Sunday Night, Monday Night y partidos especiales.',
          `${cfgInt('pts_anotador',3)} pts`) +
     fila('🐶','Underdog',
-         `Una sola oportunidad por week, con tres candidatos: escoges uno. Solo para quienes vienen fuera del top ${cfgInt('underdog_top_n',10)}.`,
+         'Exclusivo Jugadores fuera del top 10. Tendrás 3 candidatos a underdog de la semana, sus puntos cambian conforme a posibilidades de ganar.',
          `${udVals.join(' · ')} pts`) +
-    fila('🍔','Folio de consumo · lunes','',`${cfgInt('pts_folio_lunes',10)} pts`) +
-    fila('🍔','Folio de consumo · jueves','',`${cfgInt('pts_folio_jueves',5)} pts`) +
-    fila('🍔','Folio de consumo · domingo','',`${cfgInt('pts_folio_domingo',5)} pts`) +
-    fila('🍔','Folio de consumo · día especial',
-         'Miércoles, viernes o sábado. Vale más porque son los días que cuesta llenar el restaurante.',
+    fila('🍔','Lunes - Folio por consumo','',`${cfgInt('pts_folio_lunes',10)} pts`) +
+    fila('🍔','Jueves - Folio por consumo','',`${cfgInt('pts_folio_jueves',5)} pts`) +
+    fila('🍔','Domingo - Folio por consumo','',`${cfgInt('pts_folio_domingo',5)} pts`) +
+    fila('🍔','Especial - Folio por consumo',
+         'Partidos en Miércoles, Viernes o Sábado.',
          `${cfgInt('pts_folio_especial',15)} pts`);
 }
 
