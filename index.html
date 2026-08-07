@@ -332,8 +332,10 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 }
 .dia-sep::after{content:'';flex:1;height:1px;background:var(--linea);min-width:24px}
 /* Puntos de consumo del día: destacados, no en gris como el resto del separador */
-.dia-sep-pts{color:var(--oro);letter-spacing:.03em;white-space:nowrap}
-.dia-sep-pts b{font-size:.78rem}
+/* Rojo a propósito: es la única llamada de atención de esta pantalla, y
+   el pedido explícito era que resaltara sobre el resto. */
+.dia-sep-pts{color:var(--rojo);font-weight:700;letter-spacing:.03em;white-space:nowrap}
+.dia-sep-pts b{font-size:.82rem}
 .match-card{
   display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;
   padding:.9rem 1rem;margin-bottom:.7rem;
