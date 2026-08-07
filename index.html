@@ -328,9 +328,12 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 .filters select:focus,.filters input:focus{outline:none;border-color:var(--oro)}
 .dia-sep{
   font-size:.64rem;color:var(--gris);letter-spacing:.2em;text-transform:uppercase;
-  font-weight:700;margin:1.5rem 0 .6rem;display:flex;align-items:center;gap:.8rem;
+  font-weight:700;margin:1.5rem 0 .6rem;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;
 }
-.dia-sep::after{content:'';flex:1;height:1px;background:var(--linea)}
+.dia-sep::after{content:'';flex:1;height:1px;background:var(--linea);min-width:24px}
+/* Puntos de consumo del día: destacados, no en gris como el resto del separador */
+.dia-sep-pts{color:var(--oro);letter-spacing:.03em;white-space:nowrap}
+.dia-sep-pts b{font-size:.78rem}
 .match-card{
   display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;
   padding:.9rem 1rem;margin-bottom:.7rem;
@@ -2350,9 +2353,14 @@ function renderCalendario(){
     const dia = fechaLarga(g.kickoff);
     if(dia!==ultimaFecha){
       ultimaFecha=dia;
+      // Los puntos de consumo son por DÍA, no por partido (cualquiera que
+      // consuma ese día se lleva lo mismo), así que van una sola vez junto
+      // a la fecha en vez de repetidos en cada tarjeta.
+      const pts = ptsFolioDe(isoDay(g.kickoff));
       const h=document.createElement('div');
       h.className='dia-sep';
-      h.textContent=dia;
+      h.innerHTML = `<span class="dia-sep-txt">${esc(dia)}</span>
+        <span class="dia-sep-pts">🍔 Puntos por consumo <b>${pts} pts</b></span>`;
       list.appendChild(h);
     }
 
@@ -2377,10 +2385,13 @@ function renderCalendario(){
           ${res}
           <span class="chip">${esc(weekLabel(g.week))}</span>
           <span class="chip grey">${esc(slotLabel(g.slot))}</span>
+          <!-- Los puntos de consumo ya no van aquí: son por día, no por
+               partido, y se muestran una sola vez junto a la fecha (arriba). -->
           ${g.is_special
-            ? '<span class="chip red">⭐ ESPECIAL · FOLIO DE '+cfgInt('pts_folio_especial',15)+' PTS</span>'
+            ? '<span class="chip red">⭐ ESPECIAL · PRIMER ANOTADOR</span>'
             // Estelar = TNF/SNF/MNF. Los especiales (mié/vié/sáb) YA son
-            // estelares por dentro, así que no se duplica la estrella aquí.
+            // estelares por dentro, así que no se duplica la estrella aquí,
+            // pero ambos son los únicos con primer anotador jugable.
             : (g.is_stellar ? '<span class="chip red">⭐ ESTELAR · PRIMER ANOTADOR</span>' : '')}
           ${g.venue?'<span>📍 '+esc(g.venue)+'</span>':''}
         </div>
