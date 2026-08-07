@@ -1339,7 +1339,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
           <option value="SUN_LATE">Domingo tarde</option>
           <option value="SNF">Sunday Night</option>
           <option value="MNF">Monday Night</option>
-          <option value="ESPECIAL">Extraordinarios</option>
+          <option value="ESPECIAL">Especiales</option>
         </select>
         <input type="date" id="f-date" />
       </div>
@@ -1702,7 +1702,7 @@ function weekLabel(w){
   return {19:'Comodines',20:'Ronda Divisional',21:'Final de Conferencia',22:'SUPER BOWL LXI'}[w] || 'Week '+w;
 }
 function slotLabel(s){
-  return {TNF:'Thursday Night',SUN:'Domingo',SUN_LATE:'Domingo tarde',SNF:'Sunday Night',MNF:'Monday Night',ESPECIAL:'Extraordinario'}[s]||s;
+  return {TNF:'Thursday Night',SUN:'Domingo',SUN_LATE:'Domingo tarde',SNF:'Sunday Night',MNF:'Monday Night',ESPECIAL:'Especial'}[s]||s;
 }
 function fecha(iso, opts){
   return new Date(iso).toLocaleDateString('es-MX', Object.assign({timeZone:TZ}, opts));
@@ -2377,7 +2377,11 @@ function renderCalendario(){
           ${res}
           <span class="chip">${esc(weekLabel(g.week))}</span>
           <span class="chip grey">${esc(slotLabel(g.slot))}</span>
-          ${g.is_special?'<span class="chip red">⭐ EXTRAORDINARIO · FOLIO DE '+cfgInt('pts_folio_especial',15)+' PTS</span>':''}
+          ${g.is_special
+            ? '<span class="chip red">⭐ ESPECIAL · FOLIO DE '+cfgInt('pts_folio_especial',15)+' PTS</span>'
+            // Estelar = TNF/SNF/MNF. Los especiales (mié/vié/sáb) YA son
+            // estelares por dentro, así que no se duplica la estrella aquí.
+            : (g.is_stellar ? '<span class="chip red">⭐ ESTELAR · PRIMER ANOTADOR</span>' : '')}
           ${g.venue?'<span>📍 '+esc(g.venue)+'</span>':''}
         </div>
       </div>
@@ -2527,7 +2531,7 @@ function renderTablaPuntos(){
     fila('🍔','Folio de consumo · lunes','',`${cfgInt('pts_folio_lunes',10)} pts`) +
     fila('🍔','Folio de consumo · jueves','',`${cfgInt('pts_folio_jueves',5)} pts`) +
     fila('🍔','Folio de consumo · domingo','',`${cfgInt('pts_folio_domingo',5)} pts`) +
-    fila('🍔','Folio de consumo · día extraordinario',
+    fila('🍔','Folio de consumo · día especial',
          'Miércoles, viernes o sábado. Vale más porque son los días que cuesta llenar el restaurante.',
          `${cfgInt('pts_folio_especial',15)} pts`);
 }
@@ -3072,7 +3076,7 @@ function renderGamePick(g, N, det){
     <div class="qg-head">
       <!-- Ya no se anuncian puntos fijos por partido: lo que vale acertar es
            EL NÚMERO DE CONFIANZA que le pongas, y ese se ve abajo. -->
-      <span>${esc(hora(g.kickoff))} hrs · ${esc(slotLabel(g.slot))}${g.is_special?' · <b style="color:var(--dorado)">⭐ EXTRAORDINARIO</b>':''}</span>
+      <span>${esc(hora(g.kickoff))} hrs · ${esc(slotLabel(g.slot))}${g.is_special?' · <b style="color:var(--dorado)">⭐ ESPECIAL</b>':''}</span>
       <span>${marcador}${g.is_stellar?'<span class="chip red" style="margin-left:.3rem">⭐ ESTELAR</span>':''}</span>
     </div>
     <div class="qg-versus">
