@@ -40,7 +40,7 @@ chk('301 partidos',           (await one('select count(*)::int c from games')).c
 chk('288 de temporada regular',(await one('select count(*)::int c from games where week<=18')).c, 288);
 chk('13 de playoffs',         (await one('select count(*)::int c from games where week>=19')).c, 13);
 chk('22 semanas de underdog', (await one('select count(*)::int c from underdog_weeks')).c, 22);
-chk('14 llaves de config',    (await one('select count(*)::int c from config')).c, 14);
+chk('12 llaves de config',    (await one('select count(*)::int c from config')).c, 12);
 chk('30 politicas RLS',       (await one("select count(*)::int c from pg_policies where schemaname='public'")).c, 30);
 chk('RLS activo en 11 tablas',(await one("select count(*)::int c from pg_tables t join pg_class k on k.relname=t.tablename where t.schemaname='public' and k.relrowsecurity")).c, 11);
 
@@ -81,14 +81,16 @@ await q(`update games set score_a=24,score_b=17,first_scorer='A' where id='W01-T
 await q(`update games set score_a=10,score_b=20 where id='W01-D01'`);
 await q(`update games set score_a=13,score_b=27 where id='W12-BF1'`);
 const r1 = await one(`select * from ranking where id=$1`,[U1]);
-chk('confianza = (5+16) + 0 + (15+1) = 37', r1.pts_confianza, 37);
+// conf_mode = 'solo': acertar paga TU numero de confianza y nada mas.
+// TNF acertado con 16 · D01 fallado con 15 · BF1 acertado con 1 = 17.
+chk('confianza = 16 + 0 + 1 = 17', r1.pts_confianza, 17);
 chk('anotador = 3',   r1.pts_anotador, 3);
-chk('total = 40',     r1.total_puntos, 40);
+chk('total = 20',     r1.total_puntos, 20);
 
 console.log('\n== EMPATE NO DA PUNTOS ==');
 await q(`update games set team_a='NE',team_b='NYJ',score_a=20,score_b=20 where id='W01-D02'`);
 await q(`insert into picks(user_id,game_id,ganador,confianza) values($1,'W01-D02','A',14)`,[U1]);
-chk('empate = 0 pts', (await one(`select pts_confianza from ranking where id=$1`,[U1])).pts_confianza, 37);
+chk('empate = 0 pts', (await one(`select pts_confianza from ranking where id=$1`,[U1])).pts_confianza, 17);
 
 console.log('\n== CONFIANZA REPETIDA SE RECHAZA ==');
 await shouldFail('indice unico bloquea duplicado',
@@ -127,7 +129,8 @@ console.log('\n== FOLIOS DE CONSUMO ==');
 chk('lunes vale 10',     (await one(`select puntos_por_fecha('2026-09-14'::date) p`)).p, 10);
 chk('domingo vale 5',    (await one(`select puntos_por_fecha('2026-09-13'::date) p`)).p, 5);
 chk('jueves vale 5',     (await one(`select puntos_por_fecha('2026-09-10'::date) p`)).p, 5);
-chk('viernes vale 10',   (await one(`select puntos_por_fecha('2026-11-27'::date) p`)).p, 10);
+// El día raro vale MÁS que un domingo: es el que cuesta llenar el restaurante.
+chk('viernes vale 15',   (await one(`select puntos_por_fecha('2026-11-27'::date) p`)).p, 15);
 // Nombrar admin va por la ruta legitima: sin sesion, como el editor SQL de Supabase
 await db.exec(`SELECT set_config('request.jwt.claim.sub','',false)`);
 await q(`update profiles set role='admin' where id=$1`,[U1]);
@@ -147,10 +150,21 @@ chk('Beto: 10 pts de consumo',(await one(`select pts_consumo from ranking where 
 
 console.log('\n== UNDERDOG ==');
 await q(`update games set team_a='CAR',team_b='SF',score_a=30,score_b=7 where id='W01-D06'`);
-await q(`update underdog_weeks set opt_a_game='W01-D06',opt_a_team='CAR',puntos=20 where week=1`);
+await q(`update underdog_weeks set opt_a_game='W01-D06',opt_a_team='CAR' where week=1`);
 await q(`insert into underdog_picks(user_id,week,opcion) values($1,1,'A')`,[U2]);
-chk('underdog acertado = +20', (await one(`select pts_underdog from ranking where id=$1`,[U2])).pts_underdog, 20);
+// Cada opción paga lo suyo: A vale 8, no el tope de la week.
+chk('underdog acertado = +8 (opción A)', (await one(`select pts_underdog from ranking where id=$1`,[U2])).pts_underdog, 8);
 chk('detecta al perdedor',     (await one(`select underdog_acierto('W01-D06','SF') a`)).a, false);
+// Las tres puertas NO pagan igual: es lo que hace que escoger sea una decisión.
+await q(`update underdog_picks set opcion='C' where user_id=$1 and week=1`,[U2]);
+await q(`update underdog_weeks set opt_c_game='W01-D06',opt_c_team='CAR' where week=1`);
+chk('la opción C paga 12, no 8', (await one(`select pts_underdog from ranking where id=$1`,[U2])).pts_underdog, 12);
+// Y si una week vieja no trae valores por opción, se sigue pagando `puntos`.
+await q(`update underdog_weeks set puntos_c=null, puntos=20 where week=1`);
+chk('sin puntos_c cae en el respaldo', (await one(`select pts_underdog from ranking where id=$1`,[U2])).pts_underdog, 20);
+await q(`update underdog_weeks set puntos_c=12, puntos=12 where week=1`);
+await q(`update underdog_picks set opcion='A' where user_id=$1 and week=1`,[U2]);
+await q(`update underdog_weeks set opt_c_game=null, opt_c_team=null where week=1`);
 
 console.log('\n== ELEGIBILIDAD DEL UNDERDOG (corte del lunes) ==');
 chk('sin cortes, todos elegibles', (await one(`select underdog_elegible($1,1) e`,[U1])).e, true);
@@ -171,9 +185,11 @@ await q(`update config set valor='solo' where clave='conf_mode'`);
 chk('solo: 16 + 1 = 17',      (await one(`select pts_confianza from ranking where id=$1`,[U1])).pts_confianza, 17);
 await q(`update config set valor='additive' where clave='conf_mode'`);
 chk('additive: 21 + 16 = 37', (await one(`select pts_confianza from ranking where id=$1`,[U1])).pts_confianza, 37);
+// Se deja en 'solo', que es el modo oficial de la temporada.
+await q(`update config set valor='solo' where clave='conf_mode'`);
 
 console.log('\n== BONOS (puntos a mano) ==');
-// Beto viene con 30 (10 de consumo + 20 de underdog) y sin un solo bono.
+// Beto viene con 18 (10 de consumo + 8 del underdog A) y sin un solo bono.
 chk('sin bonos, pts_bono = 0',  (await one(`select pts_bono from ranking where id=$1`,[U2])).pts_bono, 0);
 await asUser(U2);
 const b1 = await one(`select otorgar_bono_instalacion() r`);
@@ -182,7 +198,7 @@ const b2 = await one(`select otorgar_bono_instalacion() r`);
 chk('no se cobra dos veces',    [b2.r.ok, b2.r.ya, b2.r.puntos], [true, true, 0]);
 chk('y solo quedo 1 fila',      (await one(`select count(*)::int c from bonos where user_id=$1 and motivo='instalacion'`,[U2])).c, 1);
 chk('el bono llega al ranking', (await one(`select pts_bono from ranking where id=$1`,[U2])).pts_bono, 25);
-chk('y suma al total: 30+25',   (await one(`select total_puntos from ranking where id=$1`,[U2])).total_puntos, 55);
+chk('y suma al total: 18+25',   (await one(`select total_puntos from ranking where id=$1`,[U2])).total_puntos, 43);
 // El monto sale de config, no esta hardcodeado en la funcion
 await q(`update config set valor='50' where clave='pts_bono_instalacion'`);
 await asUser(U1);

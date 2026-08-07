@@ -18,16 +18,19 @@ CREATE TABLE IF NOT EXISTS config (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- OJO: aquí NO están pts_win_normal ni pts_win_especial. Se quitaron antes de
+-- arrancar la temporada (ver 007_puntaje_temporada.sql): acertar un partido
+-- paga exactamente el número de confianza que le pusiste, ni más ni menos.
+-- La vista `ranking` todavía los lee con cfg_int(clave, default) por si algún
+-- día se vuelve a conf_mode = additive.
 INSERT INTO config (clave, valor, etiqueta) VALUES
-  ('pts_win_normal',    '5',         'Puntos por ganador acertado (partido normal)'),
-  ('pts_win_especial',  '15',        'Puntos por ganador acertado (partido extraordinario: mié/vie/sáb)'),
-  ('conf_mode',         'additive',  'Cómo se aplican los puntos de confianza: additive | flat | solo'),
+  ('conf_mode',         'solo',      'Cómo se aplican los puntos de confianza: solo | additive | flat'),
   ('pts_anotador',      '3',         'Puntos por acertar el primer equipo en anotar (partido estelar)'),
-  ('pts_underdog',      '20',        'Puntos por acertar el underdog de la semana'),
+  ('pts_underdog',      '12',        'Tope de puntos del underdog (cada opción trae el suyo)'),
   ('pts_folio_lunes',   '10',        'Puntos de consumo · lunes'),
   ('pts_folio_jueves',  '5',         'Puntos de consumo · jueves'),
   ('pts_folio_domingo', '5',         'Puntos de consumo · domingo'),
-  ('pts_folio_especial','10',        'Puntos de consumo · días extraordinarios (mié/vie/sáb)'),
+  ('pts_folio_especial','15',        'Puntos de consumo · días extraordinarios (mié/vie/sáb)'),
   ('lock_mode',         'semana',    'Cuándo se cierran los pronósticos: semana | partido'),
   ('underdog_top_n',    '10',        'Solo participan en underdog los jugadores fuera del top N'),
   ('whatsapp',          '528343144848', 'WhatsApp del restaurante (con lada país, sin +)'),
@@ -451,10 +454,18 @@ GRANT EXECUTE ON FUNCTION generar_folios(DATE, INT) TO authenticated;
 -- =====================================================================
 -- 7. UNDERDOG
 -- =====================================================================
+-- UNA ventana de underdog por week, con TRES candidatos. Cada quien escoge UNO:
+-- no son tres oportunidades, es una sola con tres puertas. Cada puerta paga
+-- distinto (8 · 10 · 12) para que el underdog más improbable valga más y
+-- escoger sea de verdad una decisión. `puntos` queda de respaldo para weeks
+-- viejas que no traen los valores por opción.
 CREATE TABLE IF NOT EXISTS underdog_weeks (
   week        INT PRIMARY KEY,
   abierto     BOOL NOT NULL DEFAULT TRUE,
-  puntos      INT  NOT NULL DEFAULT 20,
+  puntos      INT  NOT NULL DEFAULT 12,
+  puntos_a    INT  DEFAULT 8,
+  puntos_b    INT  DEFAULT 10,
+  puntos_c    INT  DEFAULT 12,
   opt_a_game  TEXT REFERENCES games(id) ON DELETE SET NULL,
   opt_a_team  TEXT REFERENCES teams(code),
   opt_b_game  TEXT REFERENCES games(id) ON DELETE SET NULL,
@@ -599,15 +610,18 @@ WITH conf AS (
          AND g.score_a <> g.score_b
          AND pk.ganador = (CASE WHEN g.score_a > g.score_b THEN 'A' ELSE 'B' END)
         THEN
-          CASE cfg_text('conf_mode','additive')
+          -- El modo oficial es 'solo': acertar paga tu número de confianza y
+          -- nada más. Los otros dos siguen aquí porque son un interruptor de
+          -- la tabla config y recalculan el histórico al instante.
+          CASE cfg_text('conf_mode','solo')
             WHEN 'flat' THEN (CASE WHEN g.is_special
                                    THEN cfg_int('pts_win_especial',15)
                                    ELSE cfg_int('pts_win_normal',5) END)
-            WHEN 'solo' THEN COALESCE(pk.confianza,0)
-            ELSE (CASE WHEN g.is_special
-                       THEN cfg_int('pts_win_especial',15)
-                       ELSE cfg_int('pts_win_normal',5) END)
-                 + COALESCE(pk.confianza,0)
+            WHEN 'additive' THEN (CASE WHEN g.is_special
+                                       THEN cfg_int('pts_win_especial',15)
+                                       ELSE cfg_int('pts_win_normal',5) END)
+                                 + COALESCE(pk.confianza,0)
+            ELSE COALESCE(pk.confianza,0)
           END
         ELSE 0
       END
@@ -635,9 +649,9 @@ und AS (
     up.user_id,
     COALESCE(SUM(
       CASE
-        WHEN up.opcion = 'A' AND underdog_acierto(uw.opt_a_game, uw.opt_a_team) THEN uw.puntos
-        WHEN up.opcion = 'B' AND underdog_acierto(uw.opt_b_game, uw.opt_b_team) THEN uw.puntos
-        WHEN up.opcion = 'C' AND underdog_acierto(uw.opt_c_game, uw.opt_c_team) THEN uw.puntos
+        WHEN up.opcion = 'A' AND underdog_acierto(uw.opt_a_game, uw.opt_a_team) THEN COALESCE(uw.puntos_a, uw.puntos)
+        WHEN up.opcion = 'B' AND underdog_acierto(uw.opt_b_game, uw.opt_b_team) THEN COALESCE(uw.puntos_b, uw.puntos)
+        WHEN up.opcion = 'C' AND underdog_acierto(uw.opt_c_game, uw.opt_c_team) THEN COALESCE(uw.puntos_c, uw.puntos)
         ELSE 0
       END
     ),0) AS pts_underdog
@@ -1030,8 +1044,8 @@ END
 $seed$;
 
 -- Semanas de underdog vacías listas para configurar
-INSERT INTO underdog_weeks (week, abierto, puntos)
-SELECT gs, TRUE, 20 FROM generate_series(1,22) gs
+INSERT INTO underdog_weeks (week, abierto, puntos, puntos_a, puntos_b, puntos_c)
+SELECT gs, TRUE, 12, 8, 10, 12 FROM generate_series(1,22) gs
 ON CONFLICT (week) DO NOTHING;
 
 -- =====================================================================

@@ -390,36 +390,31 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 .q-side{order:2;display:flex;flex-direction:column;gap:.9rem}
 .q-side .card{margin-bottom:0}
 
-/* --- Tarjeta de perfil (con ícono por dato y anillo dorado) --- */
-.perfil-card{text-align:center;padding:1.4rem 1.2rem}
+/* --- Encabezado de "mi perfil" ---
+   Quién eres y en qué lugar vas, en una sola tira horizontal. Sustituye a la
+   ficha vertical que además repetía cifras que ya salen en cuadros. */
+.perfil-hero{
+  display:flex;align-items:center;gap:1rem;
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--linea);border-radius:var(--r);
+  padding:1.1rem 1.3rem;margin-bottom:1rem;box-shadow:0 8px 28px rgba(0,0,0,.35);
+}
 .perfil-avatar{
-  width:78px;height:78px;margin:0 auto .7rem;border-radius:50%;
-  display:grid;place-items:center;font-size:2.1rem;
+  width:66px;height:66px;flex:none;border-radius:50%;
+  display:grid;place-items:center;
   background:radial-gradient(circle at 35% 28%, #23262E, #0C0E12);
   border:2px solid var(--oro);
   box-shadow:0 0 0 6px rgba(212,175,55,.08), 0 8px 24px rgba(0,0,0,.5);
 }
-.perfil-card .perfil-nom{
-  font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.45rem;
+.ph-quien{flex:1;min-width:0}
+.perfil-nom{
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.6rem;
   letter-spacing:.06em;line-height:1.1;
 }
-.perfil-card .perfil-rol{font-size:.6rem;letter-spacing:.2em;color:var(--gris);font-weight:700;text-transform:uppercase;margin-top:.15rem}
-.perfil-lista{list-style:none;text-align:left;margin-top:1rem;display:grid;gap:0}
-.perfil-lista li{
-  display:flex;align-items:center;gap:.6rem;
-  font-size:.78rem;color:var(--gris);
-  padding:.6rem 0;border-top:1px solid var(--linea);
-}
-.perfil-lista li .pi{
-  width:26px;height:26px;flex:none;border-radius:8px;display:grid;place-items:center;
-  background:rgba(255,255,255,.045);border:1px solid var(--linea);font-size:.85rem;
-}
-.perfil-lista li b{margin-left:auto;color:var(--txt);font-weight:700;font-variant-numeric:tabular-nums}
-.perfil-lista li b.oro{color:var(--oro2)}
-/* Renglón que invita a instalar: solo aparece si los 25 puntos siguen sin
-   cobrarse, y desaparece solo en cuanto entran. */
-.perfil-nudge{cursor:pointer;color:var(--oro2)!important}
-.perfil-nudge .pi{border-color:var(--oro);background:var(--oro-tenue)}
+.perfil-rol{font-size:.6rem;letter-spacing:.2em;color:var(--gris);font-weight:700;text-transform:uppercase;margin-top:.15rem}
+.ph-pos{flex:none;text-align:right}
+.ph-pos-n{font-family:'Bebas Neue','Oswald',sans-serif;font-size:2.4rem;line-height:1;color:var(--oro2)}
+.ph-pos-l{font-size:.58rem;letter-spacing:.16em;color:var(--gris);font-weight:700;text-transform:uppercase}
 
 /* --- El Capi: el guía de la quiniela ---
    Las láminas son PNG recortados al personaje, así que van SIN marco: se
@@ -583,7 +578,7 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
   font-weight:700;text-transform:uppercase;margin-top:.25rem;
 }
 
-/* --- Selector de semana --- */
+/* --- Selector de week --- */
 .week-bar{
   display:flex;align-items:center;gap:.6rem;
   background:linear-gradient(160deg,var(--card2),var(--card));
@@ -608,6 +603,30 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 .lock-banner.open{background:rgba(47,191,113,.1);border:1px solid rgba(47,191,113,.45);color:#8FE9BB}
 .lock-banner.shut{background:rgba(229,72,77,.1);border:1px solid rgba(229,72,77,.45);color:#FFB0B2}
 
+/* --- Autorrellenar --- */
+.auto-bar{
+  display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px dashed var(--linea2);border-radius:var(--r);
+  padding:.85rem 1rem;margin-bottom:1.1rem;
+}
+.auto-bar span{flex:1;min-width:200px;font-size:.72rem;line-height:1.5;color:var(--gris)}
+.btn-auto{
+  flex:none;border:1px solid var(--oro);border-radius:999px;
+  background:var(--oro-tenue);color:var(--oro2);padding:.62rem 1.15rem;
+  font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  transition:all .18s;
+}
+.btn-auto:hover{background:var(--oro);color:#141004}
+/* En celular esta barra se mete entre el selector de week y el primer
+   partido: apretada cuesta 100 px en vez de 180, y esos 80 px son scroll que
+   la gente hace CADA vez que entra. */
+@media (max-width:719px){
+  .auto-bar{padding:.7rem .8rem;gap:.55rem;margin-bottom:.9rem}
+  .auto-bar span{font-size:.68rem;min-width:0}
+  .btn-auto{padding:.55rem .9rem;font-size:.66rem}
+}
+
 /* --- Tabla "cómo se ganan puntos" (plegable: ocupa mucho) --- */
 .points-table{
   background:linear-gradient(160deg,var(--card2),var(--card));
@@ -624,7 +643,10 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 .points-table[open] summary::after{transform:rotate(180deg)}
 .points-table table{width:100%;border-collapse:collapse;margin-bottom:1rem}
 .points-table td{padding:.5rem 0;font-size:.78rem;border-top:1px solid var(--linea);color:var(--gris)}
-.points-table td:last-child{text-align:right;color:var(--oro2);font-weight:700;white-space:nowrap}
+.points-table td:last-child{text-align:right;color:var(--oro2);font-weight:700;white-space:nowrap;vertical-align:top}
+/* La nota chica de cada regla. Sin ella la tabla dice cuánto vale cada cosa
+   pero no cuándo aplica, que es justo lo que la gente pregunta. */
+.points-table td small{display:block;margin-top:.2rem;font-size:.68rem;line-height:1.45;color:#6E747D}
 
 /* --- Tarjeta de partido --- */
 .qgame{
@@ -793,38 +815,62 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   border:1px solid rgba(47,191,113,.4);background:rgba(47,191,113,.08);
   color:#8FE9BB;border-radius:999px;padding:.2rem .6rem;font-size:.66rem;font-weight:600;
 }
-/* El Capi con el perrito, dentro de la tarjeta del underdog. Es la lámina
-   `underdog`, la única donde sale el bulldog, y toca justo el tema. Misma
-   burbuja que la de la quiniela pero en lila, que es el color del underdog. */
-.ud-capi{
-  display:flex;align-items:center;gap:.6rem;width:100%;text-align:left;margin-top:.9rem;
-  background:rgba(176,124,232,.09);border:1px solid rgba(176,124,232,.4);
-  border-radius:var(--r-sm);padding:.5rem .8rem .5rem .55rem;transition:all .18s;
+/* El encabezado de la tarjeta del underdog: el Capi con su perrito ocupa el
+   lugar donde estaba el emoji 🦄, y todo el bloque es el botón que abre la
+   explicación. La ilustración ES el ícono, no un adorno al lado. */
+.ud-cab{
+  display:flex;align-items:center;gap:.75rem;width:100%;text-align:left;
+  margin:-.35rem 0 .6rem;padding:.3rem;border-radius:var(--r-sm);transition:background .18s;
 }
-.ud-capi:hover{background:rgba(176,124,232,.18);border-color:var(--lila)}
-.ud-capi .cb-art{width:46px;height:52px;flex:none;display:flex;align-items:flex-end;justify-content:center;position:relative}
-.ud-capi .cb-art::before{
+.ud-cab:hover{background:rgba(176,124,232,.1)}
+.ud-cab-art{
+  width:62px;height:70px;flex:none;position:relative;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.ud-cab-art::before{
   content:'';position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);
-  width:140%;height:80%;border-radius:50%;
-  background:radial-gradient(ellipse at 50% 65%, rgba(176,124,232,.28), transparent 68%);
+  width:140%;height:78%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 65%, rgba(176,124,232,.3), transparent 68%);
 }
-.ud-capi .cb-art img{position:relative;max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 6px 12px rgba(0,0,0,.55))}
-.ud-capi .cb-txt{display:flex;flex-direction:column;gap:.12rem;min-width:0}
-.ud-capi .cb-t{font-family:'Bebas Neue','Oswald',sans-serif;font-size:.95rem;letter-spacing:.08em;line-height:1.1}
-.ud-capi .cb-cta{font-size:.6rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--lila)}
-.ud-capi .cb-cta::after{content:' ▸'}
+.ud-cab-art img{position:relative;max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.6))}
+.ud-cab-txt{min-width:0}
+.ud-cab-txt h3{margin-bottom:.1rem}
+.ud-cab .cb-cta{
+  display:block;font-size:.6rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--lila);
+}
+.ud-cab .cb-cta::after{content:' ▸'}
+/* Los puntos de cada opción, en su esquina: son lo que las distingue */
+.ud-opt{position:relative;padding-right:3.2rem}
+.ud-pts{
+  position:absolute;right:.6rem;top:50%;transform:translateY(-50%);
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.25rem;
+  letter-spacing:.04em;color:var(--lila);
+}
+.ud-opt.sel .ud-pts{color:#E6D2FB}
 
 /* ========= MI PERFIL ========= */
-.perfil-layout{display:flex;flex-direction:column;gap:1.2rem}
-/* En "quiniela" las seis cifras van en carrusel para no enterrar los
-   partidos. Aquí no: el propósito de la pantalla ES verlas todas. */
+/* En "quiniela" las cifras van en carrusel para no enterrar los partidos.
+   Aquí no: el propósito de la pantalla ES verlas todas de un jalón. */
+.perfil-cifras{grid-template-columns:repeat(2,1fr)}
 @media (max-width:719px){
-  .perfil-layout .stat-row{
+  .perfil-cifras{
     display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;
     margin:0 0 .4rem;padding:0;overflow:visible;
   }
-  .perfil-layout .stat{flex:none}
+  .perfil-cifras .stat{flex:none}
 }
+/* Los puntos totales mandan sobre los demás: es LA cifra */
+.stat.destacado{
+  border-color:rgba(212,175,55,.45);
+  background:linear-gradient(160deg,#201B0C,var(--card));
+}
+.stat.destacado .v{color:var(--oro2)}
+/* El cuadro que invita a instalar: solo sale si los 25 puntos siguen sin
+   cobrarse, y desaparece solo en cuanto entran. */
+.stat.nudge{cursor:pointer;border-color:var(--oro);background:var(--oro-tenue)}
+.stat.nudge .v{color:var(--oro2)}
+.stat.nudge:hover{background:rgba(212,175,55,.16)}
 .sec-t{
   font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.35rem;letter-spacing:.09em;
   margin:1.6rem 0 .8rem;
@@ -1075,26 +1121,22 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   .q-main{grid-column:2;grid-row:1;order:0;min-width:0}
   .q-side .extras-row{grid-template-columns:1fr}
   .stat-row{grid-template-columns:repeat(6,1fr);gap:.9rem}
-  /* Mi perfil: la ficha a la izquierda, el estratega a la derecha */
-  .perfil-layout{display:grid;grid-template-columns:300px 1fr;gap:1.6rem;align-items:start}
-  .perfil-layout .stat-row{grid-template-columns:repeat(3,1fr)}
+  /* Mi perfil: las cifras en cuatro columnas, que es donde se leen mejor */
+  .perfil-cifras{grid-template-columns:repeat(4,1fr)}
   .stat{padding:1.15rem}
   .q-head{flex-wrap:nowrap}
   .save-bar{position:static;margin-top:1.6rem}
   .save-bar .btn-save{max-width:520px;margin:0 auto;display:block}
   #toast{bottom:1.5rem}
 }
-/* En celular la ficha de perfil se aplana: si va vertical como en el
-   escritorio se come la primera pantalla entera y los partidos —que es a lo
-   que la gente entra— quedan debajo del pliegue. Mismos datos, la mitad de alto. */
+/* En celular el encabezado de perfil se achica: si no, se come la primera
+   pantalla antes de llegar a las cifras. */
 @media (max-width:979px){
-  .perfil-card{text-align:left;padding:1.1rem}
-  .perfil-cab{display:flex;align-items:center;gap:.85rem}
-  .perfil-avatar{width:54px;height:54px;font-size:1.5rem;margin:0;box-shadow:0 0 0 4px rgba(212,175,55,.08)}
+  .perfil-hero{padding:.9rem 1rem;gap:.8rem}
+  .perfil-avatar{width:54px;height:54px;box-shadow:0 0 0 4px rgba(212,175,55,.08)}
+  .perfil-avatar .ic{width:26px;height:26px}
   .perfil-nom{font-size:1.25rem}
-  .perfil-lista{grid-template-columns:1fr 1fr;column-gap:1rem;margin-top:.85rem}
-  .perfil-lista li{font-size:.72rem;padding:.5rem 0;gap:.45rem}
-  .perfil-lista li .pi{width:22px;height:22px;font-size:.72rem;border-radius:6px}
+  .ph-pos-n{font-size:1.9rem}
 }
 /* Teléfonos chicos de verdad (iPhone mini y similares, 375 px o menos).
    Aquí el header lleva tres cosas: marca, botón de instalar y chip de
@@ -1115,16 +1157,14 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   .user-pill .pill-crown{width:24px;height:24px}
   .user-pill button{font-size:.6rem}
 
-  /* Ficha de perfil compacta: en un teléfono chico ocupaba media pantalla
-     antes de llegar a lo que importa. */
-  .perfil-card{padding:.9rem}
+  /* Encabezado de perfil compacto: en un teléfono chico ocupaba media
+     pantalla antes de llegar a lo que importa. */
+  .perfil-hero{padding:.8rem .9rem}
   .perfil-avatar{width:44px;height:44px;box-shadow:0 0 0 3px rgba(212,175,55,.08)}
   .perfil-avatar .ic{width:22px;height:22px}
   .perfil-nom{font-size:1.05rem}
   .perfil-rol{font-size:.55rem}
-  .perfil-lista{margin-top:.6rem;column-gap:.8rem}
-  .perfil-lista li{font-size:.68rem;padding:.4rem 0}
-  .perfil-lista li .pi{width:19px;height:19px;font-size:.62rem}
+  .ph-pos-n{font-size:1.6rem}
 
   h1{font-size:1.75rem}
   .admin-game-row{grid-template-columns:1fr 1fr;font-size:.7rem}
@@ -1285,12 +1325,12 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   <!-- ========== CALENDARIO ========== -->
   <section class="module" id="m-calendario">
     <h1 class="display">CALENDARIO NFL 2026-27</h1>
-    <p class="lead-sub">Filtra por semana, equipo, horario o fecha. Toca <b>reservar</b> para apartar mesa en La Corte.</p>
+    <p class="lead-sub">Filtra por week, equipo, horario o fecha. Toca <b>reservar</b> para apartar mesa en La Corte.</p>
     <div class="card capi capi-tip" data-capi="calendario"
          data-txt="Busca tu partido y apártate mesa. Los días de juego hay folio de consumo, y ese folio son puntos."></div>
     <div class="filtros-wrap">
       <div class="filters">
-        <select id="f-week"><option value="">Todas las semanas</option></select>
+        <select id="f-week"><option value="">Todas las weeks</option></select>
         <select id="f-team"><option value="">Todos los equipos</option></select>
         <select id="f-slot">
           <option value="">Todos los horarios</option>
@@ -1394,9 +1434,17 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
           </div>
 
           <div id="lock-banner"></div>
+
+          <!-- Autorrellenar. Existe por una razón muy concreta: hay gente que
+               no va a sentarse a repartir 16 números y se queda sin jugar. -->
+          <div class="auto-bar" id="auto-bar" style="display:none">
+            <button class="btn-auto" onclick="autollenar()">✨ LLENAR POR MÍ</button>
+            <span>Reparte ganadores y confianza según el récord de cada equipo. Cámbiale lo que quieras antes de guardar.</span>
+          </div>
+
           <div id="quiniela-list"></div>
           <div class="save-bar" id="save-bar" style="display:none">
-            <button class="btn-save" id="btn-guardar" onclick="guardarSemana()"><svg class="ic"><use href="#ic-corona"/></svg>GUARDAR MI SEMANA</button>
+            <button class="btn-save" id="btn-guardar" onclick="guardarSemana()"><svg class="ic"><use href="#ic-corona"/></svg>GUARDAR MI WEEK</button>
           </div>
 
         </div>
@@ -1409,34 +1457,27 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
        con los partidos, que es a lo que la gente entra. Aparte cabe completo
        y además le cabe El Estratega, que necesita aire para explicarse. -->
   <section class="module" id="m-perfil">
-    <h1 class="display">MI PERFIL</h1>
-    <p class="lead-sub">Cómo vas en la temporada y qué te falta exactamente para subir.</p>
+    <!-- Nombre y posición van arriba, en horizontal. La lista vertical de
+         antes repetía la mitad de las cifras que ya salían en cuadros: cada
+         dato aparece UNA vez y todos se leen igual de fácil. -->
+    <div class="perfil-hero" id="perfil-hero"></div>
 
-    <div class="perfil-layout">
-      <aside>
-        <div class="card perfil-card" id="perfil-card"></div>
-      </aside>
+    <div class="stat-row perfil-cifras" id="perfil-stats"></div>
 
-      <div>
-        <div class="stat-row" id="perfil-stats"></div>
-
-        <!-- EL ESTRATEGA: lo único de esta pantalla que no existía antes.
-             Tres metas (top 10 · top 5 · #1) con la distancia real en puntos
-             y, debajo, el Capi diciendo con qué jugadas concretas se cierra
-             esa distancia esta misma semana. -->
-        <h2 class="sec-t">TU CAMINO HACIA ARRIBA</h2>
-        <div class="metas" id="perfil-metas"></div>
-        <div class="card capi capi-coach" id="capi-coach"></div>
-      </div>
-    </div>
+    <!-- EL ESTRATEGA: tres metas (top 10 · top 5 · #1) con la distancia real
+         en puntos y, debajo, el Capi diciendo con qué jugadas concretas se
+         cierra esa distancia esta misma week. -->
+    <h2 class="sec-t">TU CAMINO A LA CIMA</h2>
+    <div class="metas" id="perfil-metas"></div>
+    <div class="card capi capi-coach" id="capi-coach"></div>
   </section>
 
   <!-- ========== RANKING ========== -->
   <section class="module" id="m-ranking">
     <h1 class="display">RANKING GENERAL</h1>
-    <p class="lead-sub">Clasificación en tiempo real. El corte del lunes define quién juega el Underdog la semana siguiente.</p>
+    <p class="lead-sub">Clasificación en tiempo real. El corte del lunes define quién juega el Underdog la week siguiente.</p>
     <div class="card capi capi-tip" data-capi="ranking"
-         data-txt="Cada lunes se congela la tabla. Si quedas del lugar 11 hacia abajo, la semana siguiente juegas Underdog: 20 puntos gratis si le atinas."></div>
+         data-txt="Cada lunes se congela la tabla. Si quedas del lugar 11 hacia abajo, la week siguiente juegas Underdog: hasta 12 puntos gratis si le atinas."></div>
     <div id="rank-list"></div>
   </section>
 
@@ -1457,13 +1498,13 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
       <p id="mi-pos-actual">Cargando posición...</p>
     </div>
     <div class="card capi capi-tip" data-capi="listo"
-         data-txt="Los 10 primeros se llevan premio, y la temporada es larguísima: 23 semanas. El que no se cae es el que gana."></div>
+         data-txt="Los 10 primeros se llevan premio, y la temporada es larguísima: 22 weeks. El que no se cae es el que gana."></div>
     <div class="grid grid-3" id="premios-top"></div>
     <h2>DEL 4° AL 10° LUGAR</h2>
     <div class="grid grid-4" id="premios-resto"></div>
     <div class="todos-ganan">
       <h2 class="display">🔥 ¡TODOS PUEDEN GANAR!</h2>
-      <p>Reparte tus puntos de confianza cada semana, acierta el primer anotador de los partidos estelares, canjea tus folios de consumo y — si vienes abajo del top 10 — aprovecha el multiplicador Underdog.</p>
+      <p>Reparte tus puntos de confianza cada week, pégale al primer anotador de los partidos estelares, canjea tus folios de consumo y — si vienes abajo del top 10 — juega tu Underdog.</p>
     </div>
   </section>
 
@@ -1484,10 +1525,10 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
       <div class="admin-section">
         <h3>📥 IMPORTAR CALENDARIO OFICIAL</h3>
         <p class="small muted">Una línea por partido:
-          <code>semana,AAAA-MM-DD,HH:MM,VISITANTE,LOCAL,SLOT,estadio</code><br>
+          <code>week,AAAA-MM-DD,HH:MM,VISITANTE,LOCAL,SLOT,estadio</code><br>
           SLOT = TNF · SUN · SUN_LATE · SNF · MNF · ESPECIAL. Ejemplo:<br>
           <code>1,2026-09-10,19:15,DAL,PHI,TNF,Lincoln Financial Field</code><br>
-          <b>Reemplaza por completo</b> las semanas que aparezcan en el texto.</p>
+          <b>Reemplaza por completo</b> las weeks que aparezcan en el texto.</p>
         <textarea id="imp-text" placeholder="1,2026-09-10,19:15,DAL,PHI,TNF,Lincoln Financial Field"></textarea>
         <button class="btn-ok" onclick="importarCalendario()" style="margin-top:.4rem">📥 IMPORTAR</button>
       </div>
@@ -1505,22 +1546,23 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
       </div>
 
       <div class="admin-section">
-        <h3>🦄 UNDERDOG DE LA SEMANA</h3>
+        <h3>🐶 UNDERDOG DE LA WEEK</h3>
         <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin:.5rem 0">
           <select id="ud-week" onchange="renderAdminUnderdog()"></select>
-          <input type="number" id="ud-pts" min="1" style="width:80px" placeholder="pts" />
           <label class="small"><input type="checkbox" id="ud-abierto" /> Abierto</label>
         </div>
+        <p class="small muted">Una sola ventana por week con tres candidatos: cada quien escoge uno.
+           Cada opción paga lo suyo (8 · 10 · 12) para que el underdog más difícil valga más.</p>
         <div id="ud-config"></div>
         <button class="btn-ok" onclick="guardarUnderdog()" style="margin-top:.5rem">💾 Guardar underdog</button>
       </div>
 
       <div class="admin-section">
-        <h3>🔒 CIERRE DE SEMANA</h3>
-        <p class="small muted">Congela la tabla del lunes. De este corte sale quién puede jugar el Underdog la semana siguiente.</p>
+        <h3>🔒 CIERRE DE WEEK</h3>
+        <p class="small muted">Congela la tabla del lunes. De este corte sale quién puede jugar el Underdog la week siguiente.</p>
         <div style="display:flex;gap:.4rem;align-items:center;margin-top:.5rem;flex-wrap:wrap">
           <select id="cs-week"></select>
-          <button class="btn-blue" onclick="cerrarSemanaAdmin()">🔒 Cerrar semana</button>
+          <button class="btn-blue" onclick="cerrarSemanaAdmin()">🔒 Cerrar week</button>
         </div>
         <div id="cs-info" class="small muted" style="margin-top:.5rem"></div>
       </div>
@@ -1652,9 +1694,12 @@ const TZ = 'America/Mexico_City';
 const cfgInt  = (k,d)=> { const v = parseInt(CFG[k]); return isNaN(v) ? d : v; };
 const cfgText = (k,d)=> CFG[k] ?? d;
 
+// "Week" y no "semana": es como le dice a la jornada cualquiera que ve NFL,
+// aqui y en Estados Unidos. Los nombres de playoffs si van en espanol porque
+// asi se transmiten en Mexico.
 function weekLabel(w){
-  if(w<=18) return 'Semana '+w;
-  return {19:'Comodines',20:'Ronda Divisional',21:'Final de Conferencia',22:'SUPER BOWL LXI'}[w] || 'Semana '+w;
+  if(w<=18) return 'Week '+w;
+  return {19:'Comodines',20:'Ronda Divisional',21:'Final de Conferencia',22:'SUPER BOWL LXI'}[w] || 'Week '+w;
 }
 function slotLabel(s){
   return {TNF:'Thursday Night',SUN:'Domingo',SUN_LATE:'Domingo tarde',SNF:'Sunday Night',MNF:'Monday Night',ESPECIAL:'Extraordinario'}[s]||s;
@@ -2332,7 +2377,7 @@ function renderCalendario(){
           ${res}
           <span class="chip">${esc(weekLabel(g.week))}</span>
           <span class="chip grey">${esc(slotLabel(g.slot))}</span>
-          ${g.is_special?'<span class="chip red">⭐ EXTRAORDINARIO · '+cfgInt('pts_win_especial',15)+' PTS</span>':''}
+          ${g.is_special?'<span class="chip red">⭐ EXTRAORDINARIO · FOLIO DE '+cfgInt('pts_folio_especial',15)+' PTS</span>':''}
           ${g.venue?'<span>📍 '+esc(g.venue)+'</span>':''}
         </div>
       </div>
@@ -2406,7 +2451,8 @@ function misPuntos(){
     const g = games.find(x=>x.id===gid);
     if(!g || g.score_a===null || g.score_a===undefined || g.score_a===g.score_b) return;
     const win = g.score_a>g.score_b ? g.team_a : g.team_b;
-    if(win===tm){ underdog += (uw.puntos||0); underdogHits++; }
+    // Cada opción paga lo suyo (8 · 10 · 12), igual que en la vista `ranking`.
+    if(win===tm){ underdog += udPuntos(uw, op); underdogHits++; }
   });
   // Los bonos (instalación y los que da ADMIN a mano) solo los conoce la
   // vista `ranking`. Se suman aquí para que el total de "Mi quiniela" y el
@@ -2422,7 +2468,7 @@ function misPuntos(){
    RENDER: QUINIELA
    ===================================================== */
 function setSemana(w){
-  if(dirty && !confirm('Tienes cambios sin guardar en esta semana. ¿Cambiar de semana igual?')){
+  if(dirty && !confirm('Tienes cambios sin guardar en esta week. ¿Cambiar de week igual?')){
     document.getElementById('wk-select').value = currentWeek;
     return;
   }
@@ -2436,23 +2482,54 @@ function cambiarSemana(delta){
   if(nw!==undefined) setSemana(nw);
 }
 
+/* Cuánto vale una opción concreta del underdog. Cada puerta paga distinto
+   (8 · 10 · 12); `puntos` es el respaldo de las weeks viejas que no traen los
+   valores por opción. Espeja lo que hace la vista `ranking`. */
+function udPuntos(uw, op){
+  if(!uw) return 0;
+  const v = uw['puntos_'+String(op).toLowerCase()];
+  return (v ?? uw.puntos ?? cfgInt('pts_underdog',12));
+}
+// El techo de la week: lo máximo que puede pagar el underdog si escoge bien.
+function maxUnderdog(uw){
+  if(!uw) return cfgInt('pts_underdog',12);
+  const v = ['a','b','c'].filter(k=>uw['opt_'+k+'_team']).map(k=>udPuntos(uw,k));
+  return v.length ? Math.max(...v) : (uw.puntos ?? cfgInt('pts_underdog',12));
+}
+
+/* Lo máximo que dan los pronósticos de una week: 1+2+...+N. Con 16 partidos
+   son 136, y decirlo es la mitad del chiste — la gente juega distinto cuando
+   sabe cuánto hay sobre la mesa. */
+function topeConfianza(w){
+  const n = gamesOf(w).length;
+  return n*(n+1)/2;
+}
+
 function renderTablaPuntos(){
   const t = document.getElementById('tabla-puntos');
   if(!t) return;
-  const mode = cfgText('conf_mode','additive');
-  const modeTxt = mode==='flat' ? 'solo el fijo'
-                : mode==='solo' ? 'solo tu confianza'
-                : 'fijo + tu confianza';
-  t.innerHTML = `
-    <tr><td>🎯 Ganador acertado · partido normal</td><td>${cfgInt('pts_win_normal',5)} pts</td></tr>
-    <tr><td>⭐ Ganador acertado · partido extraordinario (mié/vie/sáb)</td><td>${cfgInt('pts_win_especial',15)} pts</td></tr>
-    <tr><td>🔢 Puntos de confianza (repartes 1 a N cada semana)</td><td>${esc(modeTxt)}</td></tr>
-    <tr><td>⚡ Primer equipo en anotar · partidos estelares</td><td>${cfgInt('pts_anotador',3)} pts</td></tr>
-    <tr><td>🦄 Underdog de la semana (fuera del top ${cfgInt('underdog_top_n',10)})</td><td>${cfgInt('pts_underdog',20)} pts</td></tr>
-    <tr><td>🍔 Folio de consumo · lunes</td><td>${cfgInt('pts_folio_lunes',10)} pts</td></tr>
-    <tr><td>🍔 Folio de consumo · jueves</td><td>${cfgInt('pts_folio_jueves',5)} pts</td></tr>
-    <tr><td>🍔 Folio de consumo · domingo</td><td>${cfgInt('pts_folio_domingo',5)} pts</td></tr>
-    <tr><td>🍔 Folio de consumo · día extraordinario</td><td>${cfgInt('pts_folio_especial',10)} pts</td></tr>`;
+  const n = gamesOf(currentWeek).length || 16;
+  const uw = udWeeks[currentWeek];
+  const udVals = ['a','b','c'].map(k=>udPuntos(uw,k));
+  const fila = (ico,titulo,nota,valor)=>
+    `<tr><td>${ico} ${titulo}${nota?`<small>${nota}</small>`:''}</td><td>${valor}</td></tr>`;
+
+  t.innerHTML =
+    fila('🔢','Puntos de confianza',
+         `Repartes del 1 al ${n} sin repetir. Si le atinas, te llevas ese número tal cual. El tope cambia según los partidos que traiga la week.`,
+         `Máximo ${topeConfianza(currentWeek)} pts`) +
+    fila('⚡','Primer equipo en anotar',
+         'Solo en los estelares: Thursday, Sunday y Monday Night. En los demás partidos no se juega.',
+         `${cfgInt('pts_anotador',3)} pts`) +
+    fila('🐶','Underdog',
+         `Una sola oportunidad por week, con tres candidatos: escoges uno. Solo para quienes vienen fuera del top ${cfgInt('underdog_top_n',10)}.`,
+         `${udVals.join(' · ')} pts`) +
+    fila('🍔','Folio de consumo · lunes','',`${cfgInt('pts_folio_lunes',10)} pts`) +
+    fila('🍔','Folio de consumo · jueves','',`${cfgInt('pts_folio_jueves',5)} pts`) +
+    fila('🍔','Folio de consumo · domingo','',`${cfgInt('pts_folio_domingo',5)} pts`) +
+    fila('🍔','Folio de consumo · día extraordinario',
+         'Miércoles, viernes o sábado. Vale más porque son los días que cuesta llenar el restaurante.',
+         `${cfgInt('pts_folio_especial',15)} pts`);
 }
 
 /* Un solo punto de entrada para todo el tablero personal: las 6 cifras (que
@@ -2471,7 +2548,7 @@ function renderStats(){
     <div class="stat"><div class="e">🎯</div><div class="v">${p.confianza}</div><div class="l">Confianza</div></div>
     <div class="stat"><div class="e">⚡</div><div class="v">${p.anotador}</div><div class="l">Primer anotador</div></div>
     <div class="stat"><div class="e">🍔</div><div class="v">${p.consumo}</div><div class="l">Folios</div></div>
-    <div class="stat"><div class="e">🦄</div><div class="v">${p.underdog}</div><div class="l">Underdog</div></div>
+    <div class="stat"><div class="e">🐶</div><div class="v">${p.underdog}</div><div class="l">Underdog</div></div>
     <div class="stat"><div class="e">✅</div><div class="v">${pct}%</div><div class="l">Aciertos ${p.aciertos}/${p.jugados}</div></div>`;
 
   cont.innerHTML = html;
@@ -2501,42 +2578,62 @@ function renderResumen(p){
   const c = document.getElementById('rc-confianza');
   if(c){
     c.textContent = cerrada ? '—' : libres;
-    document.getElementById('rc-confianza-p').textContent = cerrada
-      ? 'la semana ya cerró'
-      : (libres ? `de ${gs.length} valores por repartir` : '¡ya repartiste todos!');
+    // Se dice el tope de la week (136 con 16 partidos) porque es lo único que
+    // deja ver de un vistazo cuánto hay sobre la mesa.
+    document.getElementById('rc-confianza-p').innerHTML = cerrada
+      ? 'la week ya cerró'
+      : (libres ? `de ${gs.length} por repartir · hasta <b>${topeConfianza(currentWeek)}</b> pts`
+                : `¡ya los repartiste! · hasta <b>${topeConfianza(currentWeek)}</b> pts`);
   }
 }
 
-/* Ficha de perfil de la barra lateral: cada dato con su ícono */
+/* Pestaña "mi perfil": el encabezado con quién eres y en qué lugar vas, y
+   TODAS las cifras en cuadros del mismo tamaño. Cada dato sale una sola vez:
+   antes la lista vertical repetía los puntos totales y el porcentaje de
+   aciertos que ya estaban arriba, y leerlo dos veces no aporta nada. */
 function renderPerfil(p){
-  const cont = document.getElementById('perfil-card');
-  if(!cont || !sbProfile) return;
+  const cifras = document.getElementById('perfil-stats');
+  if(!cifras || !sbProfile) return;
   p = p || misPuntos();
   const pct = p.jugados ? Math.round(p.aciertos*100/p.jugados) : 0;
   const rol = {admin:'Administrador', manager:'Manager'}[sbProfile.role] || 'Participante';
   const pos = rankRows.findIndex(r=>r.id===sbProfile.id);
 
-  cont.innerHTML = `
-    <div class="perfil-cab">
+  const hero = document.getElementById('perfil-hero');
+  if(hero){
+    hero.innerHTML = `
       <div class="perfil-avatar"><svg class="ic"><use href="#ic-corona"/></svg></div>
-      <div>
+      <div class="ph-quien">
         <div class="perfil-nom">${esc(sbProfile.nombre||'')}</div>
-        <div class="perfil-rol">${esc(rol)}${pos>=0?' · #'+(pos+1)+' general':''}</div>
+        <div class="perfil-rol">${esc(rol)}</div>
       </div>
-    </div>
-    <ul class="perfil-lista">
-      <li><span class="pi">🏆</span> Puntos totales   <b class="oro">${p.total}</b></li>
-      <li><span class="pi">✅</span> Victorias        <b>${p.aciertos}</b></li>
-      <li><span class="pi">🎯</span> Aciertos         <b>${pct}%</b></li>
-      <li><span class="pi">🔥</span> Mejor racha      <b>${p.rachaMax}</b></li>
-      <li><span class="pi">🦄</span> Underdogs        <b>${p.underdogHits}</b></li>
-      <li><span class="pi">⚡</span> Primer anotador  <b>${p.anotadorHits}</b></li>
-      <li><span class="pi">🎁</span> Bonos            <b>${p.bono}</b></li>
-      ${bonoInstalYa===false ? `
-      <li class="perfil-nudge" onclick="abrirInstalacion()">
-        <span class="pi">📲</span> Instala la app <b class="oro">+${cfgInt('pts_bono_instalacion',25)}</b>
-      </li>` : ''}
-    </ul>`;
+      ${pos>=0 ? `<div class="ph-pos">
+        <div class="ph-pos-n">#${pos+1}</div>
+        <div class="ph-pos-l">de ${rankRows.length}</div>
+      </div>` : ''}`;
+  }
+
+  // El número grande son los PUNTOS; la etiqueta chica lleva el conteo, para
+  // no inventar un cuadro aparte que diga lo mismo con otra unidad.
+  const cuadro = (ico,val,lab,extra)=>
+    `<div class="stat${extra?' '+extra:''}"><div class="e">${ico}</div><div class="v">${val}</div><div class="l">${lab}</div></div>`;
+
+  cifras.innerHTML =
+    cuadro('🏆', p.total, 'Puntos totales', 'destacado') +
+    cuadro('🎯', p.confianza, `Confianza · ${p.aciertos} aciertos`) +
+    cuadro('⚡', p.anotador, `Primer anotador · ${p.anotadorHits}`) +
+    cuadro('🍔', p.consumo, `Folios · ${misFolios.length} canjeados`) +
+    cuadro('🐶', p.underdog, `Underdog · ${p.underdogHits}`) +
+    cuadro('🎁', p.bono, 'Bonos') +
+    cuadro('✅', pct+'%', `Efectividad · ${p.aciertos}/${p.jugados}`) +
+    cuadro('🔥', p.rachaMax, 'Mejor racha') +
+    (bonoInstalYa===false
+      ? `<div class="stat nudge" onclick="abrirInstalacion()">
+           <div class="e">📲</div>
+           <div class="v">+${cfgInt('pts_bono_instalacion',25)}</div>
+           <div class="l">Instala la app</div>
+         </div>`
+      : '');
 }
 
 /* =====================================================
@@ -2616,31 +2713,31 @@ function estadoCapi(){
   let msg, pose;
   if(!gs.length){
     pose='bienvenida';
-    msg = `Todavía no cargan los partidos de ${sem}. En cuanto la NFL publique el calendario oficial aparecen aquí.`;
+    msg = `Todavía no cargan los partidos de la ${sem}. En cuanto la NFL publique el calendario oficial aparecen aquí.`;
   } else if(cerrada){
     pose='ranking';
-    msg = `${sem} ya cerró. Ve el ranking para saber cómo vas, y prepárate para la que sigue.`;
+    msg = `La ${sem} ya cerró. Checa el ranking para ver cómo quedaste y alístate para la que sigue.`;
   } else if(sinGanador > 0){
     pose='ganador';
-    msg = `Te faltan ${sinGanador} ${sinGanador===1?'ganador':'ganadores'} por elegir en ${sem}. Sin eso no hay puntos.`;
+    msg = `Te faltan ${sinGanador} ${sinGanador===1?'ganador':'ganadores'} por elegir en la ${sem}. Sin eso no hay puntos.`;
   } else if(sinConfianza > 0){
     pose='confianza';
-    msg = `Ya elegiste a todos tus ganadores. Ahora reparte la confianza: te faltan ${sinConfianza} ${sinConfianza===1?'número':'números'}. El más alto va a tu apuesta más segura.`;
+    msg = `Ya elegiste a todos tus ganadores. Ahora reparte la confianza: te faltan ${sinConfianza} ${sinConfianza===1?'número':'números'}. El más alto va al partido que veas más seguro.`;
   } else if(sinAnotador > 0){
     pose='anotador';
-    msg = `Los partidos estelares dan ${cfgInt('pts_anotador',3)} puntos extra si le atinas al primer equipo en anotar. Te ${sinAnotador===1?'falta 1':'faltan '+sinAnotador}.`;
+    msg = `Los estelares dan ${cfgInt('pts_anotador',3)} puntos extra si le atinas al primer equipo en anotar. Te ${sinAnotador===1?'falta 1':'faltan '+sinAnotador}.`;
   } else if(dirty){
     pose='guardar';
-    msg = `Tienes todo listo pero sin guardar. Dale al botón dorado antes del primer kickoff o no cuenta.`;
+    msg = `Ya tienes todo, pero sin guardar. Dale al botón dorado antes del primer kickoff o no cuenta.`;
   } else if(uw && uw.opt_a_team && puedoUnderdog(currentWeek) && !myUD[currentWeek]){
     pose='underdog';
-    msg = `Ya tienes tu semana lista. Te falta el underdog: es gratis, si le atinas son +${uw.puntos} puntos y si falla no pierdes nada.`;
+    msg = `Ya tienes tu week lista. Te falta el underdog: no cuesta nada, y si le atinas te llevas hasta ${maxUnderdog(uw)} puntos.`;
   } else if(!misFolios.length){
     pose='consumo';
-    msg = `Tu semana está lista. Cuando vengas a La Corte pide tu folio de consumo y captúralo: son puntos que nadie más te va a regalar.`;
+    msg = `Tu week está lista. Cuando vengas a La Corte pide tu folio y captúralo aquí: son puntos que nadie más te va a regalar.`;
   } else {
     pose='listo';
-    msg = `Todo en orden esta semana. Vuelve el lunes: del corte sale quién juega el underdog.`;
+    msg = `Todo en orden. Regresa el lunes: del corte sale quién juega el underdog.`;
   }
   // Si la pose del momento no tiene pizarrón propio se ofrece el de confianza,
   // que es LA mecánica de la quiniela y la que más se pregunta.
@@ -2720,7 +2817,7 @@ function oportunidadesSemana(w){
   const uw = udWeeks[w];
   if(uw && uw.opt_a_team && uw.abierto && puedoUnderdog(w) && !myUD[w] && !semanaCerrada(w)){
     const pts = uw.puntos || cfgInt('pts_underdog',20);
-    ops.push({ico:'🦄', pts, txt:`Juega tu <b>underdog</b> de ${esc(weekLabel(w))}: <b>+${pts}</b> si le atinas y cero si falla.`});
+    ops.push({ico:'🐶', pts, txt:`Juega tu <b>underdog</b> de la ${esc(weekLabel(w))}: hasta <b>+${pts}</b>, y si falla no pierdes nada.`});
   }
 
   // 2. Folios: el punto más fácil de toda la quiniela. Solo cuentan los días
@@ -2730,14 +2827,14 @@ function oportunidadesSemana(w){
   if(dias.length){
     const pts = dias.reduce((s,d)=> s + ptsFolioDe(d), 0);
     const n = dias.length;
-    ops.push({ico:'🍔', pts, txt:`${n===1?'Queda <b>1</b> día':'Quedan <b>'+n+'</b> días'} de juego para pedir folio en La Corte: <b>+${pts}</b> en total.`});
+    ops.push({ico:'🍔', pts, txt:`${n===1?'Queda <b>1</b> día':'Quedan <b>'+n+'</b> días'} de juego para pedir tu folio en La Corte: <b>+${pts}</b> en total.`});
   }
 
   // 3. Primer anotador de los estelares que aún no marca.
   const sinAnotador = abiertos.filter(g=>g.is_stellar && !myPicks[g.id]?.primero).length;
   if(sinAnotador){
     const pts = sinAnotador * cfgInt('pts_anotador',3);
-    ops.push({ico:'⚡', pts, txt:`Te ${sinAnotador===1?'falta 1 partido estelar':'faltan '+sinAnotador+' partidos estelares'} por marcar primer anotador: <b>+${pts}</b>.`});
+    ops.push({ico:'⚡', pts, txt:`Te ${sinAnotador===1?'falta 1 estelar':'faltan '+sinAnotador+' estelares'} por marcar primer anotador: <b>+${pts}</b>.`});
   }
   return ops;
 }
@@ -2769,8 +2866,8 @@ function comoCerrar(falta, w){
     const valga   = n===1 ? 'valga' : 'valgan';
     lista.push({ico:'🎯', pts,
       txt: yaReparte
-        ? `Acierta ${cuantos} donde pusiste más confianza (${n===1?'vale':'valen'} ${valores}): <b>+${pts}</b>.`
-        : `Reparte tu confianza y acierta ${cuantos} que más ${valga} (${valores}): <b>+${pts}</b>.`});
+        ? `Pégale a ${cuantos} donde pusiste más confianza (${n===1?'vale':'valen'} ${valores}): <b>+${pts}</b>.`
+        : `Reparte tu confianza y pégale a ${cuantos} que más ${valga} (${valores}): <b>+${pts}</b>.`});
     suma += pts;
   }
   const techo = ops.reduce((s,o)=>s+o.pts,0) + jc.reduce((s,j)=>s+j.pts,0);
@@ -2811,10 +2908,10 @@ function renderEstratega(p){
     // cuánta ventaja le lleva al primero que viene atrás de esa línea.
     const persigue = m.dentro ? rankRows[m.n] : null;
     const tip = m.dentro
-      ? (m.vacio ? `Todavía no hay ${m.n} participantes en la tabla: con jugar ya estás dentro.`
-         : persigue ? `Te sigue el <b>#${m.n+1}</b> con <b>${persigue.total_puntos}</b>: le llevas <b>${mis - persigue.total_puntos}</b> de ventaja.`
-         : `Vas <b>#${pos}</b> de ${rankRows.length}. Ya estás dentro; ahora es no soltar.`)
-      : `Quien va en el <b>#${m.n}</b> lleva <b>${rankRows[m.n-1].total_puntos}</b> puntos.`;
+      ? (m.vacio ? `Todavía no son ${m.n} en la tabla: con jugar ya estás dentro.`
+         : persigue ? `El <b>#${m.n+1}</b> trae <b>${persigue.total_puntos}</b>: le llevas <b>${mis - persigue.total_puntos}</b> de ventaja.`
+         : `Vas <b>#${pos}</b> de ${rankRows.length}. Ya estás dentro; ahora aguántalo.`)
+      : `El <b>#${m.n}</b> va con <b>${rankRows[m.n-1].total_puntos}</b> puntos.`;
     return `
       <div class="meta-card${m.dentro?' ok':''}">
         <div class="mt-t">${m.ico} ${m.t}</div>
@@ -2840,20 +2937,20 @@ function renderCoach(metas, mis, pos, w){
 
   if(!objetivo){
     titular = pos===1
-      ? `Vas en el primer lugar con ${mis} puntos. Aquí lo difícil no es llegar, es quedarse: no dejes semana sin jugar.`
-      : `Estás dentro de las tres metas. Sigue capturando cada semana y no sueltes el underdog cuando te toque.`;
+      ? `Vas en el primer lugar con ${mis} puntos. Lo difícil no es llegar, es aguantar: no dejes week sin jugar.`
+      : `Estás dentro de las tres metas. Sigue capturando cada week y no sueltes el underdog cuando te toque.`;
     const ops = oportunidadesSemana(w);
     jugadas = ops.slice(0,3);
   } else {
     const plan = comoCerrar(objetivo.falta, w);
     const semanasRestantes = [...new Set(games.map(g=>g.week))].filter(x=>x>=w).length;
     if(!plan.lista.length){
-      titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase}. ${esc(weekLabel(w))} ya cerró; la semana que entra vuelve a haber puntos en juego.`;
+      titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase}. La ${esc(weekLabel(w))} ya cerró; la que entra vuelve a traer puntos en juego.`;
     } else if(plan.alcanza){
-      titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase} — y solo en ${esc(weekLabel(w))} hay <b>${plan.techo}</b> en juego. Sí te alcanza:`;
+      titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase} — y solo en la ${esc(weekLabel(w))} hay <b>${plan.techo}</b> en juego. Sí te alcanza:`;
     } else {
       const semanas = Math.ceil(objetivo.falta / Math.max(1, plan.techo));
-      titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase}. En ${esc(weekLabel(w))} puedes sumar hasta <b>${plan.techo}</b>: a ese ritmo lo alcanzas en ${semanas} ${semanas===1?'semana':'semanas'}`
+      titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase}. En la ${esc(weekLabel(w))} puedes sumar hasta <b>${plan.techo}</b>: a ese paso lo alcanzas en ${semanas} ${semanas===1?'week':'weeks'}`
               + (semanasRestantes > semanas ? `, y todavía quedan ${semanasRestantes}. Empieza por lo seguro:` : `. Empieza por lo seguro:`);
     }
     jugadas = plan.lista.slice(0,4);
@@ -2901,10 +2998,10 @@ function renderQuiniela(){
   const banner = document.getElementById('lock-banner');
   if(!gs.length){
     banner.className='lock-banner shut';
-    banner.textContent='Sin partidos cargados para esta semana.';
+    banner.textContent='Sin partidos cargados para esta week.';
   } else if(cerrada){
     banner.className='lock-banner shut';
-    banner.textContent='🔒 ESTA SEMANA YA CERRÓ · arrancó el '+fechaLarga(ini)+' a las '+hora(ini);
+    banner.textContent='🔒 ESTA WEEK YA CERRÓ · arrancó el '+fechaLarga(ini)+' a las '+hora(ini);
   } else {
     banner.className='lock-banner open';
     banner.textContent='✅ ABIERTA · cierra el '+fechaLarga(ini)+' a las '+hora(ini)+' hrs (primer kickoff)';
@@ -2930,9 +3027,11 @@ function renderQuiniela(){
     list.appendChild(renderGamePick(g, N, det));
   });
   if(!gs.length){
-    list.innerHTML='<div class="card" style="text-align:center;color:var(--gris)">Sin partidos cargados para esta semana.</div>';
+    list.innerHTML='<div class="card" style="text-align:center;color:var(--gris)">Sin partidos cargados para esta week.</div>';
   }
-  document.getElementById('save-bar').style.display = (gs.length && !cerrada) ? '' : 'none';
+  const abierta = gs.length && !cerrada;
+  document.getElementById('save-bar').style.display = abierta ? '' : 'none';
+  document.getElementById('auto-bar').style.display = abierta ? '' : 'none';
   actualizarBotonGuardar();
 }
 
@@ -2971,7 +3070,9 @@ function renderGamePick(g, N, det){
 
   div.innerHTML = `
     <div class="qg-head">
-      <span>${esc(hora(g.kickoff))} hrs · ${esc(slotLabel(g.slot))}${g.is_special?' · <b style="color:var(--dorado)">⭐ '+cfgInt('pts_win_especial',15)+' PTS</b>':' · '+cfgInt('pts_win_normal',5)+' pts'}</span>
+      <!-- Ya no se anuncian puntos fijos por partido: lo que vale acertar es
+           EL NÚMERO DE CONFIANZA que le pongas, y ese se ve abajo. -->
+      <span>${esc(hora(g.kickoff))} hrs · ${esc(slotLabel(g.slot))}${g.is_special?' · <b style="color:var(--dorado)">⭐ EXTRAORDINARIO</b>':''}</span>
       <span>${marcador}${g.is_stellar?'<span class="chip red" style="margin-left:.3rem">⭐ ESTELAR</span>':''}</span>
     </div>
     <div class="qg-versus">
@@ -2999,7 +3100,9 @@ function renderGamePick(g, N, det){
       </select>
     </div>` : ''}
     <div class="campo">
-      <span class="lbl">🎯 Confianza <b>${N>0?'de 1 a '+N+', sin repetir':''}</b></span>
+      <!-- El número ES lo que se gana: por eso lo dice aquí y no un "5 pts"
+           fijo arriba, que ya no existe. -->
+      <span class="lbl">🎯 Confianza <b>${N>0?'de 1 a '+N+', sin repetir · si le atinas son esos puntos':''}</b></span>
       <div class="conf-chips" id="cf-${esc(g.id)}">${chips}</div>
     </div>
     ${jugado ? `<div class="earned ${det[g.id]?'':'zero'}">${det[g.id] ? '🎉 +'+det[g.id]+' PUNTOS' : 'Sin puntos en este partido'}</div>` : ''}
@@ -3025,6 +3128,58 @@ function pickConfianza(gid, val){
   const v = parseInt(val);
   myPicks[gid].confianza = (myPicks[gid].confianza===v) ? null : v;
   dirty=true; actualizarBotonGuardar(); renderResumen(); renderCapi();
+}
+
+/* ---------- Llenar por mí ----------
+
+   Existe por una razón muy concreta: repartir 16 números uno por uno espanta
+   a media banca, y el que no llena no juega. Esto deja la week completa en un
+   clic para que después nomás le muevan a lo que no les late.
+
+   NO adivina el futuro ni compra momios. Ordena los partidos por la
+   diferencia de récord entre los dos equipos —lo único objetivo y público que
+   tenemos— y le da el número más alto al que se ve más parejo... más
+   disparejo, es decir: al que tiene el favorito más claro. En la Week 1 nadie
+   tiene récord y el aviso lo dice con todas sus letras, en vez de fingir que
+   sabe algo. */
+function autollenar(){
+  const todos = gamesOf(currentWeek);
+  const gs = todos.filter(g=>!partidoCerrado(g) && g.team_a && g.team_b);
+  if(!gs.length){ toast('No hay partidos abiertos en esta week','err'); return; }
+
+  const yaTiene = gs.some(g=>myPicks[g.id]?.ganador || myPicks[g.id]?.confianza);
+  if(yaTiene && !confirm('Esto reemplaza los pronósticos que ya tienes en esta week.\n\n¿Le seguimos?')) return;
+
+  // Fuerza = victorias menos derrotas. Si nadie ha jugado, todos valen 0 y el
+  // desempate queda en el orden del calendario: por eso el aviso de abajo.
+  const fuerza = c => { const r = RECORDS[c]; return r ? (r.g - r.p) : 0; };
+  const plan = gs.map(g=>{
+    const fa = fuerza(g.team_a), fb = fuerza(g.team_b);
+    return { g, favorito: fa >= fb ? 'A' : 'B', margen: Math.abs(fa - fb) };
+  });
+  const hayRecords = plan.some(x=>x.margen > 0);
+  plan.sort((a,b)=> b.margen - a.margen);
+
+  // Los números gastados en partidos YA CERRADOS no se pueden volver a usar.
+  const usados = new Set();
+  todos.forEach(g=>{
+    if(partidoCerrado(g) && myPicks[g.id]?.confianza) usados.add(myPicks[g.id].confianza);
+  });
+  const libres = [];
+  for(let v = todos.length; v >= 1; v--) if(!usados.has(v)) libres.push(v);
+
+  plan.forEach((x,i)=>{
+    const p = myPicks[x.g.id] = myPicks[x.g.id] || {};
+    p.ganador   = x.favorito;
+    p.confianza = libres[i] ?? null;
+    if(x.g.is_stellar) p.primero = x.favorito;   // los estelares también
+  });
+
+  dirty = true;
+  renderQuiniela();
+  toast(hayRecords
+    ? '✨ Ya quedó. Revísala y cámbiale lo que no te lata, luego guarda.'
+    : '✨ Ya quedó, pero sin partidos jugados todavía no hay récords: esto es un volado. Revísala bien.');
 }
 
 /* Pinta el estado de TODAS las fichas de confianza de la semana y devuelve
@@ -3121,29 +3276,26 @@ function renderUnderdog(){
   const uw = udWeeks[currentWeek];
   const topN = cfgInt('underdog_top_n',10);
 
-  // El underdog es la mecánica que más se pregunta —quién puede jugarlo y por
-  // qué a veces no aparece—, así que el Capi viene dentro de la tarjeta. Se
-  // usa la lámina `underdog`, la única donde sale el bulldog, y abre el
-  // pizarrón del ranking, que es donde se explica el corte del lunes.
-  const capi = `
-    <button class="ud-capi" onclick="abrirCapiBoard('ranking')">
-      <span class="cb-art"><img src="${capiSrc('underdog')}" alt="El Capi y su perrito" loading="lazy" onerror="this.remove()" /></span>
-      <span class="cb-txt">
-        <span class="cb-t">¿Cómo funciona el underdog?</span>
-        <span class="cb-cta">Pregúntale al Capi</span>
-      </span>
-    </button>`;
-
+  // El Capi con su perrito ES el ícono de la tarjeta: se fue el emoji 🦄 y en
+  // su lugar quedó la lámina `underdog`, la única donde sale el bulldog. Se le
+  // pica y abre el pizarrón del ranking, que es donde se explica el corte del
+  // lunes: quién puede jugarlo y por qué a veces no aparece.
   const caja = (cuerpo)=> `<div class="extra-card underdog">
-      <div class="ex-ico">🦄</div>
-      <h3 class="display">UNDERDOG DE LA SEMANA</h3>
+      <button class="ud-cab" onclick="abrirCapiBoard('ranking')">
+        <span class="ud-cab-art">
+          <img src="${capiSrc('underdog')}" alt="El Capi y su perrito" loading="lazy" onerror="this.remove()" />
+        </span>
+        <span class="ud-cab-txt">
+          <h3 class="display">UNDERDOG</h3>
+          <span class="cb-cta">¿Cómo funciona? Pregúntale al Capi</span>
+        </span>
+      </button>
       ${cuerpo}
-      ${capi}
     </div>`;
 
   if(!uw || !uw.opt_a_team){
     slot.innerHTML = caja(
-      `<p>Los underdogs de ${esc(weekLabel(currentWeek))} aún no se publican. Se abren cada miércoles.</p>`);
+      `<p>Los underdogs de la ${esc(weekLabel(currentWeek))} aún no se publican. Se abren cada miércoles.</p>`);
     return;
   }
 
@@ -3155,12 +3307,14 @@ function renderUnderdog(){
     slot.innerHTML = caja(
       `<p>Es exclusivo para quienes vienen del lugar #${topN+1} hacia abajo.</p>
        <div class="ud-locked">
-         🔒 Cerraste la semana pasada en el <b>#${miPosPrevia(currentWeek)}</b>.
+         🔒 Cerraste la week pasada en el <b>#${miPosPrevia(currentWeek)}</b>.
          ¡Vas muy bien, ahora defiéndelo!
        </div>`);
     return;
   }
 
+  // Cada puerta paga distinto, así que el número va EN el botón: si las tres
+  // valieran igual, escoger no sería una decisión.
   const opciones = ['A','B','C'].map(op=>{
     const gid = uw['opt_'+op.toLowerCase()+'_game'];
     const tm  = uw['opt_'+op.toLowerCase()+'_team'];
@@ -3169,16 +3323,18 @@ function renderUnderdog(){
     const rival = g ? (g.team_a===tm ? g.team_b : g.team_a) : null;
     return `<button class="ud-opt ${mio===op?'sel':''}" ${cerrado?'disabled':''}
               onclick="pickUnderdog('${op}')">
+              <span class="ud-pts">+${udPuntos(uw,op)}</span>
               ${esc(tname(tm))}
               <small>${rival?'vs '+esc(tshort(rival)):''}${g?' · '+esc(hora(g.kickoff))+' hrs':''}</small>
             </button>`;
   }).join('');
 
   slot.innerHTML = caja(
-    `<p>Estás fuera del top ${topN}: elige <b>un</b> underdog de ${esc(weekLabel(currentWeek))}.
-       Si gana su partido son <b style="color:var(--lila)">+${uw.puntos} puntos</b>. No pierdes nada si falla.</p>
+    `<p>Estás fuera del top ${topN}: escoge <b>uno</b> de los tres. Si gana su
+       partido te llevas los puntos que trae, hasta
+       <b style="color:var(--lila)">+${maxUnderdog(uw)}</b>. Si falla, no pierdes nada.</p>
      <div class="ud-options">${opciones}</div>
-     ${cerrado ? '<p style="margin-top:.7rem">🔒 Ventana cerrada para esta semana.</p>' : ''}`);
+     ${cerrado ? '<p style="margin-top:.7rem">🔒 Ventana cerrada para esta week.</p>' : ''}`);
 }
 
 async function pickUnderdog(op){
@@ -3186,7 +3342,7 @@ async function pickUnderdog(op){
     .upsert({user_id:sbUser.id, week:currentWeek, opcion:op},{onConflict:'user_id,week'});
   if(error){ toast('No se pudo registrar: '+error.message,'err'); return; }
   myUD[currentWeek]=op;
-  toast('🦄 Underdog registrado');
+  toast('🐶 Underdog registrado');
   renderUnderdog(); renderStats();
   await renderRanking();
 }
@@ -3237,7 +3393,7 @@ async function renderRanking(){
       <div class="rank-pos">${medal}</div>
       <div class="rank-quien">
         <div class="rank-name">${esc(r.nombre)}${isMe?' <span style="color:var(--dorado)">(tú)</span>':''}</div>
-        <div class="rank-breakdown">🎯 ${r.pts_confianza} confianza · ⚡ ${r.pts_anotador} anotador · 🍔 ${r.pts_consumo} consumo · 🦄 ${r.pts_underdog} underdog · 📲 ${r.pts_bono??0} app</div>
+        <div class="rank-breakdown">🎯 ${r.pts_confianza} confianza · ⚡ ${r.pts_anotador} anotador · 🍔 ${r.pts_consumo} consumo · 🐶 ${r.pts_underdog} underdog · 📲 ${r.pts_bono??0} app</div>
       </div>
       <div class="rank-points">${r.total_puntos}</div>`;
     list.appendChild(row);
@@ -3356,7 +3512,7 @@ function renderAdminGames(){
         <option value="B"${g.first_scorer==='B'?' selected':''}>${esc(tshort(g.team_b))}</option>
       </select>
       <button class="btn-ok" onclick="guardarGame('${esc(g.id)}')">💾</button>
-    </div>`).join('') || '<p class="small muted">Sin partidos en esta semana.</p>';
+    </div>`).join('') || '<p class="small muted">Sin partidos en esta week.</p>';
 }
 
 async function guardarGame(gid){
@@ -3398,7 +3554,7 @@ async function importarCalendario(){
     if(c.length<5){ errores.push(`Línea ${idx+1}: faltan columnas`); return; }
     const [wk, dia, hr, away, home, slot, ...venue] = c;
     const w = parseInt(wk);
-    if(isNaN(w)){ errores.push(`Línea ${idx+1}: semana inválida`); return; }
+    if(isNaN(w)){ errores.push(`Línea ${idx+1}: week inválida`); return; }
     if(!/^\d{4}-\d{2}-\d{2}$/.test(dia)){ errores.push(`Línea ${idx+1}: fecha debe ser AAAA-MM-DD`); return; }
     if(!/^\d{1,2}:\d{2}$/.test(hr)){ errores.push(`Línea ${idx+1}: hora debe ser HH:MM`); return; }
     const A = away.toUpperCase(), B = home.toUpperCase();
@@ -3423,7 +3579,7 @@ async function importarCalendario(){
   if(!nuevos.length){ toast('Nada que importar','err'); return; }
 
   const semanas = Object.keys(porSemana).map(Number).sort((a,b)=>a-b);
-  if(!confirm(`Se reemplazarán por completo ${semanas.length} semana(s): ${semanas.map(weekLabel).join(', ')}\n\n${nuevos.length} partidos nuevos.\nSe borrarán los pronósticos de esas semanas.\n\n¿Continuar?`)) return;
+  if(!confirm(`Se reemplazarán por completo ${semanas.length} week(s): ${semanas.map(weekLabel).join(', ')}\n\n${nuevos.length} partidos nuevos.\nSe borrarán los pronósticos de esas weeks.\n\n¿Continuar?`)) return;
 
   const {error:delErr} = await sb.from('games').delete().in('week', semanas);
   if(delErr){ toast('Error borrando: '+delErr.message,'err'); return; }
@@ -3467,10 +3623,11 @@ async function renderFoliosStats(){
     `${f}: <b>${v.u}</b> canjeados de ${v.t}`).join(' &nbsp;·&nbsp; ');
 }
 
+const UD_PTS_DEF = {a:8, b:10, c:12};   // lo que trae cada puerta por omisión
+
 function renderAdminUnderdog(){
   const w = parseInt(document.getElementById('ud-week').value);
   const uw = udWeeks[w] || {};
-  document.getElementById('ud-pts').value = uw.puntos ?? cfgInt('pts_underdog',20);
   document.getElementById('ud-abierto').checked = uw.abierto ?? true;
   const gs = gamesOf(w);
   const gameOpts = (sel)=> `<option value="">— partido —</option>` +
@@ -3481,8 +3638,10 @@ function renderAdminUnderdog(){
       <b style="width:22px;color:#d8b3ff">${k.toUpperCase()}</b>
       <select id="udg-${k}" style="flex:1;min-width:200px">${gameOpts(uw['opt_'+k+'_game'])}</select>
       <select id="udt-${k}" style="min-width:170px">${teamOptions(uw['opt_'+k+'_team'])}</select>
+      <input type="number" id="udp-${k}" min="1" max="99" style="width:64px"
+             value="${uw['puntos_'+k] ?? UD_PTS_DEF[k]}" title="Puntos de esta opción" />
     </div>`).join('') +
-    '<p class="small muted">Elige el partido y el equipo underdog que debe ganarlo.</p>';
+    '<p class="small muted">Elige el partido, el equipo underdog que debe ganarlo y cuánto paga esa opción.</p>';
 }
 
 async function guardarUnderdog(){
@@ -3490,24 +3649,26 @@ async function guardarUnderdog(){
   const w = parseInt(document.getElementById('ud-week').value);
   const row = {
     week: w,
-    puntos: parseInt(document.getElementById('ud-pts').value) || cfgInt('pts_underdog',20),
     abierto: document.getElementById('ud-abierto').checked
   };
   ['a','b','c'].forEach(k=>{
     row['opt_'+k+'_game'] = document.getElementById('udg-'+k).value || null;
     row['opt_'+k+'_team'] = document.getElementById('udt-'+k).value || null;
+    row['puntos_'+k] = parseInt(document.getElementById('udp-'+k).value) || UD_PTS_DEF[k];
   });
+  // `puntos` se queda como el tope de la week: es lo que se anuncia por fuera.
+  row.puntos = Math.max(row.puntos_a, row.puntos_b, row.puntos_c);
   const {error} = await sb.from('underdog_weeks').upsert(row,{onConflict:'week'});
   if(error){ toast('Error: '+error.message,'err'); return; }
   await loadUnderdog();
-  toast('🦄 Underdog guardado');
+  toast('🐶 Underdog guardado');
   if(sbProfile && !dirty) renderUnderdog();
 }
 
 async function cerrarSemanaAdmin(){
   if(!isAdminOrManager()){ toast('Sin permiso','err'); return; }
   const w = parseInt(document.getElementById('cs-week').value);
-  if(!confirm(`¿Congelar la tabla de ${weekLabel(w)}?\n\nDe este corte sale quién puede jugar el Underdog la semana siguiente.`)) return;
+  if(!confirm(`¿Congelar la tabla de ${weekLabel(w)}?\n\nDe este corte sale quién puede jugar el Underdog la week siguiente.`)) return;
   const {data,error} = await sb.rpc('cerrar_semana',{p_week:w});
   if(error){ toast(error.message,'err'); return; }
   if(!data.ok){ toast(data.msg,'err'); return; }
@@ -3519,9 +3680,9 @@ async function cerrarSemanaAdmin(){
 async function renderCortes(){
   const {data} = await sb.from('week_snapshots').select('week').order('week');
   const cont = document.getElementById('cs-info');
-  if(!data || !data.length){ cont.textContent='Todavía no hay semanas cerradas.'; return; }
+  if(!data || !data.length){ cont.textContent='Todavía no hay weeks cerradas.'; return; }
   const ws = [...new Set(data.map(r=>r.week))];
-  cont.innerHTML = 'Semanas cerradas: <b>'+ws.map(weekLabel).join(', ')+'</b>';
+  cont.innerHTML = 'Weeks cerradas: <b>'+ws.map(weekLabel).join(', ')+'</b>';
 }
 
 function renderConfig(){
@@ -3595,7 +3756,7 @@ async function borrarHistorial(id){
 
 async function resetGeneral(){
   if(!isAdmin()){ toast('Solo admin puede hacer reset','err'); return; }
-  if(!confirm('⚠️ ESTO BORRARÁ: pronósticos, underdogs, folios canjeados, cortes semanales y resultados.\n\n¿Continuar?')) return;
+  if(!confirm('⚠️ ESTO BORRARÁ: pronósticos, underdogs, folios canjeados, cortes de week y resultados.\n\n¿Continuar?')) return;
   if(!confirm('¿Estás completamente seguro? Esta acción es irreversible.')) return;
   await sb.from('picks').delete().neq('id','00000000-0000-0000-0000-000000000000');
   await sb.from('underdog_picks').delete().neq('week',-1);

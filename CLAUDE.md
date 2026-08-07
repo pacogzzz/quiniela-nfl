@@ -21,7 +21,10 @@ supabase/migrations/001_init.sql esquema, RLS, RPCs, calendario sembrado
 supabase/migrations/002_grants.sql permisos de tabla
 supabase/migrations/003_bonos.sql  delta de bonos para la base ya desplegada
 supabase/migrations/004_login_usuario.sql delta del login con usuario
-test/                           117 pruebas contra Postgres real (PGlite)
+supabase/migrations/005_privacidad_picks.sql  cierra los pronósticos ajenos
+supabase/migrations/006_privacidad_bonos.sql  cierra los bonos ajenos
+supabase/migrations/007_puntaje_temporada.sql puntaje final antes de arrancar
+test/                           130 pruebas contra Postgres real (PGlite)
 EMPIEZA-AQUI.md                 guía para quien opera (no técnico)
 README.md                       referencia técnica
 ```
@@ -35,7 +38,7 @@ agregues algo al esquema, va en los dos lados.
 ## Pruebas — córrelas antes de subir cambios de SQL
 
 ```bash
-cd test && npm test     # suite.mjs (76 lógica) + rls.mjs (41 seguridad)
+cd test && npm test     # suite.mjs (78 lógica) + rls.mjs (52 seguridad)
 ```
 
 Levantan un Postgres real en WASM, aplican las migraciones y verifican reglas
@@ -184,9 +187,16 @@ Windows lo pinta morado, Android amarillo y iOS con joyas, y es la marca.
 ## "Mi perfil" y El Estratega
 
 La ficha de perfil salió de la columna izquierda de *quiniela* y ahora tiene su
-propia pestaña, junto con un espejo de las seis cifras. Lo nuevo de verdad es
-**El Estratega**: tres metas (top 10 · top 5 · #1) con la distancia real en
-puntos, y debajo el Capi diciendo con qué jugadas se cierra esa distancia.
+propia pestaña. **Nada se repite y todo son cuadros del mismo tamaño**: arriba
+una tira horizontal con nombre, rol y posición, y debajo una cifra por cuadro.
+La lista vertical que había antes repetía los puntos totales y el porcentaje de
+aciertos que ya salían arriba. Cuando el dato tiene dos formas (puntos y
+conteo), el número grande son los **puntos** y el conteo va en la etiqueta
+chica: nunca dos cuadros para lo mismo.
+
+Lo nuevo de verdad es **El Estratega**: tres metas (top 10 · top 5 · #1) con la
+distancia real en puntos, y debajo el Capi diciendo con qué jugadas se cierra
+esa distancia.
 
 Todo sale de datos reales y **nada se inventa**:
 
@@ -201,9 +211,24 @@ Todo sale de datos reales y **nada se inventa**:
 - El orden es underdog → folios → primer anotador → aciertos, de lo más seguro
   a lo más difícil, y se corta en cuanto la suma cubre la distancia.
 
-`comoCerrar()` es donde vive esa suma. Si el techo de la semana no alcanza,
-dice en cuántas semanas sí y cuántas quedan de temporada: el punto de todo esto
-es que nadie sienta que ya perdió en la semana 3 de 23.
+`comoCerrar()` es donde vive esa suma. Si el techo de la week no alcanza, dice
+en cuántas weeks sí y cuántas quedan de temporada: el punto de todo esto es que
+nadie sienta que ya perdió en la Week 3 de 22.
+
+## Llenar por mí (autorrellenar)
+
+`autollenar()` deja la week completa en un clic. Existe porque repartir 16
+números uno por uno espanta a media banca, **y el que no llena no juega**.
+
+No adivina el futuro ni compra momios: ordena los partidos por la diferencia de
+récord entre los dos equipos —lo único objetivo y público que hay— y le da el
+número más alto al que tiene el favorito más claro. También marca el primer
+anotador de los estelares.
+
+Dos cosas que no se deben quitar: pide confirmación si ya había pronósticos
+—reemplaza todo— y en la Week 1, cuando nadie tiene récord, el aviso dice que
+es un volado en vez de fingir que sabe algo. Los números ya gastados en
+partidos cerrados no se reciclan.
 
 11. **Los logos de la NFL NO se guardan en el repo.** Son marca registrada y el
     repo es público. Se sirven del CDN de ESPN
@@ -254,30 +279,57 @@ es que nadie sienta que ya perdió en la semana 3 de 23.
 
 17. **`ptsFolioDe()` en el JS es una copia de `puntos_por_fecha()` del SQL.**
     El Estratega necesita saber cuánto vale el folio de un día *antes* de que
-    exista el folio, así que la regla (lun 10 · jue/dom 5 · mié/vie/sáb 10)
+    exista el folio, así que la regla (lun 10 · jue/dom 5 · mié/vie/sáb 15)
     está escrita en los dos lados. Si cambia en `001_init.sql`, cambia también
     en `index.html`: si no, el Capi promete puntos que la base no paga, que es
     exactamente la clase de error que hace que la gente deje de creerle.
+
+    Lo mismo pasa con **`udPuntos()`**, que espeja el `COALESCE(puntos_a,
+    puntos)` de la vista `ranking`. Toda regla de puntaje que el front tenga
+    que anticipar vive en dos lugares; no hay forma de evitarlo sin pedirle al
+    servidor un cálculo por cada tecla.
 
 ## Reglas de puntaje (configurables en la tabla `config`)
 
 | Forma | Puntos |
 |---|---|
-| Confianza | 5 + valor asignado (1..N sin repetir); 15 + valor en extraordinarios (mié/vie/sáb) |
-| Consumo | folio por día: lun 10, jue/dom 5, extraordinarios 10. Uno por persona por día |
-| Anotador | 3 por acertar el primer equipo en anotar (solo estelares) |
-| Underdog | 20 si acierta. Solo para quienes están fuera del top 10 del corte del lunes |
+| Confianza | El número que le pusiste, 1..N sin repetir. Con 16 partidos son **136 por week** |
+| Anotador | 3 por acertar el primer equipo en anotar. **Solo estelares** (TNF · SNF · MNF) |
+| Underdog | 8 · 10 · 12 según la opción. Solo para quienes están fuera del top 10 del corte del lunes |
+| Consumo | folio por día: lun 10, jue/dom 5, extraordinarios (mié/vie/sáb) 15. Uno por persona por día |
 | Bono | Puntos a mano desde ADMIN, por cualquier motivo. `instalacion` (25) se cobra solo, una vez por persona, al abrir la app instalada |
 
-`conf_mode` = `additive` (oficial) · `flat` · `solo`. Cambiarlo recalcula todo
-el histórico al instante.
+**Ya NO hay puntos fijos por acertar** (los viejos `pts_win_normal` = 5 y
+`pts_win_especial` = 15). Se quitaron en `007_puntaje_temporada.sql`, config
+incluida. Con el esquema anterior un partido extraordinario valía 15 + hasta
+16 = 31 puntos, casi el doble que uno normal: la quiniela la decidía el
+calendario y no quién le atinaba. El premio de los días raros se pasó al
+folio, que es lo que a La Corte le sirve premiar.
 
-**Ritual obligatorio:** cada lunes, ADMIN → *Cerrar semana*. Congela la tabla y
+`conf_mode` = **`solo` (oficial)** · `additive` · `flat`. Sigue siendo un
+interruptor de la tabla `config` y cambiarlo recalcula todo el histórico al
+instante; `additive` y `flat` leen los dos `pts_win_*` con su valor por
+omisión, aunque ya no existan como renglones.
+
+**El underdog es UNA ventana por week con TRES candidatos, no tres
+oportunidades.** Cada quien escoge uno solo. Lo que cambia entre las tres
+puertas es cuánto pagan (`puntos_a`, `puntos_b`, `puntos_c` en
+`underdog_weeks`), para que el underdog más improbable valga más y escoger sea
+de verdad una decisión. `puntos` quedó como el tope de la week y como respaldo
+de las weeks viejas sin valores por opción.
+
+**Ritual obligatorio:** cada lunes, ADMIN → *Cerrar week*. Congela la tabla y
 de ahí sale la elegibilidad del underdog. Sin eso, el underdog no avanza.
 
 ## Convenciones
 
-- Todo el texto de cara al usuario va en **español de México**.
+- Todo el texto de cara al usuario va en **español de México**, y del norte:
+  como se habla en Tampico, no como sale de traducir del inglés. "Tu camino a
+  la cima", no "tu camino hacia arriba"; "pégale a", no "acierta"; "a ese
+  paso", no "a ese ritmo". Si una frase suena a manual traducido, está mal.
+- **La jornada se llama "week", no "semana".** Es como le dice todo el que ve
+  NFL. Los nombres de playoffs sí van en español (Comodines, Ronda Divisional,
+  Final de Conferencia, Super Bowl) porque así se transmiten en México.
 - Comentarios en español, explicando el *porqué* (sobre todo en el SQL).
 - La llave `anon` es pública por diseño y vive en `index.html`. La `service_role`
   **nunca** se escribe en el repo.
