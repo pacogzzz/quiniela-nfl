@@ -528,7 +528,8 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 .q-head{display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:1.3rem}
 .q-head-txt{flex:1;min-width:200px}
 .q-head h1{margin-bottom:.35rem}
-.resumen{display:grid;grid-template-columns:repeat(2,1fr);gap:.8rem;flex:none;width:100%}
+/* Ahora es una sola tarjeta (Confianza disponible); Folios se quitó de aquí. */
+.resumen{display:grid;grid-template-columns:1fr;gap:.8rem;flex:none;width:100%}
 .resumen-card{
   background:linear-gradient(160deg,var(--card2),var(--card));
   border:1px solid var(--linea);border-radius:var(--r);
@@ -1093,8 +1094,8 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 
 /* ========= ESCRITORIO ========= */
 @media (min-width:720px){
-  .stat-row{grid-template-columns:repeat(3,1fr)}
-  .resumen{width:auto;min-width:330px}
+  .stat-row{grid-template-columns:repeat(4,1fr)}
+  .resumen{width:auto;min-width:270px}
   /* En tableta la columna todavía va a ancho completo: las dos caben en fila. */
   .extras-row{grid-template-columns:repeat(2,1fr)}
   .metas{grid-template-columns:repeat(3,1fr)}
@@ -1125,7 +1126,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   .q-side{grid-column:1;grid-row:1;order:0;align-self:start}
   .q-main{grid-column:2;grid-row:1;order:0;min-width:0}
   .q-side .extras-row{grid-template-columns:1fr}
-  .stat-row{grid-template-columns:repeat(6,1fr);gap:.9rem}
+  .stat-row{grid-template-columns:repeat(4,1fr);gap:.9rem}
   /* Mi perfil: las cifras en cuatro columnas, que es donde se leen mejor */
   .perfil-cifras{grid-template-columns:repeat(4,1fr)}
   .stat{padding:1.15rem}
@@ -1393,14 +1394,10 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
               <h1 class="display">MI QUINIELA</h1>
               <p class="lead-sub" style="margin-bottom:0">Reparte tu confianza y confirma tus ganadores antes del primer kickoff.</p>
             </div>
-            <!-- Las dos tarjetas de resumen del mockup. La de confianza va
-                 destacada en dorado porque es la que exige una acción. -->
+            <!-- Solo Confianza disponible junto al título: es la que exige
+                 una acción (repartir los valores antes del kickoff). Folios
+                 se sigue viendo en su propia tarjeta de canjear, más abajo. -->
             <div class="resumen">
-              <div class="resumen-card">
-                <div class="rc-l">🍔 Folios de consumo</div>
-                <div class="rc-n" id="rc-folios">0</div>
-                <div class="rc-p" id="rc-folios-p">puntos canjeados</div>
-              </div>
               <div class="resumen-card destacada">
                 <div class="rc-l">🎯 Confianza disponible</div>
                 <div class="rc-n" id="rc-confianza">0</div>
@@ -2549,11 +2546,18 @@ function renderTablaPuntos(){
          `${cfgInt('pts_folio_especial',15)} pts`);
 }
 
-/* Un solo punto de entrada para todo el tablero personal: las 6 cifras (que
-   ahora salen DOS veces —en quiniela y en mi perfil—), las dos tarjetas de
-   resumen, la ficha de perfil, el Capi y el estratega. Se llama desde donde
-   ya se llamaba renderStats(), así nada se queda viejo después de canjear un
-   folio o registrar un underdog. */
+/* Un solo punto de entrada para todo el tablero personal: las 4 cifras de
+   aquí, la tarjeta de resumen, la ficha de perfil, el Capi y el estratega.
+   Se llama desde donde ya se llamaba renderStats(), así nada se queda viejo
+   después de canjear un folio o registrar un underdog.
+   Nota: este html también se escribe de paso en #perfil-stats, pero
+   renderPerfil() lo pisa dos líneas más abajo con su propio desglose de 8
+   cifras (incluye bonos y racha) — nunca llega a pintarse, es solo el
+   valor por defecto mientras no haya perfil cargado.
+   Confianza y Folios se quitaron de aquí: confianza ya se ve arriba en la
+   tarjeta "Confianza disponible", y folios en su propia tarjeta de canjear.
+   Aciertos queda destacado (misma clase que Puntos totales) porque es la
+   cifra que mejor resume qué tan bien vas en la temporada. */
 function renderStats(){
   const cont = document.getElementById('mis-stats');
   if(!cont) return;
@@ -2562,36 +2566,28 @@ function renderStats(){
 
   const html = `
     <div class="stat"><div class="e">🏆</div><div class="v oro">${p.total}</div><div class="l">Puntos totales</div></div>
-    <div class="stat"><div class="e">🎯</div><div class="v">${p.confianza}</div><div class="l">Confianza</div></div>
     <div class="stat"><div class="e">⚡</div><div class="v">${p.anotador}</div><div class="l">Primer anotador</div></div>
-    <div class="stat"><div class="e">🍔</div><div class="v">${p.consumo}</div><div class="l">Folios</div></div>
     <div class="stat"><div class="e">🐶</div><div class="v">${p.underdog}</div><div class="l">Underdog</div></div>
-    <div class="stat"><div class="e">✅</div><div class="v">${pct}%</div><div class="l">Aciertos ${p.aciertos}/${p.jugados}</div></div>`;
+    <div class="stat destacado"><div class="e">✅</div><div class="v oro">${pct}%</div><div class="l">Aciertos ${p.aciertos}/${p.jugados}</div></div>`;
 
   cont.innerHTML = html;
   const espejo = document.getElementById('perfil-stats');
   if(espejo) espejo.innerHTML = html;
 
-  renderResumen(p);
+  renderResumen();
   renderPerfil(p);
   renderCapi(p);
   renderEstratega(p);
 }
 
-/* Las dos tarjetas de arriba a la derecha */
-function renderResumen(p){
-  p = p || misPuntos();
+/* La tarjeta de arriba a la derecha: confianza disponible. Folios se
+   quitó de aquí; se sigue viendo en su propia tarjeta de canjear. */
+function renderResumen(){
   const gs = gamesOf(currentWeek);
   const asignados = gs.filter(g=>myPicks[g.id]?.confianza).length;
   const libres = Math.max(0, gs.length - asignados);
   const cerrada = semanaCerrada(currentWeek);
 
-  const f = document.getElementById('rc-folios');
-  if(f){
-    f.textContent = misFolios.length;
-    document.getElementById('rc-folios-p').textContent =
-      misFolios.length ? `${p.consumo} puntos canjeados` : 'aún no canjeas ninguno';
-  }
   const c = document.getElementById('rc-confianza');
   if(c){
     c.textContent = cerrada ? '—' : libres;
