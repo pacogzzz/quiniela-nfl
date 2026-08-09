@@ -463,6 +463,15 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
   filter:drop-shadow(0 16px 40px rgba(0,0,0,.7));
 }
 .modal-capi .modal-close{background:rgba(0,0,0,.6);top:0;right:0}
+/* Leyenda opcional debajo del pizarrón; solo se muestra si el pose trae una
+   (ver CAPI_BOARD_CAPTIONS). display:none por defecto vía :empty, así no
+   deja un hueco vacío en los pizarrones que no la usan. */
+.capi-board-caption{
+  margin-top:.7rem;text-align:center;font-weight:700;letter-spacing:.02em;
+  color:var(--oro2);font-size:.85rem;text-shadow:0 2px 8px rgba(0,0,0,.6);
+  white-space:pre-line;line-height:1.6;
+}
+.capi-board-caption:empty{display:none}
 
 /* --- El Capi en burbuja (dentro de "quiniela") ---
    Aquí NO es una tarjeta: es un botón chico pegado al desplegable de puntos.
@@ -775,6 +784,8 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
   display:flex;flex-direction:column;
 }
 .extra-card .ex-ico{font-size:2rem;line-height:1;margin-bottom:.55rem}
+.extra-card .ex-capi{width:72px;height:96px;margin-bottom:.4rem}
+.extra-card .ex-capi img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5))}
 .extra-card h3{color:var(--oro2);font-size:1.05rem;margin-bottom:.4rem}
 .extra-card p{font-size:.78rem;color:var(--gris);line-height:1.55}
 .extra-card .ex-cta{
@@ -821,28 +832,17 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   border:1px solid rgba(47,191,113,.4);background:rgba(47,191,113,.08);
   color:#8FE9BB;border-radius:999px;padding:.2rem .6rem;font-size:.66rem;font-weight:600;
 }
-/* El encabezado de la tarjeta del underdog: el Capi con su perrito ocupa el
-   lugar donde estaba el emoji 🦄, y todo el bloque es el botón que abre la
-   explicación. La ilustración ES el ícono, no un adorno al lado. */
+/* El encabezado de la tarjeta del underdog: el título ocupa casi todo el
+   botón, muy llamativo, y debajo el llamado a la explicación del Capi. */
 .ud-cab{
-  display:flex;align-items:center;gap:.75rem;width:100%;text-align:left;
+  display:flex;flex-direction:column;width:100%;text-align:left;
   margin:-.35rem 0 .6rem;padding:.3rem;border-radius:var(--r-sm);transition:background .18s;
 }
 .ud-cab:hover{background:rgba(176,124,232,.1)}
-.ud-cab-art{
-  width:62px;height:70px;flex:none;position:relative;
-  display:flex;align-items:flex-end;justify-content:center;
-}
-.ud-cab-art::before{
-  content:'';position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);
-  width:140%;height:78%;border-radius:50%;
-  background:radial-gradient(ellipse at 50% 65%, rgba(176,124,232,.3), transparent 68%);
-}
-.ud-cab-art img{position:relative;max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.6))}
 .ud-cab-txt{min-width:0}
-.ud-cab-txt h3{margin-bottom:.1rem}
+.ud-cab-txt h3{margin-bottom:.15rem;font-size:2.7rem;line-height:.9}
 .ud-cab .cb-cta{
-  display:block;font-size:.6rem;font-weight:700;letter-spacing:.08em;
+  display:block;font-size:.72rem;font-weight:700;letter-spacing:.08em;
   text-transform:uppercase;color:var(--lila);
 }
 .ud-cab .cb-cta::after{content:' ▸'}
@@ -983,7 +983,21 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 }
 .hist-emoji{font-size:2.4rem;line-height:1}
 .hist-card h2{margin:.5rem 0 .35rem;color:var(--txt)}
-.hist-win{font-size:.78rem;margin-top:.8rem;padding-top:.7rem;border-top:1px solid var(--linea);line-height:1.7;color:var(--oro2)}
+.hist-podium{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:1rem}
+.hist-medal{
+  border:1px solid var(--linea);border-radius:var(--r-sm);padding:.8rem .5rem;
+  text-align:center;background:rgba(255,255,255,.02);
+}
+.hist-medal.gold{border-color:var(--oro);background:linear-gradient(160deg,#241D0B,var(--card));box-shadow:0 8px 24px rgba(212,175,55,.15)}
+.hist-medal.silver{border-color:rgba(198,203,209,.45)}
+.hist-medal.bronze{border-color:rgba(205,127,50,.45)}
+.hm-rank{font-size:1.5rem;line-height:1}
+.hm-name{font-family:'Bebas Neue','Oswald',sans-serif;letter-spacing:.03em;font-size:.95rem;margin-top:.35rem;word-break:break-word;color:var(--txt)}
+.hm-pts{font-size:.68rem;color:var(--gris);margin-top:.3rem;font-weight:700;letter-spacing:.05em}
+.hm-prize{font-size:.72rem;color:var(--oro2);margin-top:.35rem;font-weight:700}
+.hist-medal.silver .hm-pts,.hist-medal.silver .hm-prize{color:var(--plata)}
+.hist-medal.bronze .hm-pts,.hist-medal.bronze .hm-prize{color:var(--bronce)}
+@media (max-width:480px){.hist-podium{grid-template-columns:1fr}}
 
 /* ========= PREMIOS ========= */
 .prizes-hero{
@@ -1318,8 +1332,8 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   <section class="module" id="m-grupos">
     <h1 class="display">CONFERENCIAS Y DIVISIONES</h1>
     <p class="lead-sub">32 equipos · 2 conferencias · 8 divisiones. El récord se actualiza solo conforme se cargan los resultados.</p>
-    <div class="card capi capi-tip" data-capi="ganador"
-         data-txt="Aquí ves cómo va cada equipo. Un equipo con buen récord no siempre gana: para eso están tus puntos de confianza."></div>
+    <div class="card capi capi-tip" data-capi="bienvenida"
+         data-txt="En esta sección podrás observar como están jugando los equipos, sus victorias y derrotas. Es importante que lo revises semana con semana para distribuir tus puntos de confianza con mayor efectividad."></div>
     <div class="conf-toggle">
       <button class="active" data-conf="AFC">AFC</button>
       <button data-conf="NFC">NFC</button>
@@ -1332,8 +1346,8 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   <section class="module" id="m-calendario">
     <h1 class="display">CALENDARIO NFL 2026-27</h1>
     <p class="lead-sub">Filtra por week, equipo, horario o fecha. Toca <b>reservar</b> para apartar mesa en La Corte.</p>
-    <div class="card capi capi-tip" data-capi="calendario"
-         data-txt="Busca tu partido y apártate mesa. Los días de juego hay folio de consumo, y ese folio son puntos."></div>
+    <div class="card capi capi-tip" data-capi="datos" data-board="calendario"
+         data-txt="En esta sección podrás observar los horarios de partido con sus puntos por consumo y modalidades de juego. Aprovecha nuestro botón de reserva fácil. ¡No te quedes sin tus puntos de consumo!"></div>
     <div class="filtros-wrap">
       <div class="filters">
         <select id="f-week"><option value="">Todas las weeks</option></select>
@@ -1374,9 +1388,9 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
             <div id="underdog-slot"></div>
 
             <div class="extra-card">
-              <div class="ex-ico">🍔</div>
+              <div class="ex-capi"><img src="/icons/capi/consumo.webp" alt="El Capi" loading="lazy" onerror="this.remove()" /></div>
               <h3 class="display">FOLIO DE CONSUMO</h3>
-              <p>Cada vez que consumas en La Corte pide tu folio y captúralo aquí. Uno por día de juego.</p>
+              <p>Ven a la corte y llega a la cima. Cada visita suma.</p>
               <div class="folio-row">
                 <input type="text" id="folio-input" placeholder="LC0913-A1B2C" maxlength="16" />
                 <button onclick="canjearFolio()">CANJEAR</button>
@@ -1464,31 +1478,32 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
          dato aparece UNA vez y todos se leen igual de fácil. -->
     <div class="perfil-hero" id="perfil-hero"></div>
 
-    <div class="stat-row perfil-cifras" id="perfil-stats"></div>
-
     <!-- EL ESTRATEGA: tres metas (top 10 · top 5 · #1) con la distancia real
          en puntos y, debajo, el Capi diciendo con qué jugadas concretas se
          cierra esa distancia esta misma week. -->
     <h2 class="sec-t">TU CAMINO A LA CIMA</h2>
     <div class="metas" id="perfil-metas"></div>
     <div class="card capi capi-coach" id="capi-coach"></div>
+
+    <div class="stat-row perfil-cifras" id="perfil-stats"></div>
   </section>
 
   <!-- ========== RANKING ========== -->
   <section class="module" id="m-ranking">
     <h1 class="display">RANKING GENERAL</h1>
     <p class="lead-sub">Clasificación en tiempo real. El corte del lunes define quién juega el Underdog la week siguiente.</p>
-    <div class="card capi capi-tip" data-capi="ranking"
-         data-txt="Cada lunes se congela la tabla. Si quedas del lugar 11 hacia abajo, la week siguiente juegas Underdog: hasta 12 puntos gratis si le atinas."></div>
+    <div class="card capi capi-tip" data-capi="ranking" data-hide-board="1"
+         data-txt="Aquí es en donde está la verdadera competencia. Observa, Analiza y Compite"
+         data-txt2="Cerramos el ranking todos los lunes. Jugadores por debajo del Top 10, tendrán el beneficio de jugar Underdog. Es tu oportunidad de remontar ¡CUALQUIERA PUEDE GANAR!"></div>
     <div id="rank-list"></div>
   </section>
 
   <!-- ========== HISTORIAL ========== -->
   <section class="module" id="m-historial">
-    <h1 class="display">HISTORIAL DE QUINIELAS</h1>
-    <p class="lead-sub">Todas las quinielas que ha organizado La Corte.</p>
-    <div class="card capi capi-tip" data-capi="bienvenida"
-         data-txt="Aquí queda guardado quién ganó cada temporada. La de este año se cierra con el Super Bowl LXI."></div>
+    <h1 class="display">HALL OF FAME</h1>
+    <p class="lead-sub">Conoce a Nuestros Campeones</p>
+    <div class="card capi capi-tip" data-capi="anotador"
+         data-txt="En este apartado podrás ver nuestro salón de la fama. Es tu oportunidad de hacer historia y quedar inmortalizado en las Quinielas de La Corte. ¡Juégale Campeón!"></div>
     <div id="hist-list" class="grid grid-2"></div>
   </section>
 
@@ -1500,7 +1515,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
       <p id="mi-pos-actual">Cargando posición...</p>
     </div>
     <div class="card capi capi-tip" data-capi="listo"
-         data-txt="Los 10 primeros se llevan premio, y la temporada es larguísima: 22 weeks. El que no se cae es el que gana."></div>
+         data-txt="Atrévete a alcanzar la gloria y disfruta de los premios. Recuerda solo pierde el que deja de jugar"></div>
     <div class="grid grid-3" id="premios-top"></div>
     <h2>DEL 4° AL 10° LUGAR</h2>
     <div class="grid grid-4" id="premios-resto"></div>
@@ -1583,11 +1598,23 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
           <input type="text" id="h-emoji" placeholder="🏆" style="width:60px" />
           <input type="text" id="h-url" placeholder="URL (opcional)" />
         </div>
+        <div style="margin-bottom:.5rem">
+          <input type="text" id="h-desc" placeholder="Descripción" style="width:100%" />
+        </div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.4rem">
+          <input type="text" id="h-g1" placeholder="🥇 Nombre" />
+          <input type="number" id="h-g1-pts" placeholder="Puntos" style="width:90px" />
+          <input type="text" id="h-g1-premio" placeholder="Premio" style="width:140px" />
+        </div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.4rem">
+          <input type="text" id="h-g2" placeholder="🥈 Nombre" />
+          <input type="number" id="h-g2-pts" placeholder="Puntos" style="width:90px" />
+          <input type="text" id="h-g2-premio" placeholder="Premio" style="width:140px" />
+        </div>
         <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem">
-          <input type="text" id="h-desc" placeholder="Descripción" style="flex:1;min-width:220px" />
-          <input type="text" id="h-g1" placeholder="🥇 Ganador" />
-          <input type="text" id="h-g2" placeholder="🥈 2°" />
-          <input type="text" id="h-g3" placeholder="🥉 3°" />
+          <input type="text" id="h-g3" placeholder="🥉 Nombre" />
+          <input type="number" id="h-g3-pts" placeholder="Puntos" style="width:90px" />
+          <input type="text" id="h-g3-premio" placeholder="Premio" style="width:140px" />
           <button class="btn-ok" onclick="crearHistorial()">Agregar</button>
         </div>
         <div id="hist-admin" class="small"></div>
@@ -1625,6 +1652,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   <div class="modal modal-capi">
     <button class="modal-close" onclick="cerrarCapiBoard()">✕</button>
     <img id="capi-board-img" src="" alt="Explicación de El Capi" />
+    <p id="capi-board-caption" class="capi-board-caption"></p>
   </div>
 </div>
 
@@ -2637,7 +2665,6 @@ function renderPerfil(p){
     cuadro('⚡', p.anotador, `Primer anotador · ${p.anotadorHits}`) +
     cuadro('🍔', p.consumo, `Folios · ${misFolios.length} canjeados`) +
     cuadro('🐶', p.underdog, `Underdog · ${p.underdogHits}`) +
-    cuadro('🎁', p.bono, 'Bonos') +
     cuadro('✅', pct+'%', `Efectividad · ${p.aciertos}/${p.jugados}`) +
     cuadro('🔥', p.rachaMax, 'Mejor racha') +
     (bonoInstalYa===false
@@ -2667,15 +2694,26 @@ const CAPI_POSES = ['bienvenida','registrate','datos','calendario','ganador',
 // Estas tres láminas traen un pizarrón con texto explicando la mecánica. En la
 // tarjeta chica va solo el personaje (el texto no se leería) y el pizarrón
 // completo se abre en grande con el botón "¿Cómo funciona?".
-const CAPI_BOARDS = ['calendario','confianza','ranking'];
+const CAPI_BOARDS = ['calendario','confianza','ranking','underdog'];
 
 function capiSrc(pose){
   return '/icons/capi/' + (CAPI_POSES.includes(pose) ? pose : 'bienvenida') + '.webp';
 }
 
+// Leyenda opcional que acompaña a cada pizarrón. Si un pose no aparece aquí,
+// el pizarrón se abre sin leyenda (la P queda vacía y el CSS la esconde).
+const CAPI_BOARD_CAPTIONS = {
+  calendario: 'APROVECHA Y HAZ TU RESERVACIÓN. ¡NO SE GANA SOLO JUGANDO!',
+  underdog: 'Cada semana tendrás 3 equipos underdog:\n'
+    + 'Opción A - 8 pts (Equipo con probabilidad alta de ganar)\n'
+    + 'Opción B - 10 pts (Equipo con probabilidad media de ganar)\n'
+    + 'Opción C - 12 pts (Equipo con probabilidad baja de ganar)'
+};
+
 function abrirCapiBoard(pose){
   if(!CAPI_BOARDS.includes(pose)) return;
   document.getElementById('capi-board-img').src = '/icons/capi/board-'+pose+'.webp';
+  document.getElementById('capi-board-caption').textContent = CAPI_BOARD_CAPTIONS[pose] || '';
   document.getElementById('modal-capi').classList.remove('hidden');
 }
 function cerrarCapiBoard(){
@@ -2696,15 +2734,24 @@ function pintarCapiTips(){
   document.querySelectorAll('.capi-tip[data-capi]').forEach(c=>{
     if(c.dataset.listo) return;
     c.dataset.listo = '1';
+    // data-board es aparte de data-capi a propósito: data-capi es qué POSE
+    // muestra la tarjeta chica, data-board es qué PIZARRÓN abre el botón.
+    // No siempre son la misma pose (ej. la tarjeta puede mostrar a El Capi
+    // con el teléfono, "datos", pero seguir abriendo el pizarrón de
+    // "calendario"). Si no se especifica, cae de vuelta a data-capi, que
+    // es el comportamiento de siempre para las tarjetas que sí coinciden.
+    const board = c.dataset.board || c.dataset.capi;
+    const mostrarBtn = CAPI_BOARDS.includes(board) && !c.dataset.hideBoard;
     c.innerHTML = `
       <div class="capi-art">
         <img src="${capiSrc(c.dataset.capi)}" alt="El Capi" loading="lazy" onerror="this.remove()" />
       </div>
       <div class="capi-txt">
-        <div class="capi-t">El Capi te dice</div>
+        <div class="capi-t">${esc(c.dataset.label||'El Capi te recomienda')}</div>
         <p>${esc(c.dataset.txt||'')}</p>
-        ${CAPI_BOARDS.includes(c.dataset.capi)
-          ? `<button class="capi-board-btn" onclick="abrirCapiBoard('${esc(c.dataset.capi)}')">📖 ¿Cómo funciona?</button>`
+        ${c.dataset.txt2 ? `<p>${esc(c.dataset.txt2)}</p>` : ''}
+        ${mostrarBtn
+          ? `<button class="capi-board-btn" onclick="abrirCapiBoard('${esc(board)}')">📖 ¿Cómo funciona?</button>`
           : ''}
       </div>`;
   });
@@ -2941,7 +2988,8 @@ function renderEstratega(p){
 function renderCoach(metas, mis, pos, w){
   const cont = document.getElementById('capi-coach');
   if(!cont) return;
-  const {pose, msg, board} = estadoCapi();
+  const {msg} = estadoCapi();
+  const pose = 'guardar';
 
   // Se aconseja sobre la meta más cercana que todavía no se logra. Si ya está
   // en el primer lugar, el consejo es el de mantenerse.
@@ -2956,16 +3004,7 @@ function renderCoach(metas, mis, pos, w){
     jugadas = ops.slice(0,3);
   } else {
     const plan = comoCerrar(objetivo.falta, w);
-    const semanasRestantes = [...new Set(games.map(g=>g.week))].filter(x=>x>=w).length;
-    if(!plan.lista.length){
-      titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase}. La ${esc(weekLabel(w))} ya cerró; la que entra vuelve a traer puntos en juego.`;
-    } else if(plan.alcanza){
-      titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase} — y solo en la ${esc(weekLabel(w))} hay <b>${plan.techo}</b> en juego. Sí te alcanza:`;
-    } else {
-      const semanas = Math.ceil(objetivo.falta / Math.max(1, plan.techo));
-      titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase}. En la ${esc(weekLabel(w))} puedes sumar hasta <b>${plan.techo}</b>: a ese paso lo alcanzas en ${semanas} ${semanas===1?'week':'weeks'}`
-              + (semanasRestantes > semanas ? `, y todavía quedan ${semanasRestantes}. Empieza por lo seguro:` : `. Empieza por lo seguro:`);
-    }
+    titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase} y en esta ${esc(weekLabel(w))} hay <b>${plan.techo} puntos</b> en juego. Estos son mis recomendaciones:`;
     jugadas = plan.lista.slice(0,4);
   }
 
@@ -2980,14 +3019,13 @@ function renderCoach(metas, mis, pos, w){
         jugadas.map(j=>`<li><span class="ci">${j.ico}</span><span>${j.txt}</span></li>`).join('')
       }</ul>` : ''}
       <button class="coach-ir" onclick="irA('quiniela')">${esc(msg)}</button>
-      <button class="capi-board-btn" onclick="abrirCapiBoard('${esc(board)}')">📖 ¿Cómo funciona?</button>
     </div>`;
 }
 
 function renderMisFolios(){
   const cont = document.getElementById('mis-folios');
   if(!cont) return;
-  if(!misFolios.length){ cont.innerHTML='<span class="small muted">Aún no has canjeado folios.</span>'; return; }
+  if(!misFolios.length){ cont.innerHTML='<span class="small muted">Pide tu folio al mesero y canjea</span>'; return; }
   cont.innerHTML = misFolios.map(f=>
     `<span class="folio-tag">${esc(f.fecha.split('-').reverse().slice(0,2).join('/'))} · +${f.puntos}</span>`
   ).join('');
@@ -3294,10 +3332,7 @@ function renderUnderdog(){
   // pica y abre el pizarrón del ranking, que es donde se explica el corte del
   // lunes: quién puede jugarlo y por qué a veces no aparece.
   const caja = (cuerpo)=> `<div class="extra-card underdog">
-      <button class="ud-cab" onclick="abrirCapiBoard('ranking')">
-        <span class="ud-cab-art">
-          <img src="${capiSrc('underdog')}" alt="El Capi y su perrito" loading="lazy" onerror="this.remove()" />
-        </span>
+      <button class="ud-cab" onclick="abrirCapiBoard('underdog')">
         <span class="ud-cab-txt">
           <h3 class="display">UNDERDOG</h3>
           <span class="cb-cta">¿Cómo funciona? Pregúntale al Capi</span>
@@ -3308,7 +3343,7 @@ function renderUnderdog(){
 
   if(!uw || !uw.opt_a_team){
     slot.innerHTML = caja(
-      `<p>Los underdogs de la ${esc(weekLabel(currentWeek))} aún no se publican. Se abren cada miércoles.</p>`);
+      `<p>Los underdogs de las weeks, se habilitan los miércoles.</p>`);
     return;
   }
 
@@ -3428,6 +3463,16 @@ async function renderRanking(){
 /* =====================================================
    RENDER: HISTORIAL
    ===================================================== */
+// Una tarjeta de podio por lugar; se omite si no hay nombre capturado.
+function medalla(clase, ico, nombre, puntos, premio){
+  if(!nombre) return '';
+  return `<div class="hist-medal ${clase}">
+      <div class="hm-rank">${ico}</div>
+      <div class="hm-name">${esc(nombre)}</div>
+      ${puntos?`<div class="hm-pts">${esc(String(puntos))} PTS</div>`:''}
+      ${premio?`<div class="hm-prize">🏆 ${esc(premio)}</div>`:''}
+    </div>`;
+}
 async function renderHistorial(){
   const list = document.getElementById('hist-list');
   if(!list) return;
@@ -3443,10 +3488,10 @@ async function renderHistorial(){
       <div class="chip gold">${esc(h.temporada||'—')}</div>
       ${h.descripcion?`<p class="small muted" style="margin-top:.6rem">${esc(h.descripcion)}</p>`:''}
       ${(h.ganador_1||h.ganador_2||h.ganador_3)?`
-        <div class="hist-win">
-          ${h.ganador_1?`🥇 ${esc(h.ganador_1)}<br>`:''}
-          ${h.ganador_2?`🥈 ${esc(h.ganador_2)}<br>`:''}
-          ${h.ganador_3?`🥉 ${esc(h.ganador_3)}`:''}
+        <div class="hist-podium">
+          ${medalla('gold','🥇',h.ganador_1,h.ganador_1_puntos,h.ganador_1_premio)}
+          ${medalla('silver','🥈',h.ganador_2,h.ganador_2_puntos,h.ganador_2_premio)}
+          ${medalla('bronze','🥉',h.ganador_3,h.ganador_3_puntos,h.ganador_3_premio)}
         </div>`:''}
       ${h.url?`<a href="${esc(h.url)}" target="_blank" rel="noopener" class="btn-reserve" style="display:inline-block;margin-top:.8rem">🔗 VER QUINIELA</a>`:''}
     </div>`).join('');
@@ -3749,13 +3794,20 @@ async function crearHistorial(){
     url:document.getElementById('h-url').value.trim(),
     descripcion:document.getElementById('h-desc').value.trim(),
     ganador_1:document.getElementById('h-g1').value.trim(),
+    ganador_1_puntos:parseInt(document.getElementById('h-g1-pts').value)||0,
+    ganador_1_premio:document.getElementById('h-g1-premio').value.trim(),
     ganador_2:document.getElementById('h-g2').value.trim(),
+    ganador_2_puntos:parseInt(document.getElementById('h-g2-pts').value)||0,
+    ganador_2_premio:document.getElementById('h-g2-premio').value.trim(),
     ganador_3:document.getElementById('h-g3').value.trim(),
+    ganador_3_puntos:parseInt(document.getElementById('h-g3-pts').value)||0,
+    ganador_3_premio:document.getElementById('h-g3-premio').value.trim(),
     orden:99
   };
   const {error} = await sb.from('historial').insert(row);
   if(error){ toast(error.message,'err'); return; }
-  ['h-titulo','h-temp','h-emoji','h-url','h-desc','h-g1','h-g2','h-g3'].forEach(id=>document.getElementById(id).value='');
+  ['h-titulo','h-temp','h-emoji','h-url','h-desc','h-g1','h-g1-pts','h-g1-premio',
+   'h-g2','h-g2-pts','h-g2-premio','h-g3','h-g3-pts','h-g3-premio'].forEach(id=>document.getElementById(id).value='');
   toast('📜 Agregado al historial');
   renderHistAdmin(); renderHistorial();
 }
