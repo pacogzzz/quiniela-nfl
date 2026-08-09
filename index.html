@@ -1208,7 +1208,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 <div id="registro">
   <div class="reg-card">
     <div id="reg-form-step">
-      <div class="reg-capi"><img id="capi-reg" src="/icons/capi/bienvenida.webp" alt="El Capi te da la bienvenida" /></div>
+      <div class="reg-capi"><img id="capi-reg" src="/icons/capi/equipo.webp" alt="El equipo de La Corte" /></div>
       <h1 class="display">LA CORTE<small>QUINIELA NFL · 2026-27</small></h1>
       <p class="lead">Entra con tu usuario y contraseña.</p>
 
@@ -2006,7 +2006,7 @@ function normUsuario(s){ return (s||'').trim().toLowerCase(); }
 function setModo(modo){
   _regModo = modo;
   const nuevo = modo==='registro';
-  ponCapi(document.getElementById('capi-reg'), nuevo ? 'registrate' : 'bienvenida');
+  ponCapi(document.getElementById('capi-reg'), nuevo ? 'registrate' : 'equipo');
   document.getElementById('modo-login').classList.toggle('active', !nuevo);
   document.getElementById('modo-registro').classList.toggle('active', nuevo);
   document.getElementById('campo-nombre').style.display  = nuevo?'':'none';
@@ -2689,7 +2689,7 @@ function renderPerfil(p){
    ===================================================== */
 const CAPI_POSES = ['bienvenida','registrate','datos','calendario','ganador',
                     'confianza','guardar','ranking','consumo','anotador',
-                    'underdog','listo'];
+                    'underdog','listo','equipo'];
 
 // Estas tres láminas traen un pizarrón con texto explicando la mecánica. En la
 // tarjeta chica va solo el personaje (el texto no se leería) y el pizarrón
