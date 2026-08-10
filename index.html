@@ -386,27 +386,33 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
    folio que la quiniela real (mismas clases CSS) para que se sienta
    idéntico; solo cambia el ancho, porque el resto de los modales son
    angostos y centrados y aquí hacen falta partidos completos. */
-.modal-practica{max-width:920px;text-align:left}
+.modal-practica{max-width:640px;text-align:left}
 .modal-practica h2{text-align:left;border-left:3px solid var(--lila);padding-left:.6rem}
 .modal-practica .qgame{margin-bottom:.9rem}
 .modal-practica .qgame:last-of-type{margin-bottom:0}
-/* La confianza se escoge DENTRO de cada partido, igual que en la quiniela
-   real. Esta columna de la izquierda es puro apoyo visual —de solo
-   lectura, no se toca— para que nunca se pierda de vista qué números
-   quedan mientras se hace scroll por los 16 partidos. Fija (sticky) para
-   que acompañe todo el recorrido. */
-.practica-layout{display:flex;gap:1rem;align-items:flex-start;margin-bottom:1.1rem}
-.practica-sidebar{
-  flex:0 0 152px;position:sticky;top:-1px;
+/* ========= CONFIANZA FLOTANTE =========
+   Panel de apoyo visual —de solo lectura, no se toca— que se usa tanto en
+   el modo práctica como en la quiniela real: la confianza se sigue
+   eligiendo DENTRO de cada partido, esto solo refleja qué números quedan y
+   qué equipo se quedó con cada uno.
+   En escritorio flota sobre el contenido (position:fixed) y se puede
+   ARRASTRAR agarrando la cabecera, porque fijo en un solo lugar terminaba
+   tapado o fuera de vista según cuánto se hubiera hecho scroll. En celular
+   no flota: va fijo arriba de los partidos, en cuadrícula compacta. */
+.conf-flotante{
+  margin-bottom:1.1rem;
   background:linear-gradient(160deg,var(--card2),var(--card));
   border:1px solid var(--linea2);border-radius:var(--r-sm);
-  padding:.8rem .6rem;box-shadow:0 10px 24px rgba(0,0,0,.45);
+  padding:.7rem .6rem;box-shadow:0 10px 24px rgba(0,0,0,.45);
 }
-.practica-sidebar h4{
-  text-align:center;font-family:'Bebas Neue','Oswald',sans-serif;font-size:.78rem;
-  letter-spacing:.07em;line-height:1.2;color:var(--oro2);margin-bottom:.4rem;
+.conf-flotante .cf-cabeza{
+  display:flex;justify-content:space-between;align-items:center;gap:.5rem;
+  font-family:'Bebas Neue','Oswald',sans-serif;font-size:.74rem;letter-spacing:.05em;
+  color:var(--oro2);margin-bottom:.5rem;
 }
-.practica-sidebar-lista{display:flex;flex-direction:column;gap:.32rem}
+.conf-flotante .cf-cabeza b{color:var(--txt)}
+.conf-flotante .cf-drag{color:var(--gris);font-size:.7rem;letter-spacing:.2em}
+.conf-flotante .cf-lista{display:flex;flex-direction:column;gap:.32rem}
 .psb-fila{
   display:flex;align-items:center;gap:.4rem;
   background:rgba(255,255,255,.03);border:1px solid var(--linea);border-radius:999px;
@@ -421,15 +427,20 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 .psb-fila.disponible{border-color:rgba(47,191,113,.32);color:#8FE9BB}
 .psb-fila.disponible .psb-n{background:rgba(47,191,113,.16);color:#8FE9BB}
 .psb-fila.ocupada .psb-n{background:none}
-.practica-main{flex:1;min-width:0}
-@media (max-width:719px){
-  .practica-layout{flex-direction:column}
-  .practica-sidebar{
-    position:static;width:100%;flex:none;
-    display:flex;flex-direction:column;gap:.4rem;
+@media (min-width:720px){
+  .conf-flotante{
+    position:fixed;z-index:60;width:150px;left:16px;top:150px;
+    max-height:78vh;display:flex;flex-direction:column;
   }
-  .practica-sidebar h4{text-align:left;margin-bottom:0}
-  .practica-sidebar-lista{
+  .conf-flotante .cf-cabeza{
+    cursor:grab;padding-bottom:.4rem;border-bottom:1px dashed var(--linea);flex:none;
+  }
+  .conf-flotante .cf-cabeza:active{cursor:grabbing}
+  .conf-flotante .cf-lista{overflow-y:auto}
+}
+@media (max-width:719px){
+  .conf-flotante .cf-drag{display:none}
+  .conf-flotante .cf-lista{
     display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;
     max-height:150px;overflow-y:auto;
   }
@@ -1543,6 +1554,17 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
             <span>Reparte ganadores y confianza según el récord de cada equipo. Cámbiale lo que quieras antes de guardar.</span>
           </div>
 
+          <!-- Apoyo visual de solo lectura: qué confianza queda y qué
+               equipo se quedó con cada una. La confianza se sigue eligiendo
+               dentro de cada partido, igual que siempre. -->
+          <div class="conf-flotante" id="conf-flotante-real">
+            <div class="cf-cabeza" id="cf-cabeza-real">
+              <span>🎯 CONFIANZA · quedan <b id="rc-conf-flotante">0</b></span>
+              <span class="cf-drag">⠿⠿</span>
+            </div>
+            <div class="cf-lista" id="conf-flotante-lista"></div>
+          </div>
+
           <div id="quiniela-list"></div>
           <div class="save-bar" id="save-bar" style="display:none">
             <button class="btn-save" id="btn-guardar" onclick="guardarSemana()"><svg class="ic"><use href="#ic-corona"/></svg>GUARDAR MI WEEK</button>
@@ -1758,19 +1780,19 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
     <div id="practica-resultado"></div>
 
     <!-- La confianza se elige DENTRO de cada partido (como en la quiniela
-         real); esta columna de la izquierda es solo un apoyo visual fijo,
-         de solo lectura, para no perder de vista qué números quedan y qué
-         equipo se quedó con cada uno mientras se hace scroll por los 16. -->
-    <div class="practica-layout">
-      <aside class="practica-sidebar">
-        <h4>🎯 CONFIANZA<br>DISPONIBLE</h4>
-        <div class="small muted" style="text-align:center;margin-bottom:.5rem">quedan <b id="practica-conf-disp" style="color:var(--oro2)">0</b></div>
-        <div class="practica-sidebar-lista" id="practica-sidebar-lista"></div>
-      </aside>
-      <div class="practica-main">
-        <div id="practica-juegos"></div>
+         real); este panel es solo un apoyo visual, de solo lectura, para no
+         perder de vista qué números quedan y qué equipo se quedó con cada
+         uno. En escritorio flota y se puede arrastrar (por si tapa algo);
+         en celular va fijo arriba de los partidos, en cuadrícula. -->
+    <div class="conf-flotante" id="practica-flotante">
+      <div class="cf-cabeza" id="practica-cf-cabeza">
+        <span>🎯 CONFIANZA · quedan <b id="practica-conf-disp">0</b></span>
+        <span class="cf-drag">⠿⠿</span>
       </div>
+      <div class="cf-lista" id="practica-sidebar-lista"></div>
     </div>
+
+    <div id="practica-juegos"></div>
 
     <div class="extra-card underdog" style="margin-top:1.1rem">
       <h3 class="display">🐶 UNDERDOG DE PRÁCTICA</h3>
@@ -2770,6 +2792,42 @@ function renderResumen(){
       : (libres ? `de ${gs.length} por repartir · hasta <b>${topeConfianza(currentWeek)}</b> pts`
                 : `¡ya los repartiste! · hasta <b>${topeConfianza(currentWeek)}</b> pts`);
   }
+  renderConfianzaFlotante();
+}
+
+// Apoyo visual de solo lectura (misma idea que en el modo práctica): qué
+// confianza queda y qué equipo se quedó con cada una. Nunca asigna nada por
+// sí mismo, solo refleja `myPicks`.
+function renderConfianzaFlotante(){
+  const cont = document.getElementById('conf-flotante-lista');
+  if(!cont) return;
+  const gs = gamesOf(currentWeek);
+  const N = gs.length;
+  const asignados = {};
+  Object.entries(myPicks).forEach(([gid,p])=>{
+    if(p.confianza) asignados[p.confianza] = {gid, lado:p.ganador};
+  });
+  const filas = [];
+  for(let v=N; v>=1; v--){
+    const a = asignados[v];
+    if(a){
+      const g = gs.find(x=>x.id===a.gid);
+      const code = a.lado==='A' ? g?.team_a : (a.lado==='B' ? g?.team_b : null);
+      filas.push(`<div class="psb-fila ocupada">
+          <span class="psb-n">${v}</span>
+          ${code ? teamLogo(code,'xs') : ''}
+          <span class="psb-nombre">${code ? esc(tshort(code)) : '—'}</span>
+        </div>`);
+    } else {
+      filas.push(`<div class="psb-fila disponible">
+          <span class="psb-n">${v}</span>
+          <span class="psb-nombre">disponible</span>
+        </div>`);
+    }
+  }
+  cont.innerHTML = filas.join('');
+  const rc = document.getElementById('rc-conf-flotante');
+  if(rc) rc.textContent = N - Object.keys(asignados).length;
 }
 
 /* Pestaña "mi perfil": el encabezado con quién eres y en qué lugar vas, y
@@ -3174,6 +3232,40 @@ function renderMisFolios(){
     `<span class="folio-tag">${esc(f.fecha.split('-').reverse().slice(0,2).join('/'))} · +${f.puntos}</span>`
   ).join('');
 }
+
+/* =====================================================================
+   PANEL DE CONFIANZA FLOTANTE (arrastrable)
+   =====================================================================
+   Se usa tanto en la quiniela real como en el modo práctica. Solo aplica
+   en escritorio (en celular el panel va fijo en flujo normal, sin
+   arrastre: no hace falta y en pantallas chicas estorbaría). Se arrastra
+   agarrando la cabecera; queda pegado dentro de los límites de la
+   ventana para que nunca se pueda soltar fuera de vista. */
+function hacerArrastrable(panel, manija){
+  if(!panel || !manija) return;
+  let offX=0, offY=0, arrastrando=false;
+  const mueveA = (x,y)=>{
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const nx = Math.min(Math.max(8, x-offX), window.innerWidth - w - 8);
+    const ny = Math.min(Math.max(8, y-offY), window.innerHeight - h - 8);
+    panel.style.left = nx+'px';
+    panel.style.top = ny+'px';
+  };
+  const empieza = (x,y)=>{
+    if(window.innerWidth < 720) return; // en celular no flota, no hay nada que arrastrar
+    const r = panel.getBoundingClientRect();
+    offX = x - r.left; offY = y - r.top;
+    arrastrando = true;
+  };
+  manija.addEventListener('mousedown', e=>{ empieza(e.clientX, e.clientY); e.preventDefault(); });
+  window.addEventListener('mousemove', e=>{ if(arrastrando) mueveA(e.clientX, e.clientY); });
+  window.addEventListener('mouseup', ()=> arrastrando=false);
+  manija.addEventListener('touchstart', e=>{ const t=e.touches[0]; empieza(t.clientX,t.clientY); }, {passive:true});
+  window.addEventListener('touchmove', e=>{ if(arrastrando){ const t=e.touches[0]; mueveA(t.clientX,t.clientY); } }, {passive:true});
+  window.addEventListener('touchend', ()=> arrastrando=false);
+}
+hacerArrastrable(document.getElementById('practica-flotante'), document.getElementById('practica-cf-cabeza'));
+hacerArrastrable(document.getElementById('conf-flotante-real'), document.getElementById('cf-cabeza-real'));
 
 /* =====================================================================
    MODO PRACTICA
@@ -3638,7 +3730,7 @@ function pickGanador(gid, val, btn){
   myPicks[gid].ganador = (myPicks[gid].ganador===val) ? null : val;
   btn.parentElement.querySelectorAll('.team-btn').forEach(b=>b.classList.remove('sel'));
   if(myPicks[gid].ganador) btn.classList.add('sel');
-  dirty=true; actualizarBotonGuardar(); renderCapi();
+  dirty=true; actualizarBotonGuardar(); renderCapi(); renderConfianzaFlotante();
 }
 function pickPrimero(gid, val, el){
   myPicks[gid] = myPicks[gid] || {};
