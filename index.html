@@ -391,19 +391,25 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 .modal-practica .qgame{margin-bottom:.9rem}
 .modal-practica .qgame:last-of-type{margin-bottom:0}
 /* ========= CONFIANZA FLOTANTE =========
-   Panel de apoyo visual —de solo lectura, no se toca ni se mueve— que se
-   usa tanto en el modo práctica como en la quiniela real: la confianza se
-   sigue eligiendo DENTRO de cada partido, esto solo refleja qué números
-   quedan y qué equipo se quedó con cada uno. Muy angosto a propósito (solo
-   número, o el escudo una vez asignado, sin ningún texto) para que no
-   quite espacio a los partidos. Fijo en el costado izquierdo en
-   escritorio, con scroll interno propio; en celular va arriba de los
-   partidos, en cuadrícula. */
+   Panel de apoyo visual —de solo lectura, no se toca— que se usa tanto en
+   el modo práctica como en la quiniela real: la confianza se sigue
+   eligiendo DENTRO de cada partido, esto solo refleja qué números quedan y
+   qué equipo se quedó con cada uno.
+
+   IMPORTANTE: es una COLUMNA de verdad (flex), no una capa flotando encima
+   del contenido. .cf-layout pone el panel y los partidos lado a lado, así
+   que el panel tiene su propio espacio reservado y JAMÁS tapa nada —a
+   diferencia de position:fixed, que lo sacaba del flujo y lo dejaba
+   flotando sobre lo que hubiera debajo. En escritorio es sticky (acompaña
+   el scroll sin taparlo); en celular va arriba de los partidos, ancho
+   completo, en cuadrícula. */
+.cf-layout{display:flex;gap:.6rem;align-items:flex-start;margin-bottom:1.1rem}
+.cf-contenido{flex:1;min-width:0}
 .conf-flotante{
-  margin-bottom:1.1rem;
+  flex:none;
   background:linear-gradient(160deg,var(--card2),var(--card));
   border:1px solid var(--linea2);border-radius:var(--r-sm);
-  padding:.5rem;box-shadow:0 10px 24px rgba(0,0,0,.45);
+  padding:.5rem;box-shadow:0 6px 18px rgba(0,0,0,.35);
 }
 .conf-flotante .cf-cabeza{
   text-align:center;font-size:.78rem;font-weight:800;color:var(--oro2);
@@ -420,13 +426,15 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 .psb-fila.disponible{color:var(--gris)}
 .psb-fila.ocupada{background:none;border-color:transparent;padding:0}
 @media (min-width:720px){
-  .conf-flotante{
-    position:fixed;z-index:60;width:56px;left:12px;top:150px;
-    max-height:78vh;display:flex;flex-direction:column;
-  }
+  .conf-flotante{width:56px;position:sticky;top:0;max-height:80vh;display:flex;flex-direction:column}
+  /* La quiniela real vive bajo el header fijo (#header, ~64px); el modal de
+     práctica no tiene ese header, así que ahí top:0 ya es correcto. */
+  #conf-flotante-real{top:76px}
   .conf-flotante .cf-lista{overflow-y:auto}
 }
 @media (max-width:719px){
+  .cf-layout{flex-direction:column;align-items:stretch}
+  .conf-flotante{width:100%}
   .conf-flotante .cf-lista{
     display:grid;grid-template-columns:repeat(8,1fr);gap:.3rem;
     max-height:120px;overflow-y:auto;
@@ -1542,15 +1550,19 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 
           <!-- Apoyo visual de solo lectura: qué confianza queda y qué
                equipo se quedó con cada una. La confianza se sigue eligiendo
-               dentro de cada partido, igual que siempre. -->
-          <div class="conf-flotante" id="conf-flotante-real">
-            <div class="cf-cabeza" title="Confianza disponible">🎯<b id="rc-conf-flotante">0</b></div>
-            <div class="cf-lista" id="conf-flotante-lista"></div>
-          </div>
-
-          <div id="quiniela-list"></div>
-          <div class="save-bar" id="save-bar" style="display:none">
-            <button class="btn-save" id="btn-guardar" onclick="guardarSemana()"><svg class="ic"><use href="#ic-corona"/></svg>GUARDAR MI WEEK</button>
+               dentro de cada partido, igual que siempre. Va en su PROPIA
+               columna (flex), nunca encima de los partidos. -->
+          <div class="cf-layout">
+            <div class="conf-flotante" id="conf-flotante-real">
+              <div class="cf-cabeza" title="Confianza disponible">🎯<b id="rc-conf-flotante">0</b></div>
+              <div class="cf-lista" id="conf-flotante-lista"></div>
+            </div>
+            <div class="cf-contenido">
+              <div id="quiniela-list"></div>
+              <div class="save-bar" id="save-bar" style="display:none">
+                <button class="btn-save" id="btn-guardar" onclick="guardarSemana()"><svg class="ic"><use href="#ic-corona"/></svg>GUARDAR MI WEEK</button>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -1765,14 +1777,17 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
     <!-- La confianza se elige DENTRO de cada partido (como en la quiniela
          real); este panel es solo un apoyo visual, de solo lectura, fijo en
          el costado izquierdo, para no perder de vista qué números quedan y
-         qué equipo se quedó con cada uno. En celular va fijo arriba de los
-         partidos, en cuadrícula. -->
-    <div class="conf-flotante" id="practica-flotante">
-      <div class="cf-cabeza" title="Confianza disponible">🎯<b id="practica-conf-disp">0</b></div>
-      <div class="cf-lista" id="practica-sidebar-lista"></div>
+         qué equipo se quedó con cada uno. Su propia columna (flex), nunca
+         encima de los partidos. En celular va fijo arriba, en cuadrícula. -->
+    <div class="cf-layout">
+      <div class="conf-flotante" id="practica-flotante">
+        <div class="cf-cabeza" title="Confianza disponible">🎯<b id="practica-conf-disp">0</b></div>
+        <div class="cf-lista" id="practica-sidebar-lista"></div>
+      </div>
+      <div class="cf-contenido">
+        <div id="practica-juegos"></div>
+      </div>
     </div>
-
-    <div id="practica-juegos"></div>
 
     <div class="extra-card underdog" style="margin-top:1.1rem">
       <h3 class="display">🐶 UNDERDOG DE PRÁCTICA</h3>
