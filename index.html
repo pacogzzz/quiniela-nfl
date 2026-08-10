@@ -386,46 +386,56 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
    folio que la quiniela real (mismas clases CSS) para que se sienta
    idéntico; solo cambia el ancho, porque el resto de los modales son
    angostos y centrados y aquí hacen falta partidos completos. */
-.modal-practica{max-width:640px;text-align:left}
+.modal-practica{max-width:920px;text-align:left}
 .modal-practica h2{text-align:left;border-left:3px solid var(--lila);padding-left:.6rem}
 .modal-practica .qgame{margin-bottom:.9rem}
 .modal-practica .qgame:last-of-type{margin-bottom:0}
-/* El banco de confianza queda pegado arriba mientras se hace scroll por los
-   16 partidos: es la respuesta directa a "no recuerdo qué números me
-   quedan". Dos columnas para que quepan los 16 sin empujar los partidos
-   varias pantallas hacia abajo. */
-.practica-banco{
-  position:sticky;top:-1px;z-index:5;margin-bottom:1.1rem;
+/* La confianza se escoge DENTRO de cada partido, igual que en la quiniela
+   real. Esta columna de la izquierda es puro apoyo visual —de solo
+   lectura, no se toca— para que nunca se pierda de vista qué números
+   quedan mientras se hace scroll por los 16 partidos. Fija (sticky) para
+   que acompañe todo el recorrido. */
+.practica-layout{display:flex;gap:1rem;align-items:flex-start;margin-bottom:1.1rem}
+.practica-sidebar{
+  flex:0 0 152px;position:sticky;top:-1px;
   background:linear-gradient(160deg,var(--card2),var(--card));
   border:1px solid var(--linea2);border-radius:var(--r-sm);
-  padding:.7rem .8rem;box-shadow:0 10px 24px rgba(0,0,0,.45);
+  padding:.8rem .6rem;box-shadow:0 10px 24px rgba(0,0,0,.45);
 }
-.practica-banco h4{
-  display:flex;justify-content:space-between;align-items:center;
-  font-family:'Bebas Neue','Oswald',sans-serif;font-size:.82rem;letter-spacing:.08em;
-  color:var(--oro2);margin-bottom:.5rem;
+.practica-sidebar h4{
+  text-align:center;font-family:'Bebas Neue','Oswald',sans-serif;font-size:.78rem;
+  letter-spacing:.07em;line-height:1.2;color:var(--oro2);margin-bottom:.4rem;
 }
-.practica-banco h4 b{color:var(--txt)}
-.practica-banco-lista{display:grid;grid-template-columns:1fr 1fr;gap:.3rem .5rem}
-.pb-fila{
-  display:flex;align-items:center;gap:.4rem;width:100%;text-align:left;
+.practica-sidebar-lista{display:flex;flex-direction:column;gap:.32rem}
+.psb-fila{
+  display:flex;align-items:center;gap:.4rem;
   background:rgba(255,255,255,.03);border:1px solid var(--linea);border-radius:999px;
-  padding:.25rem .55rem;font-size:.68rem;font-weight:700;color:var(--gris);transition:all .15s;
+  padding:.22rem .5rem;font-size:.68rem;font-weight:700;color:var(--gris);
 }
-.pb-fila .pb-n{
+.psb-fila .psb-n{
   flex:none;width:20px;height:20px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,.07);color:var(--txt);font-size:.64rem;
 }
-.pb-fila span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pb-fila.disponible:hover:not(:disabled){border-color:var(--oro);color:var(--oro2)}
-.pb-fila.armada{border-color:var(--oro);background:var(--oro-tenue);color:var(--oro2)}
-.pb-fila.armada .pb-n{background:var(--oro);color:#141004}
-.pb-fila.usada{color:var(--txt)}
-.pb-fila.usada .pb-n{background:none}
-.pb-fila.usada .tlogo{flex:none}
-.pb-fila:disabled{cursor:not-allowed;opacity:.55}
-@media (max-width:480px){.practica-banco-lista{grid-template-columns:1fr}}
+.psb-fila .psb-nombre{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.psb-fila.disponible{border-color:rgba(47,191,113,.32);color:#8FE9BB}
+.psb-fila.disponible .psb-n{background:rgba(47,191,113,.16);color:#8FE9BB}
+.psb-fila.ocupada .psb-n{background:none}
+.practica-main{flex:1;min-width:0}
+@media (max-width:719px){
+  .practica-layout{flex-direction:column}
+  .practica-sidebar{
+    position:static;width:100%;flex:none;
+    display:flex;flex-direction:column;gap:.4rem;
+  }
+  .practica-sidebar h4{text-align:left;margin-bottom:0}
+  .practica-sidebar-lista{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;
+    max-height:150px;overflow-y:auto;
+  }
+  .psb-fila{padding:.2rem .3rem;font-size:.62rem;justify-content:center}
+  .psb-fila .psb-nombre{display:none}
+}
 /* El resumen de puntos tras simular, desglosado por mecánica. */
 .practica-desglose{display:flex;flex-direction:column}
 .pd-row{
@@ -1747,15 +1757,20 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 
     <div id="practica-resultado"></div>
 
-    <!-- Banco de confianza: fijo arriba mientras se hace scroll por los 16
-         partidos, para que nunca se pierda de vista qué números quedan. Los
-         ya asignados muestran el escudo del equipo en vez del número. -->
-    <div class="practica-banco">
-      <h4><span>🎯 BANCO DE CONFIANZA</span><span>quedan <b id="practica-conf-disp">0</b></span></h4>
-      <div class="practica-banco-lista" id="practica-banco-lista"></div>
+    <!-- La confianza se elige DENTRO de cada partido (como en la quiniela
+         real); esta columna de la izquierda es solo un apoyo visual fijo,
+         de solo lectura, para no perder de vista qué números quedan y qué
+         equipo se quedó con cada uno mientras se hace scroll por los 16. -->
+    <div class="practica-layout">
+      <aside class="practica-sidebar">
+        <h4>🎯 CONFIANZA<br>DISPONIBLE</h4>
+        <div class="small muted" style="text-align:center;margin-bottom:.5rem">quedan <b id="practica-conf-disp" style="color:var(--oro2)">0</b></div>
+        <div class="practica-sidebar-lista" id="practica-sidebar-lista"></div>
+      </aside>
+      <div class="practica-main">
+        <div id="practica-juegos"></div>
+      </div>
     </div>
-
-    <div id="practica-juegos"></div>
 
     <div class="extra-card underdog" style="margin-top:1.1rem">
       <h3 class="display">🐶 UNDERDOG DE PRÁCTICA</h3>
@@ -3190,7 +3205,6 @@ let practicaPicks = {};
 let practicaUD = null;
 let practicaFolios = [];
 let practicaGuardada = false;
-let practicaConfArmada = null;  // valor de confianza "armado" en el banco, esperando que toques un equipo
 let practicaResultado = null;   // null hasta simular; luego {porGame,total,confPts,confAciertos,...}
 
 function practicaJuegos(){ return gamesOf(1); }
@@ -3201,7 +3215,7 @@ function practicaLocked(){ return !!practicaResultado; }
 
 function abrirPractica(){
   practicaPicks = {}; practicaUD = null; practicaFolios = [];
-  practicaGuardada = false; practicaResultado = null; practicaConfArmada = null;
+  practicaGuardada = false; practicaResultado = null;
   renderPractica();
   document.getElementById('modal-practica').classList.remove('hidden');
 }
@@ -3210,7 +3224,7 @@ function cerrarPractica(){
 }
 function reiniciarPractica(){
   practicaPicks = {}; practicaUD = null; practicaFolios = [];
-  practicaGuardada = false; practicaResultado = null; practicaConfArmada = null;
+  practicaGuardada = false; practicaResultado = null;
   renderPractica();
   toast('🔄 Práctica reiniciada');
 }
@@ -3232,7 +3246,7 @@ function renderPractica(){
     }
     list.appendChild(renderPracticaJuego(g, N));
   });
-  renderPracticaBanco();
+  renderPracticaSidebar();
   renderPracticaUD();
   renderPracticaFolios();
   renderPracticaResultado();
@@ -3242,16 +3256,16 @@ function renderPractica(){
   document.getElementById('practica-btn-canjear').disabled = locked;
 }
 
-// El banco de confianza es la única forma de asignar un número: se "arma"
-// aquí y se aplica tocando un equipo en su partido. Así se ve SIEMPRE qué
-// queda disponible, en vez de tener que acordarte mientras haces scroll por
-// 16 partidos. Lo ya asignado muestra el escudo del equipo, no el número.
-function renderPracticaBanco(){
-  const cont = document.getElementById('practica-banco-lista');
+// Solo lectura, a propósito: la confianza se asigna DENTRO de cada partido
+// (como en la quiniela real). Esta columna nada más refleja ese estado —sin
+// onclick, sin botones reales— para que nunca se pierda de vista qué
+// números quedan ni qué equipo se quedó con cada uno mientras se hace
+// scroll por los 16 partidos.
+function renderPracticaSidebar(){
+  const cont = document.getElementById('practica-sidebar-lista');
   if(!cont) return;
   const gs = practicaJuegos();
   const N = gs.length;
-  const locked = practicaLocked();
   const asignados = {};
   Object.entries(practicaPicks).forEach(([gid,p])=>{
     if(p.confianza) asignados[p.confianza] = {gid, lado:p.ganador};
@@ -3263,40 +3277,33 @@ function renderPracticaBanco(){
     if(a){
       const g = gs.find(x=>x.id===a.gid);
       const code = a.lado==='A' ? g.team_a : (a.lado==='B' ? g.team_b : null);
-      filas.push(`<button type="button" class="pb-fila usada" ${locked?'disabled':''}
-                    onclick="practicaDesasignar(${v})" title="Quitarle la confianza ${v}">
-          <span class="pb-n">${v}</span>
+      filas.push(`<div class="psb-fila ocupada">
+          <span class="psb-n">${v}</span>
           ${code ? teamLogo(code,'xs') : ''}
-          <span>${code ? esc(tshort(code)) : '—'}</span>
-        </button>`);
+          <span class="psb-nombre">${code ? esc(tshort(code)) : '—'}</span>
+        </div>`);
     } else {
-      filas.push(`<button type="button" class="pb-fila disponible ${practicaConfArmada===v?'armada':''}" ${locked?'disabled':''}
-                    onclick="practicaArmarConfianza(${v})">
-          <span class="pb-n">${v}</span>
-          <span>${practicaConfArmada===v?'toca un equipo…':'disponible'}</span>
-        </button>`);
+      filas.push(`<div class="psb-fila disponible">
+          <span class="psb-n">${v}</span>
+          <span class="psb-nombre">disponible</span>
+        </div>`);
     }
   }
   cont.innerHTML = filas.join('');
   document.getElementById('practica-conf-disp').textContent = N - Object.keys(asignados).length;
 }
-function practicaArmarConfianza(v){
-  if(practicaLocked()) return;
-  practicaConfArmada = (practicaConfArmada===v) ? null : v;
-  renderPracticaBanco();
-  if(practicaConfArmada) toast('🎯 Ahora toca el equipo al que le quieres dar '+v);
-}
-function practicaDesasignar(v){
-  if(practicaLocked()) return;
-  const entry = Object.entries(practicaPicks).find(([,p])=>p.confianza===v);
-  if(entry) practicaPicks[entry[0]].confianza = null;
-  practicaResultado = null;
-  renderPractica();
-}
 
 function renderPracticaJuego(g, N){
   const p = practicaPicks[g.id] || {};
   const locked = practicaLocked();
+  const usadosPorOtros = Object.entries(practicaPicks)
+    .filter(([k])=>k!==g.id).map(([,v])=>v.confianza).filter(Boolean);
+  const chips = Array.from({length:N},(_,i)=>{
+    const v = N-i;
+    const ocupado = usadosPorOtros.includes(v);
+    return `<button type="button" ${ocupado||locked?'disabled':''} class="${p.confianza===v?'sel':''}"
+              onclick="practicaConfianza('${g.id}',${v})">${v}</button>`;
+  }).join('');
   const lado = (code, der)=>`
     <div class="qg-team${der?' der':''}">
       ${teamLogo(code)}
@@ -3319,12 +3326,11 @@ function renderPracticaJuego(g, N){
       ${lado(g.team_b,true)}
     </div>
     <div class="campo">
-      <span class="lbl">Selecciona ganador ${p.confianza?` <b style="color:var(--oro2)">· confianza ${p.confianza}</b>`:''}</span>
+      <span class="lbl">Selecciona ganador</span>
       <div class="seg">
         <button class="team-btn ${p.ganador==='A'?'sel':''}" ${locked?'disabled':''} onclick="practicaGanador('${g.id}','A')">${esc(g.team_a)}</button>
         <button class="team-btn ${p.ganador==='B'?'sel':''}" ${locked?'disabled':''} onclick="practicaGanador('${g.id}','B')">${esc(g.team_b)}</button>
       </div>
-      ${!p.confianza ? `<div class="small muted" style="margin-top:.4rem">Toca un número en el banco de confianza de arriba y luego un equipo aquí.</div>` : ''}
     </div>
     ${g.is_stellar ? `
     <div class="campo">
@@ -3335,6 +3341,10 @@ function renderPracticaJuego(g, N){
         <option value="B"${p.primero==='B'?' selected':''}>${esc(tname(g.team_b))}</option>
       </select>
     </div>` : ''}
+    <div class="campo">
+      <span class="lbl">🎯 Confianza <b>de 1 a ${N}, sin repetir</b></span>
+      <div class="conf-chips">${chips}</div>
+    </div>
     ${res ? `<div class="earned ${res.pts?'':'zero'}">${res.pts ? '🎉 +'+res.pts+' PUNTOS' : 'Sin puntos en este partido'}</div>` : ''}
   `;
   return div;
@@ -3342,22 +3352,10 @@ function renderPracticaJuego(g, N){
 
 // Cambiar cualquier pronóstico invalida el último resultado simulado: si no,
 // se vería un "SIMULADO" que ya no corresponde a lo que acabas de elegir.
-// Si hay un número armado en el banco, tocar un equipo se lo asigna aquí
-// mismo: es el único lugar donde una confianza queda ligada a un partido.
 function practicaGanador(gid, val){
   if(practicaLocked()) return;
   practicaPicks[gid] = practicaPicks[gid] || {};
-  const yaEraEste = practicaPicks[gid].ganador===val;
-  if(yaEraEste){
-    practicaPicks[gid].ganador = null;
-    practicaPicks[gid].confianza = null;
-  } else {
-    practicaPicks[gid].ganador = val;
-    if(practicaConfArmada && !practicaPicks[gid].confianza){
-      practicaPicks[gid].confianza = practicaConfArmada;
-      practicaConfArmada = null;
-    }
-  }
+  practicaPicks[gid].ganador = (practicaPicks[gid].ganador===val) ? null : val;
   practicaResultado = null;
   renderPractica();
 }
@@ -3365,6 +3363,13 @@ function practicaPrimero(gid, val){
   if(practicaLocked()) return;
   practicaPicks[gid] = practicaPicks[gid] || {};
   practicaPicks[gid].primero = val || null;
+  practicaResultado = null;
+  renderPractica();
+}
+function practicaConfianza(gid, val){
+  if(practicaLocked()) return;
+  practicaPicks[gid] = practicaPicks[gid] || {};
+  practicaPicks[gid].confianza = (practicaPicks[gid].confianza===val) ? null : val;
   practicaResultado = null;
   renderPractica();
 }
