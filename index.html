@@ -382,6 +382,14 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
   position:absolute;top:.8rem;right:.8rem;width:30px;height:30px;border-radius:50%;
   background:rgba(255,255,255,.05);border:1px solid var(--linea2);color:var(--gris);
 }
+/* El modal de práctica reusa las mismas tarjetas de partido, underdog y
+   folio que la quiniela real (mismas clases CSS) para que se sienta
+   idéntico; solo cambia el ancho, porque el resto de los modales son
+   angostos y centrados y aquí hacen falta partidos completos. */
+.modal-practica{max-width:640px;text-align:left}
+.modal-practica h2{text-align:left;border-left:3px solid var(--lila);padding-left:.6rem}
+.modal-practica .qgame{margin-bottom:.9rem}
+.modal-practica .qgame:last-of-type{margin-bottom:0}
 
 /* ========= QUINIELA ========= */
 #quiniela{position:relative}
@@ -510,6 +518,11 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
   color:var(--oro2);
 }
 .capi-bubble .cb-cta::after{content:' ▸'}
+/* El botón de práctica es el mismo molde que la burbuja del Capi, pero en
+   morado (el color del underdog) para que no se confunda con un consejo
+   del Capi: es una acción distinta, un simulador aparte. */
+.practica-btn{border-color:var(--lila);background:linear-gradient(160deg,#1A1024,var(--card))}
+.practica-btn .cb-cta{color:var(--lila)}
 /* En celular la burbuja se pone a lo ancho debajo del desplegable: de lado
    dejaba el título "CÓMO SE GANAN PUNTOS" en dos renglones. */
 @media (max-width:719px){
@@ -632,7 +645,8 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
   font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
   transition:all .18s;
 }
-.btn-auto:hover{background:var(--oro);color:#141004}
+.btn-auto:hover:not(:disabled){background:var(--oro);color:#141004}
+.btn-auto:disabled{opacity:.4;cursor:not-allowed}
 /* En celular esta barra se mete entre el selector de week y el primer
    partido: apretada cuesta 100 px en vez de 180, y esos 80 px son scroll que
    la gente hace CADA vez que entra. */
@@ -1441,6 +1455,14 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
                 <span class="cb-cta">Pregúntale al Capi</span>
               </span>
             </button>
+
+            <button class="capi-bubble practica-btn" onclick="abrirPractica()">
+              <span class="cb-art" style="font-size:1.7rem;align-items:center">🎮</span>
+              <span class="cb-txt">
+                <span class="cb-t">¿Nunca has jugado?</span>
+                <span class="cb-cta">Practica aquí, sin compromiso</span>
+              </span>
+            </button>
           </div>
 
           <div class="week-bar">
@@ -1653,6 +1675,56 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
     <button class="modal-close" onclick="cerrarCapiBoard()">✕</button>
     <img id="capi-board-img" src="" alt="Explicación de El Capi" />
     <p id="capi-board-caption" class="capi-board-caption"></p>
+  </div>
+</div>
+
+<!-- Modo práctica: la Week 1 real (mismos 16 partidos, escudos y horarios
+     que la quiniela de verdad), pero aislada por completo del estado real
+     (practicaPicks/practicaUD/practicaFolios en vez de
+     myPicks/myUD/misFolios). Nunca toca Supabase ni la semana real. Guardar
+     + Simular deja ver cuántos puntos habría ganado con un resultado al
+     azar, ya que la Week 1 todavía no se juega. -->
+<div class="modal-backdrop hidden" id="modal-practica">
+  <div class="modal modal-practica">
+    <button class="modal-close" onclick="cerrarPractica()">✕</button>
+    <h2 class="display">🎮 MODO PRÁCTICA · WEEK 1</h2>
+    <p class="small muted" style="margin:.5rem 0 1rem">
+      Los partidos reales de la Week 1, para que practiques exactamente igual que la quiniela de verdad. Nada de esto cuenta para tu quiniela real — practica las veces que quieras.
+    </p>
+
+    <div id="practica-resultado"></div>
+
+    <div class="small" style="margin-bottom:.9rem;color:var(--oro2)">
+      🎯 Confianza disponible: <b id="practica-conf-disp">0</b> valores por asignar
+    </div>
+
+    <div id="practica-juegos"></div>
+
+    <div class="extra-card underdog" style="margin-top:1.1rem">
+      <h3 class="display">🐶 UNDERDOG DE PRÁCTICA</h3>
+      <p style="margin-bottom:.3rem">Elige uno de estos 3 underdogs reales de la Week 1:</p>
+      <p class="small muted" style="margin-bottom:.6rem">Elegidos con criterio propio para que practiques la mecánica — la Week 1 todavía no se juega, así que no existe un pronóstico oficial de analistas para esta temporada.</p>
+      <div class="ud-options" id="practica-ud"></div>
+    </div>
+
+    <div class="extra-card" style="margin-top:.8rem">
+      <div class="ex-ico">🍔</div>
+      <h3 class="display">FOLIO DE PRÁCTICA</h3>
+      <p>Escribe cualquier texto para simular cómo se canjea un folio de consumo.</p>
+      <div class="folio-row">
+        <input type="text" id="practica-folio-input" placeholder="LC0000-EJEMPLO" maxlength="16" />
+        <button onclick="canjearPractica()">CANJEAR</button>
+      </div>
+      <div class="folio-list" id="practica-folios"></div>
+    </div>
+
+    <button class="btn-save" id="practica-btn-guardar" onclick="guardarPractica()" style="margin-top:1.2rem;width:100%">
+      <svg class="ic"><use href="#ic-corona"/></svg>GUARDAR MI WEEK DE PRÁCTICA
+    </button>
+    <button class="btn-auto" id="practica-btn-simular" onclick="simularPractica()" style="margin-top:.6rem;width:100%" disabled>
+      🎲 SIMULAR RESULTADOS Y VER MIS PUNTOS
+    </button>
+    <button class="btn-auto" onclick="reiniciarPractica()" style="margin-top:.6rem;width:100%">🔄 Reiniciar práctica</button>
   </div>
 </div>
 
@@ -3029,6 +3101,265 @@ function renderMisFolios(){
   cont.innerHTML = misFolios.map(f=>
     `<span class="folio-tag">${esc(f.fecha.split('-').reverse().slice(0,2).join('/'))} · +${f.puntos}</span>`
   ).join('');
+}
+
+/* =====================================================================
+   MODO PRACTICA
+   =====================================================================
+   Una quiniela de mentira para quien nunca ha jugado, pero con los 16
+   partidos REALES de la Week 1 (mismos escudos, horarios y estelares que
+   la quiniela de verdad) para que se sienta igual de principio a fin:
+   eliges ganadores, repartes confianza del 1 al 16, escoges underdog,
+   canjeas un folio, guardas tu week y al final simulas un resultado al
+   azar para ver cuántos puntos habrías ganado.
+
+   Todo vive en su propio estado aislado —practicaPicks, practicaUD,
+   practicaFolios, practicaResultado— que nunca toca `myPicks`, `myUD`,
+   `misFolios` ni Supabase. Se reinicia solo con abrir el modal.
+
+   Los 3 underdogs son equipos reales de la Week 1, elegidos con criterio
+   futbolístico propio (no hay forma de consultar analistas de una
+   temporada que todavía no se juega) — son ilustrativos para practicar
+   la mecánica, no un pronóstico oficial. */
+const PRACTICA_UD = [
+  {op:'A', team:'NYJ', game:'W01-I05', pts:8,
+   txt:'Jets de visita ante Titans — el underdog más "seguro" de los tres'},
+  {op:'B', team:'CAR', game:'W01-I08', pts:10,
+   txt:'Panthers de local ante Bears — underdog moderado'},
+  {op:'C', team:'NYG', game:'W01-I15', pts:12,
+   txt:'Giants de local ante Cowboys — el más arriesgado'},
+];
+let practicaPicks = {};
+let practicaUD = null;
+let practicaFolios = [];
+let practicaGuardada = false;
+let practicaResultado = null;   // null hasta simular; luego {porGame,total,udGano,udPts,udOpt,folioPts}
+
+function practicaJuegos(){ return gamesOf(1); }
+
+function abrirPractica(){
+  practicaPicks = {}; practicaUD = null; practicaFolios = [];
+  practicaGuardada = false; practicaResultado = null;
+  renderPractica();
+  document.getElementById('modal-practica').classList.remove('hidden');
+}
+function cerrarPractica(){
+  document.getElementById('modal-practica').classList.add('hidden');
+}
+function reiniciarPractica(){
+  practicaPicks = {}; practicaUD = null; practicaFolios = [];
+  practicaGuardada = false; practicaResultado = null;
+  renderPractica();
+  toast('🔄 Práctica reiniciada');
+}
+
+function renderPractica(){
+  const gs = practicaJuegos();
+  const N = gs.length;
+  const list = document.getElementById('practica-juegos');
+  list.innerHTML = '';
+  let ultimoDia = '';
+  gs.forEach(g=>{
+    const dia = fechaLarga(g.kickoff);
+    if(dia!==ultimoDia){
+      ultimoDia = dia;
+      const h = document.createElement('div');
+      h.className = 'dia-sep';
+      h.textContent = dia;
+      list.appendChild(h);
+    }
+    list.appendChild(renderPracticaJuego(g, N));
+  });
+  const asignadas = Object.values(practicaPicks).filter(p=>p.confianza).length;
+  document.getElementById('practica-conf-disp').textContent = N - asignadas;
+  renderPracticaUD();
+  renderPracticaFolios();
+  renderPracticaResultado();
+  document.getElementById('practica-btn-simular').disabled = !practicaGuardada;
+}
+
+function renderPracticaJuego(g, N){
+  const p = practicaPicks[g.id] || {};
+  const usadosPorOtros = Object.entries(practicaPicks)
+    .filter(([k])=>k!==g.id).map(([,v])=>v.confianza).filter(Boolean);
+  const chips = Array.from({length:N},(_,i)=>{
+    const v = N-i;
+    const ocupado = usadosPorOtros.includes(v);
+    return `<button type="button" ${ocupado?'disabled':''} class="${p.confianza===v?'sel':''}"
+              onclick="practicaConfianza('${g.id}',${v})">${v}</button>`;
+  }).join('');
+  const lado = (code, der)=>`
+    <div class="qg-team${der?' der':''}">
+      ${teamLogo(code)}
+      <div class="qt-nom"><b>${esc(tshort(code))}</b><span>${esc(TEAMS[code]?TEAMS[code].ciudad:code)}</span></div>
+    </div>`;
+
+  const res = practicaResultado?.porGame[g.id];
+  const div = document.createElement('div');
+  const acierto = res && p.ganador && p.ganador===res.ganador;
+  div.className = 'qgame' + (g.is_special?' special':'') + (res ? (acierto?' hit':' miss') : '');
+
+  div.innerHTML = `
+    <div class="qg-head">
+      <span>${esc(hora(g.kickoff))} hrs · ${esc(slotLabel(g.slot))}${g.is_special?' · <b style="color:var(--dorado)">⭐ ESPECIAL</b>':''} · <b style="color:var(--lila)">🎮 PRÁCTICA</b></span>
+      <span>${res?`<span class="chip gold">SIMULADO: GANA ${esc(res.ganador==='A'?g.team_a:g.team_b)}</span>`:''}${g.is_stellar?'<span class="chip red" style="margin-left:.3rem">⭐ ESTELAR</span>':''}</span>
+    </div>
+    <div class="qg-versus">
+      ${lado(g.team_a,false)}
+      <span class="vs">VS</span>
+      ${lado(g.team_b,true)}
+    </div>
+    <div class="campo">
+      <span class="lbl">Selecciona ganador</span>
+      <div class="seg">
+        <button class="team-btn ${p.ganador==='A'?'sel':''}" onclick="practicaGanador('${g.id}','A')">${esc(g.team_a)}</button>
+        <button class="team-btn ${p.ganador==='B'?'sel':''}" onclick="practicaGanador('${g.id}','B')">${esc(g.team_b)}</button>
+      </div>
+    </div>
+    ${g.is_stellar ? `
+    <div class="campo">
+      <span class="lbl">⚡ Primer equipo en anotar <b>+${cfgInt('pts_anotador',3)} · solo estelares</b></span>
+      <select class="anot-select ${p.primero?'sel':''}" onchange="practicaPrimero('${g.id}',this.value)">
+        <option value="">— elige equipo —</option>
+        <option value="A"${p.primero==='A'?' selected':''}>${esc(tname(g.team_a))}</option>
+        <option value="B"${p.primero==='B'?' selected':''}>${esc(tname(g.team_b))}</option>
+      </select>
+    </div>` : ''}
+    <div class="campo">
+      <span class="lbl">🎯 Confianza <b>de 1 a ${N}, sin repetir</b></span>
+      <div class="conf-chips">${chips}</div>
+    </div>
+    ${res ? `<div class="earned ${res.pts?'':'zero'}">${res.pts ? '🎉 +'+res.pts+' PUNTOS' : 'Sin puntos en este partido'}</div>` : ''}
+  `;
+  return div;
+}
+
+// Cambiar cualquier pronóstico invalida el último resultado simulado: si no,
+// se vería un "SIMULADO" que ya no corresponde a lo que acabas de elegir.
+function practicaGanador(gid, val){
+  practicaPicks[gid] = practicaPicks[gid] || {};
+  practicaPicks[gid].ganador = (practicaPicks[gid].ganador===val) ? null : val;
+  practicaResultado = null;
+  renderPractica();
+}
+function practicaPrimero(gid, val){
+  practicaPicks[gid] = practicaPicks[gid] || {};
+  practicaPicks[gid].primero = val || null;
+  practicaResultado = null;
+  renderPractica();
+}
+function practicaConfianza(gid, val){
+  practicaPicks[gid] = practicaPicks[gid] || {};
+  practicaPicks[gid].confianza = (practicaPicks[gid].confianza===val) ? null : val;
+  practicaResultado = null;
+  renderPractica();
+}
+
+function renderPracticaUD(){
+  const cont = document.getElementById('practica-ud');
+  if(!cont) return;
+  cont.innerHTML = PRACTICA_UD.map(o=>{
+    const marcado = practicaResultado && practicaUD===o.op
+      ? (practicaResultado.udGano
+          ? `<span class="chip gold" style="margin-left:.4rem">🎉 GANÓ</span>`
+          : `<span class="chip" style="margin-left:.4rem">no ganó</span>`)
+      : '';
+    return `<button type="button" class="ud-opt ${practicaUD===o.op?'sel':''}" onclick="elegirPracticaUD('${o.op}')">
+      <span class="ud-pts">+${o.pts}</span>
+      ${esc(tname(o.team))}${marcado}
+      <small>${esc(o.txt)}</small>
+    </button>`;
+  }).join('');
+}
+function elegirPracticaUD(op){
+  practicaUD = (practicaUD===op) ? null : op;
+  practicaResultado = null;
+  renderPractica();
+  if(practicaUD) toast('🐶 Elegiste tu underdog de práctica');
+}
+
+function renderPracticaFolios(){
+  const cont = document.getElementById('practica-folios');
+  if(!cont) return;
+  if(!practicaFolios.length){ cont.innerHTML = '<span class="small muted">Pide tu folio al mesero y canjea</span>'; return; }
+  const pts = cfgInt('pts_folio_domingo',5);
+  cont.innerHTML = practicaFolios.map(f=>`<span class="folio-tag">${esc(f)} · +${pts}</span>`).join('');
+}
+function canjearPractica(){
+  const input = document.getElementById('practica-folio-input');
+  const val = input.value.trim();
+  if(!val){ toast('Escribe cualquier folio de ejemplo','err'); return; }
+  practicaFolios.push(val);
+  practicaResultado = null;
+  input.value = '';
+  renderPractica();
+  toast('🎉 +'+cfgInt('pts_folio_domingo',5)+' puntos de práctica canjeados');
+}
+
+function guardarPractica(){
+  const gs = practicaJuegos();
+  const faltan = gs.filter(g=>!practicaPicks[g.id]?.ganador).length;
+  if(faltan && !confirm(`Te faltan ${faltan} ganadores por elegir en tu week de práctica.\n\n¿Guardar así de todos modos?`)) return;
+  practicaGuardada = true;
+  practicaResultado = null;
+  renderPractica();
+  toast('💾 Week de práctica guardada — ya puedes simular resultados');
+}
+
+// Sin resultados reales que copiar (Week 1 aún no se juega), cada partido se
+// decide al azar con una ligera ventaja de local — es lo único objetivo que
+// hay antes de que exista un solo récord en la temporada.
+function practicaSimularGanador(){
+  return Math.random() < 0.55 ? 'B' : 'A';
+}
+function simularPractica(){
+  if(!practicaGuardada){ toast('Primero guarda tu week de práctica','err'); return; }
+  const gs = practicaJuegos();
+  const porGame = {};
+  let total = 0;
+  gs.forEach(g=>{
+    const ganador = practicaSimularGanador();
+    const primero = g.is_stellar ? practicaSimularGanador() : null;
+    const p = practicaPicks[g.id] || {};
+    let pts = 0;
+    if(p.ganador && p.ganador===ganador && p.confianza) pts += p.confianza;
+    if(g.is_stellar && p.primero && p.primero===primero) pts += cfgInt('pts_anotador',3);
+    porGame[g.id] = {ganador, primero, pts};
+    total += pts;
+  });
+
+  let udPts=0, udGano=false, udOpt=null;
+  if(practicaUD){
+    udOpt = PRACTICA_UD.find(o=>o.op===practicaUD);
+    const gUD = gs.find(g=>g.id===udOpt.game);
+    if(gUD){
+      const ladoEquipo = gUD.team_a===udOpt.team ? 'A' : 'B';
+      udGano = porGame[gUD.id].ganador === ladoEquipo;
+      if(udGano){ udPts = udOpt.pts; total += udPts; }
+    }
+  }
+  const folioPts = practicaFolios.length * cfgInt('pts_folio_domingo',5);
+  total += folioPts;
+
+  practicaResultado = {porGame, total, udPts, udGano, udOpt, folioPts};
+  renderPractica();
+  toast('🎲 ¡Resultados simulados!');
+}
+
+function renderPracticaResultado(){
+  const cont = document.getElementById('practica-resultado');
+  if(!cont) return;
+  const r = practicaResultado;
+  if(!r){ cont.innerHTML=''; return; }
+  cont.innerHTML = `
+    <div class="card" style="border-color:var(--oro);text-align:center;margin-bottom:1rem">
+      <div class="display" style="font-size:2.4rem;color:var(--oro2)">🎉 ${r.total} PUNTOS</div>
+      <p class="small muted" style="margin-top:.3rem">
+        Así habrías quedado esta semana con tus pronósticos de práctica —resultados al azar, para que veas la mecánica en acción.
+        ${r.udOpt ? (r.udGano ? ` Tu underdog (${esc(tshort(r.udOpt.team))}) ¡ganó! +${r.udPts}.` : ` Tu underdog (${esc(tshort(r.udOpt.team))}) no ganó esta vez.`) : ''}
+        ${r.folioPts ? ` +${r.folioPts} de tus folios.` : ''}
+      </p>
+    </div>`;
 }
 
 function renderQuiniela(){
