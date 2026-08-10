@@ -485,10 +485,15 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
    Aquí NO es una tarjeta: es un botón chico pegado al desplegable de puntos.
    Su única función es estar a la mano cuando alguien no entiende la mecánica,
    así que ocupa lo mínimo y lo que dice es la pregunta, no un recado. */
-.ayuda-row{display:flex;gap:.7rem;align-items:stretch;margin-bottom:1.1rem}
-.ayuda-row .points-table{flex:1;min-width:0;margin-bottom:0}
+.ayuda-row{display:flex;flex-direction:column;gap:.7rem;margin-bottom:1.1rem}
+.ayuda-row .points-table{margin-bottom:0}
+/* Los dos botones van en su propia fila, debajo del desplegable de puntos:
+   con los tres lado a lado (visto en producción) el texto de cada uno se
+   apretaba demasiado para leerse bien. */
+.ayuda-botones{display:flex;gap:.7rem}
+.ayuda-botones .capi-bubble{flex:1;min-width:0}
 .capi-bubble{
-  flex:none;display:flex;align-items:center;gap:.6rem;text-align:left;
+  display:flex;align-items:center;gap:.6rem;text-align:left;
   background:linear-gradient(160deg,#201B0C,var(--card));
   border:1px solid var(--oro);border-radius:var(--r);
   padding:.55rem .9rem .55rem .6rem;
@@ -523,10 +528,11 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
    del Capi: es una acción distinta, un simulador aparte. */
 .practica-btn{border-color:var(--lila);background:linear-gradient(160deg,#1A1024,var(--card))}
 .practica-btn .cb-cta{color:var(--lila)}
-/* En celular la burbuja se pone a lo ancho debajo del desplegable: de lado
-   dejaba el título "CÓMO SE GANAN PUNTOS" en dos renglones. */
+/* En celular los dos botones también se apilan: lado a lado en 375px el
+   texto de cada uno queda demasiado apretado para leerse bien. */
 @media (max-width:719px){
-  .ayuda-row{flex-direction:column;gap:.6rem}
+  .ayuda-row{gap:.6rem}
+  .ayuda-botones{flex-direction:column}
   .capi-bubble{width:100%}
 }
 
@@ -1446,23 +1452,25 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
               <table id="tabla-puntos"></table>
             </details>
 
-            <button class="capi-bubble" id="capi-bubble" onclick="preguntarAlCapi()">
-              <span class="cb-art">
-                <img id="capi-img" src="/icons/capi/bienvenida.webp" alt="El Capi" onerror="this.remove()" />
-              </span>
-              <span class="cb-txt">
-                <span class="cb-t">¿Cómo funciona?</span>
-                <span class="cb-cta">Pregúntale al Capi</span>
-              </span>
-            </button>
+            <div class="ayuda-botones">
+              <button class="capi-bubble" id="capi-bubble" onclick="preguntarAlCapi()">
+                <span class="cb-art">
+                  <img id="capi-img" src="/icons/capi/bienvenida.webp" alt="El Capi" onerror="this.remove()" />
+                </span>
+                <span class="cb-txt">
+                  <span class="cb-t">¿Cómo funciona?</span>
+                  <span class="cb-cta">Pregúntale al Capi</span>
+                </span>
+              </button>
 
-            <button class="capi-bubble practica-btn" onclick="abrirPractica()">
-              <span class="cb-art" style="font-size:1.7rem;align-items:center">🎮</span>
-              <span class="cb-txt">
-                <span class="cb-t">¿Nunca has jugado?</span>
-                <span class="cb-cta">Practica aquí, sin compromiso</span>
-              </span>
-            </button>
+              <button class="capi-bubble practica-btn" onclick="abrirPractica()">
+                <span class="cb-art" style="font-size:1.7rem;align-items:center">🎮</span>
+                <span class="cb-txt">
+                  <span class="cb-t">¿Nunca has jugado?</span>
+                  <span class="cb-cta">Practica aquí, sin compromiso</span>
+                </span>
+              </button>
+            </div>
           </div>
 
           <div class="week-bar">
