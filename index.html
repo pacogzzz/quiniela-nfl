@@ -400,46 +400,40 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
    del contenido. .cf-layout pone el panel y los partidos lado a lado, así
    que el panel tiene su propio espacio reservado y JAMÁS tapa nada —a
    diferencia de position:fixed, que lo sacaba del flujo y lo dejaba
-   flotando sobre lo que hubiera debajo. En escritorio es sticky (acompaña
-   el scroll sin taparlo); en celular va arriba de los partidos, ancho
-   completo, en cuadrícula. */
-.cf-layout{display:flex;gap:.6rem;align-items:flex-start;margin-bottom:1.1rem}
+   flotando sobre lo que hubiera debajo. Es sticky (acompaña el scroll sin
+   taparlo) y va del lado izquierdo SIEMPRE, también en celular —solo se
+   angosta un poco más para que quepa sin apretar los partidos. */
+.cf-layout{display:flex;gap:.5rem;align-items:flex-start;margin-bottom:1.1rem}
 .cf-contenido{flex:1;min-width:0}
 .conf-flotante{
-  flex:none;
+  flex:none;width:52px;position:sticky;top:0;max-height:80vh;
+  display:flex;flex-direction:column;
   background:linear-gradient(160deg,var(--card2),var(--card));
   border:1px solid var(--linea2);border-radius:var(--r-sm);
-  padding:.5rem;box-shadow:0 6px 18px rgba(0,0,0,.35);
+  padding:.4rem .3rem;box-shadow:0 6px 18px rgba(0,0,0,.35);
 }
+/* La quiniela real vive bajo el header fijo (#header); el modal de
+   práctica no tiene ese header, así que ahí top:0 ya es correcto. */
+#conf-flotante-real{top:70px}
 .conf-flotante .cf-cabeza{
-  text-align:center;font-size:.78rem;font-weight:800;color:var(--oro2);
-  margin-bottom:.4rem;padding-bottom:.4rem;border-bottom:1px dashed var(--linea);
+  text-align:center;font-size:.68rem;font-weight:800;color:var(--oro2);
+  margin-bottom:.35rem;padding-bottom:.35rem;border-bottom:1px dashed var(--linea);
 }
-.conf-flotante .cf-cabeza b{display:block;color:var(--txt);font-size:.95rem;margin-top:.1rem}
-.conf-flotante .cf-lista{display:flex;flex-direction:column;gap:.28rem}
+.conf-flotante .cf-cabeza b{display:block;color:var(--txt);font-size:.82rem;margin-top:.1rem}
+.conf-flotante .cf-lista{display:flex;flex-direction:column;gap:.24rem;overflow-y:auto}
 .psb-fila{
   display:flex;align-items:center;justify-content:center;
-  width:34px;height:34px;margin:0 auto;
+  width:30px;height:30px;margin:0 auto;
   background:rgba(255,255,255,.05);border:1px solid var(--linea);border-radius:50%;
-  font-size:.72rem;font-weight:800;color:var(--txt);
+  font-size:.66rem;font-weight:800;color:var(--txt);
 }
 .psb-fila.disponible{color:var(--gris)}
 .psb-fila.ocupada{background:none;border-color:transparent;padding:0}
-@media (min-width:720px){
-  .conf-flotante{width:56px;position:sticky;top:0;max-height:80vh;display:flex;flex-direction:column}
-  /* La quiniela real vive bajo el header fijo (#header, ~64px); el modal de
-     práctica no tiene ese header, así que ahí top:0 ya es correcto. */
-  #conf-flotante-real{top:76px}
-  .conf-flotante .cf-lista{overflow-y:auto}
-}
-@media (max-width:719px){
-  .cf-layout{flex-direction:column;align-items:stretch}
-  .conf-flotante{width:100%}
-  .conf-flotante .cf-lista{
-    display:grid;grid-template-columns:repeat(8,1fr);gap:.3rem;
-    max-height:120px;overflow-y:auto;
-  }
-  .psb-fila{width:100%;height:28px;font-size:.64rem}
+@media (min-width:480px){
+  .conf-flotante{width:56px;padding:.5rem}
+  .conf-flotante .cf-cabeza{font-size:.78rem}
+  .conf-flotante .cf-cabeza b{font-size:.95rem}
+  .psb-fila{width:34px;height:34px;font-size:.72rem}
 }
 /* El resumen de puntos tras simular, desglosado por mecánica. */
 .practica-desglose{display:flex;flex-direction:column}
