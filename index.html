@@ -1095,6 +1095,12 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 .prize-card.bronze{border-color:rgba(205,127,50,.45)}
 .prize-icon{font-size:3rem;display:block;margin-bottom:.6rem}
 .prize-card.gold .prize-icon,.prize-card.silver .prize-icon,.prize-card.bronze .prize-icon{font-size:3.8rem}
+/* El Capi ilustrado con cada premio, en vez del emoji genérico de antes. */
+.prize-img{
+  display:block;margin:0 auto .6rem;height:110px;width:auto;max-width:100%;
+  object-fit:contain;filter:drop-shadow(0 10px 20px rgba(0,0,0,.5));
+}
+.prize-img.sm{height:76px}
 .prize-medal{font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.3rem;letter-spacing:.12em;color:var(--oro2)}
 .prize-card.silver .prize-medal{color:var(--plata)}
 .prize-card.bronze .prize-medal{color:var(--bronce)}
@@ -1860,16 +1866,16 @@ let semanasCerradas = new Set();// semanas que ya tienen corte hecho
 let dirty = false;
 
 const PREMIOS = [
-  {p:1,  icon:'🏖️', t:'VIAJE A CANCÚN',      s:'2 personas · hotel todo incluido'},
-  {p:2,  icon:'📱', t:'iPHONE 18',           s:'Último modelo, nuevo de paquete'},
-  {p:3,  icon:'⌚', t:'APPLE WATCH SERIES 12',s:'Para no perderte ni un down'},
-  {p:4,  icon:'👕', t:'JERSEY OFICIAL',      s:'Del equipo que tú elijas'},
-  {p:5,  icon:'🏈', t:'BALÓN DE AMERICANO',  s:'Balón oficial'},
-  {p:6,  icon:'🍽️', t:'CENA PARA 4',         s:'En La Corte'},
-  {p:7,  icon:'🍴', t:'CENA PARA 2',         s:'En La Corte'},
-  {p:8,  icon:'💵', t:'CONSUMO $1,500',      s:'Para gastar en La Corte'},
-  {p:9,  icon:'💵', t:'CONSUMO $1,000',      s:'Para gastar en La Corte'},
-  {p:10, icon:'💵', t:'CONSUMO $750',        s:'Para gastar en La Corte'}
+  {p:1,  icon:'🏖️', img:'/icons/premios/1.webp',  t:'VIAJE A CANCÚN',      s:'2 personas · hotel todo incluido'},
+  {p:2,  icon:'📱', img:'/icons/premios/2.webp',  t:'iPHONE 18',           s:'Último modelo, nuevo de paquete'},
+  {p:3,  icon:'⌚', img:'/icons/premios/3.webp',  t:'APPLE WATCH SERIES 12',s:'Para no perderte ni un down'},
+  {p:4,  icon:'👕', img:'/icons/premios/4.webp',  t:'JERSEY OFICIAL',      s:'Del equipo que tú elijas'},
+  {p:5,  icon:'🏈', img:'/icons/premios/5.webp',  t:'BALÓN DE AMERICANO',  s:'Balón oficial'},
+  {p:6,  icon:'🍽️', img:'/icons/premios/6.webp',  t:'CENA PARA 4',         s:'En La Corte'},
+  {p:7,  icon:'🍴', img:'/icons/premios/7.webp',  t:'CENA PARA 2',         s:'En La Corte'},
+  {p:8,  icon:'💵', img:'/icons/premios/8.webp',  t:'CONSUMO $1,500',      s:'Para gastar en La Corte'},
+  {p:9,  icon:'💵', img:'/icons/premios/9.webp',  t:'CONSUMO $1,000',      s:'Para gastar en La Corte'},
+  {p:10, icon:'💵', img:'/icons/premios/10.webp', t:'CONSUMO $750',        s:'Para gastar en La Corte'}
 ];
 
 /* =====================================================
@@ -4012,14 +4018,14 @@ function renderPremios(){
   const cls = {1:'gold',2:'silver',3:'bronze'};
   top.innerHTML = PREMIOS.slice(0,3).map((p,i)=>`
     <div class="prize-card ${cls[p.p]}" style="animation-delay:${(i+1)*.15}s">
-      <span class="prize-icon">${p.icon}</span>
+      <img class="prize-img" src="${esc(p.img)}" alt="${esc(p.t)}" loading="lazy" onerror="this.outerHTML='<span class=\\'prize-icon\\'>${p.icon}</span>'" />
       <div class="prize-medal">${['🥇','🥈','🥉'][i]} ${p.p}° LUGAR</div>
       <div class="prize-desc">${esc(p.t)}</div>
       <div class="prize-sub">${esc(p.s)}</div>
     </div>`).join('');
   resto.innerHTML = PREMIOS.slice(3).map((p,i)=>`
     <div class="prize-card plain" style="animation-delay:${(i+1)*.08}s">
-      <span class="prize-icon">${p.icon}</span>
+      <img class="prize-img sm" src="${esc(p.img)}" alt="${esc(p.t)}" loading="lazy" onerror="this.outerHTML='<span class=\\'prize-icon\\'>${p.icon}</span>'" />
       <div class="prize-medal" style="font-size:1.1rem">${p.p}° LUGAR</div>
       <div class="prize-desc">${esc(p.t)}</div>
       <div class="prize-sub">${esc(p.s)}</div>
