@@ -391,61 +391,47 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 .modal-practica .qgame{margin-bottom:.9rem}
 .modal-practica .qgame:last-of-type{margin-bottom:0}
 /* ========= CONFIANZA FLOTANTE =========
-   Panel de apoyo visual —de solo lectura, no se toca— que se usa tanto en
-   el modo práctica como en la quiniela real: la confianza se sigue
-   eligiendo DENTRO de cada partido, esto solo refleja qué números quedan y
-   qué equipo se quedó con cada uno.
-   En escritorio flota sobre el contenido (position:fixed) y se puede
-   ARRASTRAR agarrando la cabecera, porque fijo en un solo lugar terminaba
-   tapado o fuera de vista según cuánto se hubiera hecho scroll. En celular
-   no flota: va fijo arriba de los partidos, en cuadrícula compacta. */
+   Panel de apoyo visual —de solo lectura, no se toca ni se mueve— que se
+   usa tanto en el modo práctica como en la quiniela real: la confianza se
+   sigue eligiendo DENTRO de cada partido, esto solo refleja qué números
+   quedan y qué equipo se quedó con cada uno. Muy angosto a propósito (solo
+   número, o el escudo una vez asignado, sin ningún texto) para que no
+   quite espacio a los partidos. Fijo en el costado izquierdo en
+   escritorio, con scroll interno propio; en celular va arriba de los
+   partidos, en cuadrícula. */
 .conf-flotante{
   margin-bottom:1.1rem;
   background:linear-gradient(160deg,var(--card2),var(--card));
   border:1px solid var(--linea2);border-radius:var(--r-sm);
-  padding:.7rem .6rem;box-shadow:0 10px 24px rgba(0,0,0,.45);
+  padding:.5rem;box-shadow:0 10px 24px rgba(0,0,0,.45);
 }
 .conf-flotante .cf-cabeza{
-  display:flex;justify-content:space-between;align-items:center;gap:.5rem;
-  font-family:'Bebas Neue','Oswald',sans-serif;font-size:.74rem;letter-spacing:.05em;
-  color:var(--oro2);margin-bottom:.5rem;
+  text-align:center;font-size:.78rem;font-weight:800;color:var(--oro2);
+  margin-bottom:.4rem;padding-bottom:.4rem;border-bottom:1px dashed var(--linea);
 }
-.conf-flotante .cf-cabeza b{color:var(--txt)}
-.conf-flotante .cf-drag{color:var(--gris);font-size:.7rem;letter-spacing:.2em}
-.conf-flotante .cf-lista{display:flex;flex-direction:column;gap:.32rem}
+.conf-flotante .cf-cabeza b{display:block;color:var(--txt);font-size:.95rem;margin-top:.1rem}
+.conf-flotante .cf-lista{display:flex;flex-direction:column;gap:.28rem}
 .psb-fila{
-  display:flex;align-items:center;gap:.4rem;
-  background:rgba(255,255,255,.03);border:1px solid var(--linea);border-radius:999px;
-  padding:.22rem .5rem;font-size:.68rem;font-weight:700;color:var(--gris);
-}
-.psb-fila .psb-n{
-  flex:none;width:20px;height:20px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  background:rgba(255,255,255,.07);color:var(--txt);font-size:.64rem;
+  width:34px;height:34px;margin:0 auto;
+  background:rgba(255,255,255,.05);border:1px solid var(--linea);border-radius:50%;
+  font-size:.72rem;font-weight:800;color:var(--txt);
 }
-.psb-fila .psb-nombre{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.psb-fila.disponible{border-color:rgba(47,191,113,.32);color:#8FE9BB}
-.psb-fila.disponible .psb-n{background:rgba(47,191,113,.16);color:#8FE9BB}
-.psb-fila.ocupada .psb-n{background:none}
+.psb-fila.disponible{color:var(--gris)}
+.psb-fila.ocupada{background:none;border-color:transparent;padding:0}
 @media (min-width:720px){
   .conf-flotante{
-    position:fixed;z-index:60;width:150px;left:16px;top:150px;
+    position:fixed;z-index:60;width:56px;left:12px;top:150px;
     max-height:78vh;display:flex;flex-direction:column;
   }
-  .conf-flotante .cf-cabeza{
-    cursor:grab;padding-bottom:.4rem;border-bottom:1px dashed var(--linea);flex:none;
-  }
-  .conf-flotante .cf-cabeza:active{cursor:grabbing}
   .conf-flotante .cf-lista{overflow-y:auto}
 }
 @media (max-width:719px){
-  .conf-flotante .cf-drag{display:none}
   .conf-flotante .cf-lista{
-    display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;
-    max-height:150px;overflow-y:auto;
+    display:grid;grid-template-columns:repeat(8,1fr);gap:.3rem;
+    max-height:120px;overflow-y:auto;
   }
-  .psb-fila{padding:.2rem .3rem;font-size:.62rem;justify-content:center}
-  .psb-fila .psb-nombre{display:none}
+  .psb-fila{width:100%;height:28px;font-size:.64rem}
 }
 /* El resumen de puntos tras simular, desglosado por mecánica. */
 .practica-desglose{display:flex;flex-direction:column}
@@ -1558,10 +1544,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
                equipo se quedó con cada una. La confianza se sigue eligiendo
                dentro de cada partido, igual que siempre. -->
           <div class="conf-flotante" id="conf-flotante-real">
-            <div class="cf-cabeza" id="cf-cabeza-real">
-              <span>🎯 CONFIANZA · quedan <b id="rc-conf-flotante">0</b></span>
-              <span class="cf-drag">⠿⠿</span>
-            </div>
+            <div class="cf-cabeza" title="Confianza disponible">🎯<b id="rc-conf-flotante">0</b></div>
             <div class="cf-lista" id="conf-flotante-lista"></div>
           </div>
 
@@ -1780,15 +1763,12 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
     <div id="practica-resultado"></div>
 
     <!-- La confianza se elige DENTRO de cada partido (como en la quiniela
-         real); este panel es solo un apoyo visual, de solo lectura, para no
-         perder de vista qué números quedan y qué equipo se quedó con cada
-         uno. En escritorio flota y se puede arrastrar (por si tapa algo);
-         en celular va fijo arriba de los partidos, en cuadrícula. -->
+         real); este panel es solo un apoyo visual, de solo lectura, fijo en
+         el costado izquierdo, para no perder de vista qué números quedan y
+         qué equipo se quedó con cada uno. En celular va fijo arriba de los
+         partidos, en cuadrícula. -->
     <div class="conf-flotante" id="practica-flotante">
-      <div class="cf-cabeza" id="practica-cf-cabeza">
-        <span>🎯 CONFIANZA · quedan <b id="practica-conf-disp">0</b></span>
-        <span class="cf-drag">⠿⠿</span>
-      </div>
+      <div class="cf-cabeza" title="Confianza disponible">🎯<b id="practica-conf-disp">0</b></div>
       <div class="cf-lista" id="practica-sidebar-lista"></div>
     </div>
 
@@ -2813,16 +2793,9 @@ function renderConfianzaFlotante(){
     if(a){
       const g = gs.find(x=>x.id===a.gid);
       const code = a.lado==='A' ? g?.team_a : (a.lado==='B' ? g?.team_b : null);
-      filas.push(`<div class="psb-fila ocupada">
-          <span class="psb-n">${v}</span>
-          ${code ? teamLogo(code,'xs') : ''}
-          <span class="psb-nombre">${code ? esc(tshort(code)) : '—'}</span>
-        </div>`);
+      filas.push(`<div class="psb-fila ocupada" title="${v}">${code ? teamLogo(code,'xs') : v}</div>`);
     } else {
-      filas.push(`<div class="psb-fila disponible">
-          <span class="psb-n">${v}</span>
-          <span class="psb-nombre">disponible</span>
-        </div>`);
+      filas.push(`<div class="psb-fila disponible">${v}</div>`);
     }
   }
   cont.innerHTML = filas.join('');
@@ -3234,40 +3207,6 @@ function renderMisFolios(){
 }
 
 /* =====================================================================
-   PANEL DE CONFIANZA FLOTANTE (arrastrable)
-   =====================================================================
-   Se usa tanto en la quiniela real como en el modo práctica. Solo aplica
-   en escritorio (en celular el panel va fijo en flujo normal, sin
-   arrastre: no hace falta y en pantallas chicas estorbaría). Se arrastra
-   agarrando la cabecera; queda pegado dentro de los límites de la
-   ventana para que nunca se pueda soltar fuera de vista. */
-function hacerArrastrable(panel, manija){
-  if(!panel || !manija) return;
-  let offX=0, offY=0, arrastrando=false;
-  const mueveA = (x,y)=>{
-    const w = panel.offsetWidth, h = panel.offsetHeight;
-    const nx = Math.min(Math.max(8, x-offX), window.innerWidth - w - 8);
-    const ny = Math.min(Math.max(8, y-offY), window.innerHeight - h - 8);
-    panel.style.left = nx+'px';
-    panel.style.top = ny+'px';
-  };
-  const empieza = (x,y)=>{
-    if(window.innerWidth < 720) return; // en celular no flota, no hay nada que arrastrar
-    const r = panel.getBoundingClientRect();
-    offX = x - r.left; offY = y - r.top;
-    arrastrando = true;
-  };
-  manija.addEventListener('mousedown', e=>{ empieza(e.clientX, e.clientY); e.preventDefault(); });
-  window.addEventListener('mousemove', e=>{ if(arrastrando) mueveA(e.clientX, e.clientY); });
-  window.addEventListener('mouseup', ()=> arrastrando=false);
-  manija.addEventListener('touchstart', e=>{ const t=e.touches[0]; empieza(t.clientX,t.clientY); }, {passive:true});
-  window.addEventListener('touchmove', e=>{ if(arrastrando){ const t=e.touches[0]; mueveA(t.clientX,t.clientY); } }, {passive:true});
-  window.addEventListener('touchend', ()=> arrastrando=false);
-}
-hacerArrastrable(document.getElementById('practica-flotante'), document.getElementById('practica-cf-cabeza'));
-hacerArrastrable(document.getElementById('conf-flotante-real'), document.getElementById('cf-cabeza-real'));
-
-/* =====================================================================
    MODO PRACTICA
    =====================================================================
    Una quiniela de mentira para quien nunca ha jugado, pero con los 16
@@ -3369,16 +3308,9 @@ function renderPracticaSidebar(){
     if(a){
       const g = gs.find(x=>x.id===a.gid);
       const code = a.lado==='A' ? g.team_a : (a.lado==='B' ? g.team_b : null);
-      filas.push(`<div class="psb-fila ocupada">
-          <span class="psb-n">${v}</span>
-          ${code ? teamLogo(code,'xs') : ''}
-          <span class="psb-nombre">${code ? esc(tshort(code)) : '—'}</span>
-        </div>`);
+      filas.push(`<div class="psb-fila ocupada" title="${v}">${code ? teamLogo(code,'xs') : v}</div>`);
     } else {
-      filas.push(`<div class="psb-fila disponible">
-          <span class="psb-n">${v}</span>
-          <span class="psb-nombre">disponible</span>
-        </div>`);
+      filas.push(`<div class="psb-fila disponible">${v}</div>`);
     }
   }
   cont.innerHTML = filas.join('');
