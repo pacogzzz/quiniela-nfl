@@ -3680,7 +3680,7 @@ function renderPracticaJuego(g, N){
   const chips = Array.from({length:N},(_,i)=>{
     const v = N-i;
     const ocupado = usadosPorOtros.includes(v);
-    return `<button type="button" ${ocupado||locked?'disabled':''} class="${p.confianza===v?'sel':''}"
+    return `<button type="button" data-v="${v}" ${ocupado||locked?'disabled':''} class="${p.confianza===v?'sel':''}"
               onclick="practicaConfianza('${g.id}',${v})">${v}</button>`;
   }).join('');
   const lado = (code, der)=>`
@@ -3722,7 +3722,7 @@ function renderPracticaJuego(g, N){
     </div>` : ''}
     <div class="campo">
       <span class="lbl">🎯 Confianza <b>de 1 a ${N}, sin repetir</b></span>
-      <div class="conf-chips">${chips}</div>
+      <div class="conf-chips" id="pcf-${esc(g.id)}">${chips}</div>
     </div>
     ${res ? `<div class="earned ${res.pts?'':'zero'}">${res.pts ? '🎉 +'+res.pts+' PUNTOS' : 'Sin puntos en este partido'}</div>` : ''}
   `;
@@ -3750,7 +3750,36 @@ function practicaConfianza(gid, val){
   practicaPicks[gid] = practicaPicks[gid] || {};
   practicaPicks[gid].confianza = (practicaPicks[gid].confianza===val) ? null : val;
   practicaResultado = null;
-  renderPractica();
+  // A diferencia de practicaGanador/practicaPrimero, aquí NO se llama a
+  // renderPractica(): reconstruir toda la tarjeta reinicia el scroll
+  // horizontal de las fichas y el número elegido "se pierde" de vista
+  // (vuelve a mostrar el 16 primero). Se actualiza en su lugar.
+  refrescarConfianzaPractica();
+  renderPracticaSidebar();
+}
+// Espejo de refrescarConfianza() (quiniela real) para el modo práctica:
+// solo cambia clases en los botones que ya existen, así el scroll de
+// .conf-chips no se resetea con cada clic.
+function refrescarConfianzaPractica(){
+  const gs = practicaJuegos();
+  const usados = {};
+  gs.forEach(g=>{
+    const c = practicaPicks[g.id]?.confianza;
+    if(c) (usados[c] = usados[c] || []).push(g.id);
+  });
+  const locked = practicaLocked();
+  gs.forEach(g=>{
+    const fila = document.getElementById('pcf-'+g.id);
+    if(!fila) return;
+    const mio = practicaPicks[g.id]?.confianza || null;
+    fila.querySelectorAll('button').forEach(b=>{
+      const v = parseInt(b.dataset.v);
+      const ajeno = !!(usados[v] && !usados[v].includes(g.id));
+      b.classList.toggle('sel', v===mio);
+      b.classList.toggle('usado', ajeno);
+      b.disabled = locked || ajeno;
+    });
+  });
 }
 
 function renderPracticaUD(){
@@ -3854,6 +3883,12 @@ function simularPractica(){
   practicaConfArmada = null;
   renderPractica();
   toast('🎲 ¡Resultados simulados!');
+  // El resultado se pinta arriba de todo (practica-resultado), pero el
+  // modal se queda scrolleado hasta donde estaba el botón "Simular",
+  // normalmente muy abajo. Sin este scroll, nadie ve sus puntos sin
+  // buscarlos.
+  const modalPractica = document.querySelector('.modal-practica');
+  if(modalPractica) modalPractica.scrollTop = 0;
 }
 
 function renderPracticaResultado(){
@@ -3864,11 +3899,18 @@ function renderPracticaResultado(){
   const msg = r.total>=100 ? '¡Semanononón! Así se juega.'
             : r.total>=50  ? 'Nada mal para tu primera vez.'
             : 'Así se ve la mecánica en acción — con más práctica le agarras la mano.';
+  // Misma imagen que el cierre de semana real, según cuántos partidos
+  // acertaste en la simulación (confAciertos: ganador correcto + confianza
+  // asignada), para que la práctica se sienta igual de principio a fin.
+  const imgAciertos = r.confAciertos>=11 ? '/icons/cierre/aciertos-alto.webp'
+                     : r.confAciertos>=6  ? '/icons/cierre/aciertos-medio.webp'
+                     : '/icons/cierre/aciertos-bajo.webp';
   const fila = (ico,label,valor,detalle)=>`
     <div class="pd-row"><span>${ico} ${label}</span><b>${valor}${detalle?`<small>${detalle}</small>`:''}</b></div>`;
   cont.innerHTML = `
     <div class="card" style="border-color:var(--oro);margin-bottom:1.1rem">
       <div style="text-align:center;margin-bottom:.7rem">
+        <img class="rs-img" src="${imgAciertos}" alt="Aciertos de la práctica" loading="lazy" onerror="this.remove()" />
         <div class="display" style="font-size:2.6rem;color:var(--oro2);line-height:1">🎉 ${r.total} PUNTOS</div>
         <p class="small muted" style="margin-top:.35rem">${msg} Practica de nuevo con "🔄 Reiniciar práctica".</p>
       </div>
@@ -4030,6 +4072,10 @@ function pickConfianza(gid, val){
   const v = parseInt(val);
   myPicks[gid].confianza = (myPicks[gid].confianza===v) ? null : v;
   dirty=true; actualizarBotonGuardar(); renderResumen(); renderCapi();
+  // Sin esto, el botón que acabas de tocar nunca se marcaba como elegido:
+  // por eso parecía que la selección "se quedaba" en el último número que
+  // sí se había pintado bien (normalmente el 16, al cargar la week).
+  refrescarConfianza();
 }
 
 /* ---------- Llenar por mí ----------
