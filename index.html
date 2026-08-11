@@ -1431,7 +1431,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   <section class="module" id="m-calendario">
     <h1 class="display">CALENDARIO NFL 2026-27</h1>
     <p class="lead-sub">Filtra por week, equipo, horario o fecha. Toca <b>reservar</b> para apartar mesa en La Corte.</p>
-    <div class="card capi capi-tip" data-capi="datos" data-board="calendario"
+    <div class="card capi capi-tip" data-capi="datos" data-board="calendarioV2"
          data-txt="En esta sección podrás observar los horarios de partido con sus puntos por consumo y modalidades de juego. Aprovecha nuestro botón de reserva fácil. ¡No te quedes sin tus puntos de consumo!"></div>
     <div class="filtros-wrap">
       <div class="filters">
@@ -2887,7 +2887,7 @@ const CAPI_POSES = ['bienvenida','registrate','datos','calendario','ganador',
 // Estas tres láminas traen un pizarrón con texto explicando la mecánica. En la
 // tarjeta chica va solo el personaje (el texto no se leería) y el pizarrón
 // completo se abre en grande con el botón "¿Cómo funciona?".
-const CAPI_BOARDS = ['calendario','confianza','ranking','underdog'];
+const CAPI_BOARDS = ['calendarioV2','confianza','ranking','underdog'];
 
 function capiSrc(pose){
   return '/icons/capi/' + (CAPI_POSES.includes(pose) ? pose : 'bienvenida') + '.webp';
@@ -2896,7 +2896,7 @@ function capiSrc(pose){
 // Leyenda opcional que acompaña a cada pizarrón. Si un pose no aparece aquí,
 // el pizarrón se abre sin leyenda (la P queda vacía y el CSS la esconde).
 const CAPI_BOARD_CAPTIONS = {
-  calendario: 'APROVECHA Y HAZ TU RESERVACIÓN. ¡NO SE GANA SOLO JUGANDO!',
+  calendarioV2: 'APROVECHA Y HAZ TU RESERVACIÓN. ¡NO SE GANA SOLO JUGANDO!',
   underdog: 'Cada semana tendrás 3 equipos underdog:\n'
     + 'Opción A - 8 pts (Equipo con probabilidad alta de ganar)\n'
     + 'Opción B - 10 pts (Equipo con probabilidad media de ganar)\n'
