@@ -546,8 +546,21 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 
 /* --- Tarjeta de racha (semanas seguidas jugando + premios) --- */
 .racha-card{border-color:var(--oro)}
+.racha-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
+.racha-head h3{margin:0}
 .racha-actual{font-size:1.05rem;margin:.3rem 0 .1rem}
 .racha-actual b{font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.6rem;color:var(--oro2);margin-right:.3rem}
+/* La barra mide el tramo ACTUAL (del último nivel ganado al siguiente), no
+   0-a-infinito: así siempre se ve avanzar, incluso con rachas largas. */
+.racha-barra{
+  height:10px;border-radius:999px;background:rgba(255,255,255,.06);
+  overflow:hidden;margin:.5rem 0 .4rem;
+}
+.racha-barra-fill{
+  height:100%;border-radius:999px;
+  background:linear-gradient(90deg,var(--oro2),var(--oro));
+  transition:width .4s ease;
+}
 .racha-premios-lista{display:flex;flex-direction:column;gap:.6rem;margin-top:1rem}
 .racha-premio{
   display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
@@ -564,6 +577,18 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
   font-weight:800;letter-spacing:.04em;padding:.25rem .55rem;border-radius:var(--r-sm);font-size:.78rem;
 }
 .rp-hint{font-size:.6rem;color:var(--gris)}
+/* --- Filas del modal "Ver premios" --- */
+.premio-nivel-fila{
+  display:flex;align-items:center;gap:.8rem;
+  padding:.7rem 0;border-top:1px solid var(--linea);text-align:left;
+}
+.premio-nivel-fila:first-child{border-top:none}
+.pnf-n{
+  flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+  background:var(--oro-tenue);color:var(--oro2);font-weight:800;font-size:.85rem;
+}
+.pnf-txt b{display:block;font-size:.85rem}
+.pnf-txt span{font-size:.7rem;color:var(--gris)}
 
 /* --- El Capi: el guía de la quiniela ---
    Las láminas son PNG recortados al personaje, así que van SIN marco: se
@@ -1852,6 +1877,18 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   </div>
 </div>
 
+<!-- La escalera completa de premios de la racha. abrirPremiosRacha() la
+     llena; el contenido es estático (no depende de sesión), así que se
+     puede armar de una sola vez cada que se abre. -->
+<div class="modal-backdrop hidden" id="modal-premios-racha">
+  <div class="modal">
+    <button class="modal-close" onclick="cerrarPremiosRacha()">✕</button>
+    <h2>🔥 PREMIOS DE LA RACHA</h2>
+    <p class="lead" style="margin-bottom:1rem">Entre más semanas seguidas juegues, mejor el premio.</p>
+    <div id="premios-racha-lista"></div>
+  </div>
+</div>
+
 <!-- Modo práctica: la Week 1 real (mismos 16 partidos, escudos y horarios
      que la quiniela de verdad), pero aislada por completo del estado real
      (practicaPicks/practicaUD/practicaFolios en vez de
@@ -3012,6 +3049,12 @@ function rachaSiguienteUmbral(racha){
   while(u<=racha) u += 5;
   return u;
 }
+// El umbral que ya se cruzó (0 si todavía no llega ni al nivel 1). Es el
+// otro extremo de la barra de progreso: entre este número y
+// rachaSiguienteUmbral() es donde se rellena.
+function rachaUmbralAnterior(siguiente){
+  return siguiente===3 ? 0 : siguiente-5;
+}
 
 /* =====================================================
    RENDER: QUINIELA
@@ -3198,8 +3241,13 @@ function renderMiRacha(){
   if(!cont || !sbProfile) return;
   const racha = rachaSemanas();
   const siguiente = rachaSiguienteUmbral(racha);
+  const anterior = rachaUmbralAnterior(siguiente);
   const faltan = siguiente - racha;
   const premioSiguiente = rachaPremioDe(rachaNivelDe(siguiente));
+  // Qué tan avanzado va DENTRO del tramo actual (de `anterior` a
+  // `siguiente`), no de 0 al infinito: así la barra siempre se ve moverse,
+  // en vez de quedar imperceptible una vez pasadas varias semanas.
+  const pct = Math.max(0, Math.min(100, Math.round((racha-anterior)/(siguiente-anterior)*100)));
 
   const filaPremio = p => `
     <div class="racha-premio ${p.canjeado?'canjeado':''}">
@@ -3215,14 +3263,39 @@ function renderMiRacha(){
     </div>`;
 
   cont.innerHTML = `
-    <h3 class="display">🔥 TU RACHA</h3>
+    <div class="racha-head">
+      <h3 class="display">🔥 TU RACHA</h3>
+      <button class="btn-auto" onclick="abrirPremiosRacha()">🎁 VER PREMIOS</button>
+    </div>
     <p class="racha-actual"><b>${racha}</b> ${racha===1?'semana seguida':'semanas seguidas'} jugando</p>
+    <div class="racha-barra"><div class="racha-barra-fill" style="width:${pct}%"></div></div>
     <p class="small muted">Te ${faltan===1?'falta 1 semana más':'faltan '+faltan+' semanas más'} para: <b>${esc(premioSiguiente)}</b></p>
     ${misRachaPremios.length
       ? `<div class="racha-premios-lista">${misRachaPremios.slice().reverse().map(filaPremio).join('')}</div>`
       : `<p class="small muted">Todavía no desbloqueas ningún premio — arranca tu racha guardando tu pronóstico cada week.</p>`}
   `;
 }
+
+// Muestra la escalera completa de premios (los 4 niveles fijos + cómo sigue
+// después). Es contenido estático: se genera a partir de rachaPremioDe(),
+// así que si algún día cambia la escalera, esto se actualiza solo.
+function abrirPremiosRacha(){
+  const cuerpo = document.getElementById('premios-racha-lista');
+  const umbrales = [3,8,13,18];
+  cuerpo.innerHTML = umbrales.map((u,i)=>`
+    <div class="premio-nivel-fila">
+      <div class="pnf-n">${i+1}</div>
+      <div class="pnf-txt"><b>${u} semanas seguidas</b><span>${esc(rachaPremioDe(i+1))}</span></div>
+    </div>`).join('') + `
+    <p class="small muted" style="margin-top:.8rem">A partir de la semana 18, cada 5 semanas más se repite el <b>Descuento 25%</b> — la racha nunca deja de dar premios.</p>`;
+  document.getElementById('modal-premios-racha').classList.remove('hidden');
+}
+function cerrarPremiosRacha(){
+  document.getElementById('modal-premios-racha').classList.add('hidden');
+}
+document.getElementById('modal-premios-racha').addEventListener('click', e=>{
+  if(e.target.id==='modal-premios-racha') cerrarPremiosRacha();
+});
 
 /* =====================================================
    EL CAPI
