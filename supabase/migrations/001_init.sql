@@ -108,6 +108,9 @@ CREATE TABLE IF NOT EXISTS profiles (
   -- si el registro se corta a la mitad, el perfil se rescata y se completa.
   usuario    TEXT,
   role       TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user','manager','admin')),
+  -- Última semana cuyo "cierre de semana" (pantalla obligatoria de
+  -- resultados) ya vio. En 0 nadie ha visto ninguna todavía.
+  ultima_week_vista INT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -690,6 +693,29 @@ LEFT JOIN bon  b ON b.user_id = p.id
 ORDER BY total_puntos DESC, p.nombre ASC;
 
 GRANT SELECT ON ranking TO authenticated;
+
+-- Aciertos (y partidos jugados) de cada usuario, por semana. Para el cierre
+-- de semana: "fuiste del X% de la liga" y el resumen de esa week. Mismo
+-- patrón de privacidad que `ranking` (ver 005_privacidad_picks.sql): agrega
+-- por usuario y semana, nunca devuelve el pronóstico individual de un
+-- partido.
+CREATE OR REPLACE VIEW aciertos_semana AS
+SELECT
+  pk.user_id,
+  g.week,
+  COUNT(*) FILTER (
+    WHERE g.score_a IS NOT NULL
+      AND g.score_a <> g.score_b
+      AND pk.ganador = (CASE WHEN g.score_a > g.score_b THEN 'A' ELSE 'B' END)
+  ) AS aciertos,
+  COUNT(*) FILTER (
+    WHERE g.score_a IS NOT NULL AND g.score_a <> g.score_b
+  ) AS jugados
+FROM picks pk
+JOIN games g ON g.id = pk.game_id
+GROUP BY pk.user_id, g.week;
+
+GRANT SELECT ON aciertos_semana TO authenticated;
 
 -- Cerrar la semana: congela el ranking del día (lunes) en week_snapshots
 CREATE OR REPLACE FUNCTION cerrar_semana(p_week INT)

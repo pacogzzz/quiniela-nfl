@@ -190,6 +190,14 @@ chk('Ana SIGUE sin ver el de Beto aunque el partido ya arranco',
 chk('  y la tabla de posiciones sigue mostrando a todos',
   (await one(`select count(*)::int c from ranking`)).c >= 2, true);
 
+// Mismo patron que `ranking`, para el cierre de semana: `aciertos_semana`
+// tiene que agregar por usuario+semana para TODOS (si no, no hay con que
+// calcular "fuiste del X% de la liga"), pero la vista NUNCA selecciona
+// ganador/confianza -- estructuralmente no puede filtrar el pronostico de
+// nadie, solo un conteo.
+chk('  y aciertos_semana agrega a todos sin exponer el pronostico de nadie',
+  (await one(`select count(*)::int c from aciertos_semana where user_id=$1`,[BETO])).c >= 1, true);
+
 console.log('\n== RUTAS LEGITIMAS PARA CAMBIAR ROLES ==');
 await login(ANA);
 await allowed('un jugador SI puede editar su nombre/telefono',
