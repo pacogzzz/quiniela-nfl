@@ -982,6 +982,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 }
 .meta-card .mt-bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--oro),var(--oro2))}
 .meta-card .mt-tip{font-size:.74rem;color:var(--gris);line-height:1.5;margin-top:.7rem}
+.meta-card .mt-mini{font-size:.72rem;color:var(--oro2);font-weight:600;line-height:1.5;margin-top:.6rem}
 /* Meta ya conseguida: verde, y la cifra deja de ser una distancia */
 .meta-card.ok{border-color:rgba(47,191,113,.45)}
 .meta-card.ok .mt-n{color:#8FE9BB}
@@ -3034,6 +3035,11 @@ function ptsFolioDe(iso){
   if(dow===0) return cfgInt('pts_folio_domingo',5);
   return cfgInt('pts_folio_especial',10);           // mié / vie / sáb
 }
+// Nombre del día para el consejo del Capi ("aprovecha el de Lunes").
+function nombreDia(iso){
+  const d = fecha(iso+'T12:00:00', {weekday:'long'});
+  return d.charAt(0).toUpperCase() + d.slice(1);
+}
 
 /* Los partidos de la semana que siguen abiertos, ordenados por lo que valen
    si se aciertan (de más a menos). Para los que aún no tienen número de
@@ -3069,17 +3075,23 @@ function oportunidadesSemana(w){
   const uw = udWeeks[w];
   if(uw && uw.opt_a_team && uw.abierto && puedoUnderdog(w) && !myUD[w] && !semanaCerrada(w)){
     const pts = uw.puntos || cfgInt('pts_underdog',20);
-    ops.push({ico:'🐶', pts, txt:`Juega tu <b>underdog</b> de la ${esc(weekLabel(w))}: hasta <b>+${pts}</b>, y si falla no pierdes nada.`});
+    ops.push({ico:'🐶', pts, txt:`Eres candidato al <b>underdog</b> de la ${esc(weekLabel(w))}: juégalo, hasta <b>+${pts}</b> y si falla no pierdes nada.`});
   }
 
   // 2. Folios: el punto más fácil de toda la quiniela. Solo cuentan los días
-  //    de juego que quedan y en los que aún no ha canjeado.
+  //    de juego que quedan y en los que aún no ha canjeado. Se destaca el
+  //    día que más paga (el número real sale siempre de la configuración,
+  //    nunca de un valor fijo, porque el admin lo puede cambiar cualquier day).
   const yaCanjeados = new Set(misFolios.map(f=>f.fecha));
   const dias = [...new Set(abiertos.map(g=>isoDay(g.kickoff)))].filter(d=>!yaCanjeados.has(d));
   if(dias.length){
-    const pts = dias.reduce((s,d)=> s + ptsFolioDe(d), 0);
+    const porDia = dias.map(d=>({d, pts:ptsFolioDe(d)})).sort((a,b)=>b.pts-a.pts);
+    const pts = porDia.reduce((s,x)=> s + x.pts, 0);
+    const mejor = porDia[0];
     const n = dias.length;
-    ops.push({ico:'🍔', pts, txt:`${n===1?'Queda <b>1</b> día':'Quedan <b>'+n+'</b> días'} de juego para pedir tu folio en La Corte: <b>+${pts}</b> en total.`});
+    ops.push({ico:'🍔', pts, txt: n===1
+      ? `Queda <b>1</b> día de folio esta ${esc(weekLabel(w))} (<b>${esc(nombreDia(mejor.d))}</b>): <b>+${mejor.pts}</b> por venir a La Corte.`
+      : `Quedan <b>${n}</b> días de folio: aprovecha sobre todo el de <b>${esc(nombreDia(mejor.d))}</b> (<b>+${mejor.pts}</b>) — en total suman <b>+${pts}</b>.`});
   }
 
   // 3. Primer anotador de los estelares que aún no marca.
@@ -3089,6 +3101,32 @@ function oportunidadesSemana(w){
     ops.push({ico:'⚡', pts, txt:`Te ${sinAnotador===1?'falta 1 estelar':'faltan '+sinAnotador+' estelares'} por marcar primer anotador: <b>+${pts}</b>.`});
   }
   return ops;
+}
+
+/* Avisos que importan pero no tienen un número de puntos propio que sumar
+   —por eso van aparte de oportunidadesSemana(), que sí alimenta la
+   matemática de comoCerrar()—: partidos especiales sin pronóstico y
+   confianza sin repartir. Es lo que hace que el consejo se sienta hecho
+   para ESTA persona y no una frase genérica. */
+function avisosSemana(w){
+  const avisos = [];
+  const abiertos = gamesOf(w).filter(g=>!partidoCerrado(g));
+  if(!abiertos.length) return avisos;
+
+  const especiales = abiertos.filter(g=>g.is_special && !myPicks[g.id]?.ganador);
+  if(especiales.length){
+    avisos.push({ico:'⭐', txt: especiales.length===1
+      ? `Tienes un <b>partido especial</b> esta ${esc(weekLabel(w))} sin pronóstico — vale más, no lo dejes pasar.`
+      : `Tienes <b>${especiales.length} partidos especiales</b> esta ${esc(weekLabel(w))} sin pronóstico — valen más, no los dejes pasar.`});
+  }
+
+  const sinConfianza = jugadasConfianza(w).filter(x=>!x.propia).length;
+  if(sinConfianza){
+    avisos.push({ico:'🎯', txt: sinConfianza===1
+      ? `Te queda <b>1 número de confianza</b> sin repartir — no dejes puntos en la mesa.`
+      : `Te quedan <b>${sinConfianza} números de confianza</b> sin repartir — no dejes puntos en la mesa.`});
+  }
+  return avisos;
 }
 
 /* El corazón del asunto: cuántas jugadas hacen falta para cubrir una
@@ -3156,20 +3194,52 @@ function renderEstratega(p){
 
   cont.innerHTML = conFalta.map(m=>{
     const pct = m.dentro ? 100 : Math.max(3, Math.min(99, Math.round(mis*100/(m.meta||1))));
-    // Si ya está dentro, lo útil no es repetírselo tres veces: es decirle
-    // cuánta ventaja le lleva al primero que viene atrás de esa línea.
-    const persigue = m.dentro ? rankRows[m.n] : null;
-    const tip = m.dentro
-      ? (m.vacio ? `Todavía no son ${m.n} en la tabla: con jugar ya estás dentro.`
-         : persigue ? `El <b>#${m.n+1}</b> trae <b>${persigue.total_puntos}</b>: le llevas <b>${mis - persigue.total_puntos}</b> de ventaja.`
-         : `Vas <b>#${pos}</b> de ${rankRows.length}. Ya estás dentro; ahora aguántalo.`)
-      : `El <b>#${m.n}</b> va con <b>${rankRows[m.n-1].total_puntos}</b> puntos.`;
+    // El que te pisa los talones: quien viene justo debajo de la línea de
+    // corte (o de tu propio lugar, si ya vas en primero). Es la presión de
+    // verdad — si te descuidas, ese es quien te quita el lugar.
+    const perseguidor = m.dentro ? rankRows[m.n] : null;
+
+    let etiqueta, mini = '', tip;
+
+    if(m.vacio){
+      etiqueta = 'Todavía son pocos jugadores: ¡ya estás dentro!';
+      tip = 'Sé de los primeros en asegurar tu lugar — entre menos jugadores hay, más fácil se defiende.';
+    } else if(m.dentro){
+      if(m.n===10){
+        etiqueta = 'Te encuentras en el Top 10. ¡No te des por vencido!';
+        if(pos<=5){
+          mini = 'Vas más arriba todavía: ya estás en el Top 5.';
+        } else {
+          const rival5 = rankRows[4];
+          const falta5 = rival5 ? Math.max(1, rival5.total_puntos - mis + 1) : null;
+          const premio = PREMIOS.find(pr=>pr.p===pos)?.t;
+          mini = falta5
+            ? `Estás a <b>${falta5} puntos</b> de entrar al Top 5. Tu premio actual: <b>${esc(premio||'—')}</b>.`
+            : '';
+        }
+      } else if(m.n===5){
+        etiqueta = 'Te encuentras en el Top 5. ¡Sigue así, campeón!';
+        const premio = PREMIOS.find(pr=>pr.p===pos)?.t;
+        mini = `Si la temporada terminara hoy, estarías ganando: <b>${esc(premio||'—')}</b>.`;
+      } else {
+        etiqueta = '¡Estás en la cima! Defiende tu corona.';
+        mini = 'Nadie regala el primer lugar dos veces: hay que ganárselo cada week.';
+      }
+      tip = perseguidor
+        ? `El <b>#${m.n+1}</b> trae <b>${perseguidor.total_puntos}</b> puntos, a solo <b>${mis - perseguidor.total_puntos}</b> de ti. ¡No dejes que te alcance!`
+        : `Vas <b>#${pos}</b> de ${rankRows.length}. Nadie te pisa los talones todavía, pero no te confíes.`;
+    } else {
+      etiqueta = '¡Solo necesitas estos puntos! ¡A por ellos!';
+      tip = `El <b>#${m.n}</b> tiene <b>${rankRows[m.n-1].total_puntos}</b> puntos.`;
+    }
+
     return `
       <div class="meta-card${m.dentro?' ok':''}">
         <div class="mt-t">${m.ico} ${m.t}</div>
         <div class="mt-n">${m.dentro ? '✔' : m.falta}</div>
-        <div class="mt-l">${m.dentro ? 'ya estás dentro' : 'puntos te faltan'} · ${esc(weekLabel(w))}</div>
+        <div class="mt-l">${esc(etiqueta)}${m.dentro?'':' · '+esc(weekLabel(w))}</div>
         <div class="mt-bar"><span style="width:${pct}%"></span></div>
+        ${mini ? `<div class="mt-mini">${mini}</div>` : ''}
         <div class="mt-tip">${tip}</div>
       </div>`;
   }).join('');
@@ -3183,22 +3253,29 @@ function renderCoach(metas, mis, pos, w){
   const {msg} = estadoCapi();
   const pose = 'guardar';
 
-  // Se aconseja sobre la meta más cercana que todavía no se logra. Si ya está
-  // en el primer lugar, el consejo es el de mantenerse.
+  // Se aconseja sobre la meta más cercana que todavía no se logra —así el
+  // consejo se siente hecho para ESTA persona, no una frase genérica—. Si ya
+  // está en el primer lugar, el consejo es el de defenderlo.
   const objetivo = metas.find(m=>!m.dentro);
   let titular, jugadas = [];
 
   if(!objetivo){
     titular = pos===1
-      ? `Vas en el primer lugar con ${mis} puntos. Lo difícil no es llegar, es aguantar: no dejes week sin jugar.`
-      : `Estás dentro de las tres metas. Sigue capturando cada week y no sueltes el underdog cuando te toque.`;
-    const ops = oportunidadesSemana(w);
-    jugadas = ops.slice(0,3);
+      ? `¡Vas en el primer lugar con <b>${mis} puntos</b>! Lo difícil no es llegar, es aguantar: no dejes ni una week sin jugar.`
+      : `¡Estás dentro de las tres metas! Nada está escrito todavía — sigue capturando cada week y no sueltes el underdog cuando te toque.`;
+    jugadas = oportunidadesSemana(w).slice(0,3);
   } else {
     const plan = comoCerrar(objetivo.falta, w);
-    titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase} y en esta ${esc(weekLabel(w))} hay <b>${plan.techo} puntos</b> en juego. Estos son mis recomendaciones:`;
+    const animo = objetivo.n===10 ? '¡Todavía puedes lograrlo!'
+                : objetivo.n===5  ? '¡Vas bien, sigue así!'
+                : '¡Estás cerca de la cima, ve por ella!';
+    titular = `Te faltan <b>${objetivo.falta} puntos</b> para ${objetivo.frase} y en esta ${esc(weekLabel(w))} hay <b>${plan.techo} puntos</b> en juego. ${animo} Estas son mis recomendaciones:`;
     jugadas = plan.lista.slice(0,4);
   }
+  // Avisos personalizados aparte —partido especial sin picks, confianza sin
+  // repartir— para que el consejo no se quede corto cuando ya no hace falta
+  // sumar puntos para la meta.
+  jugadas = [...jugadas, ...avisosSemana(w)].slice(0,5);
 
   cont.innerHTML = `
     <div class="capi-art">
