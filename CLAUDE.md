@@ -24,7 +24,10 @@ supabase/migrations/004_login_usuario.sql delta del login con usuario
 supabase/migrations/005_privacidad_picks.sql  cierra los pronósticos ajenos
 supabase/migrations/006_privacidad_bonos.sql  cierra los bonos ajenos
 supabase/migrations/007_puntaje_temporada.sql puntaje final antes de arrancar
-test/                           130 pruebas contra Postgres real (PGlite)
+supabase/migrations/008_ganadores_historial.sql delta de ganadores/historial
+supabase/migrations/009_cierre_semana.sql      delta del cierre de semana
+supabase/migrations/010_racha_premios.sql      delta de racha de semanas y premios
+test/                           170 pruebas contra Postgres real (PGlite)
 EMPIEZA-AQUI.md                 guía para quien opera (no técnico)
 README.md                       referencia técnica
 ```
@@ -38,7 +41,7 @@ agregues algo al esquema, va en los dos lados.
 ## Pruebas — córrelas antes de subir cambios de SQL
 
 ```bash
-cd test && npm test     # suite.mjs (78 lógica) + rls.mjs (52 seguridad)
+cd test && npm test     # suite.mjs (104 lógica) + rls.mjs (66 seguridad)
 ```
 
 Levantan un Postgres real en WASM, aplican las migraciones y verifican reglas

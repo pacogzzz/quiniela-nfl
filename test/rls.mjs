@@ -142,6 +142,56 @@ await login(ADMIN);
 chk('el admin SI ve los de todos (los otorga y responde los reclamos)',
   (await one(`select count(*)::int c from bonos where user_id=$1`,[ANA])).c, 1);
 
+console.log('\n== LA RACHA DE SEMANAS SOLO LA OTORGA EL SERVIDOR ==');
+// Pronostico de Ana en 3 semanas nuevas (9,10,11): primero el pronostico
+// (la semana todavia no arranca), y DESPUES se le mueve el kickoff al
+// pasado -- el trigger ya bloquea escribir picks de una semana arrancada.
+await login(ANA);
+for (const w of [9,10,11]) {
+  await allowed(`Ana guarda su pronostico de la semana ${w}`,
+    `insert into picks(user_id,game_id,ganador)
+     select $1, id, 'A' from games where week=${w} limit 1`, [ANA]);
+}
+await db.exec(`RESET ROLE`);
+await q(`update games set kickoff = now() - interval '3 days' where week=9`);
+await q(`update games set kickoff = now() - interval '2 days' where week=10`);
+await q(`update games set kickoff = now() - interval '1 days' where week=11`);
+
+await login(ANA);
+await blocked('Ana no puede otorgarse un código de racha directo',
+  `insert into racha_premios(user_id,nivel,racha,premio,codigo) values($1,4,99,'Descuento 25%','TRAMPA')`,[ANA]);
+await allowed('Ana reclama su racha por RPC (la vía correcta)', `select reclamar_racha()`);
+chk('  le tocó el nivel 1 (3 semanas seguidas)',
+  (await one(`select nivel from racha_premios where user_id=$1`,[ANA])).nivel, 1);
+
+console.log('\n== LOS CÓDIGOS DE RACHA AJENOS TAMBIÉN SON PRIVADOS ==');
+await login(BETO);
+chk('Beto NO ve el código de Ana',
+  (await one(`select count(*)::int c from racha_premios where user_id=$1`,[ANA])).c, 0);
+await login(ADMIN);
+const codigoAna = (await one(`select codigo from racha_premios where user_id=$1`,[ANA])).codigo;
+await login(BETO);
+chk('Beto (jugador, no admin) no puede canjear el código de Ana',
+  (await one(`select canjear_codigo_racha($1) r`,[codigoAna])).r.msg, 'Sin permiso');
+await blocked('ni marcarlo como canjeado a mano',
+  `update racha_premios set canjeado=true where codigo=$1`,[codigoAna]);
+await login(ADMIN);
+chk('el admin SÍ puede canjearlo',
+  (await one(`select canjear_codigo_racha($1) r`,[codigoAna])).r.ok, true);
+chk('  y ya no se puede volver a canjear',
+  (await one(`select canjear_codigo_racha($1) r`,[codigoAna])).r.ok, false);
+await login(BETO);
+await blocked('un jugador normal no puede borrar códigos de racha (ni el suyo)',
+  `delete from racha_premios where user_id=$1`,[ANA]);
+await login(ADMIN);
+await allowed('el admin sí puede borrarlos (reset general)',
+  `delete from racha_premios where user_id=$1`,[ANA]);
+// El código de racha ya quedó otorgado (no depende de que sigan los picks);
+// se limpian los pronósticos de prueba para no descuadrar los conteos
+// exactos de las pruebas de privacidad de picks que vienen más abajo.
+await db.exec(`RESET ROLE`);
+await q(`delete from picks where user_id=$1 and week in (9,10,11)`,[ANA]);
+
 console.log('\n== EL UNDERDOG RESPETA EL TOP 10 ==');
 await db.exec(`RESET ROLE`);
 await q(`insert into week_snapshots(week,user_id,posicion,total) values (1,$1,1,500),(1,$2,50,10)`,[ANA,BETO]);

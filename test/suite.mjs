@@ -41,8 +41,8 @@ chk('288 de temporada regular',(await one('select count(*)::int c from games whe
 chk('13 de playoffs',         (await one('select count(*)::int c from games where week>=19')).c, 13);
 chk('22 semanas de underdog', (await one('select count(*)::int c from underdog_weeks')).c, 22);
 chk('12 llaves de config',    (await one('select count(*)::int c from config')).c, 12);
-chk('30 politicas RLS',       (await one("select count(*)::int c from pg_policies where schemaname='public'")).c, 30);
-chk('RLS activo en 11 tablas',(await one("select count(*)::int c from pg_tables t join pg_class k on k.relname=t.tablename where t.schemaname='public' and k.relrowsecurity")).c, 11);
+chk('32 politicas RLS',       (await one("select count(*)::int c from pg_policies where schemaname='public'")).c, 32);
+chk('RLS activo en 12 tablas',(await one("select count(*)::int c from pg_tables t join pg_class k on k.relname=t.tablename where t.schemaname='public' and k.relrowsecurity")).c, 12);
 
 console.log('\n== FECHAS SEMBRADAS ==');
 const w1=await dow('W01-TNF'),  tg=await dow('W12-TG1'), bf=await dow('W12-BF1');
@@ -231,6 +231,64 @@ console.log('\n== ORDEN DEL RANKING ==');
 const rank = await q(`select nombre,total_puntos from ranking`);
 console.log('        ', rank.map(r=>`${r.nombre}=${r.total_puntos}`).join('   '));
 chk('de mayor a menor', rank[0].total_puntos >= rank[1].total_puntos, true);
+
+console.log('\n== ESCALERA DE NIVELES DE RACHA ==');
+chk('0 semanas = nivel 0',   (await one(`select racha_nivel_de(0) n`)).n, 0);
+chk('2 semanas = nivel 0',   (await one(`select racha_nivel_de(2) n`)).n, 0);
+chk('3 semanas = nivel 1',   (await one(`select racha_nivel_de(3) n`)).n, 1);
+chk('7 semanas = nivel 1',   (await one(`select racha_nivel_de(7) n`)).n, 1);
+chk('8 semanas = nivel 2',   (await one(`select racha_nivel_de(8) n`)).n, 2);
+chk('13 semanas = nivel 3',  (await one(`select racha_nivel_de(13) n`)).n, 3);
+chk('18 semanas = nivel 4',  (await one(`select racha_nivel_de(18) n`)).n, 4);
+chk('22 semanas = nivel 4',  (await one(`select racha_nivel_de(22) n`)).n, 4);
+chk('23 semanas = nivel 5 (18+5, se repite)', (await one(`select racha_nivel_de(23) n`)).n, 5);
+chk('28 semanas = nivel 6 (18+10)',           (await one(`select racha_nivel_de(28) n`)).n, 6);
+chk('premio nivel 1', (await one(`select racha_premio_de(1) p`)).p, 'Promo 3x2 de cortesía');
+chk('premio nivel 2', (await one(`select racha_premio_de(2) p`)).p, 'Entrada + Promo 3x2 de cortesía');
+chk('premio nivel 3', (await one(`select racha_premio_de(3) p`)).p, 'Descuento 15%');
+chk('premio nivel 4', (await one(`select racha_premio_de(4) p`)).p, 'Descuento 25%');
+chk('premio nivel 7 (se repite el de nivel 4)', (await one(`select racha_premio_de(7) p`)).p, 'Descuento 25%');
+
+console.log('\n== RACHA DE SEMANAS Y SUS CODIGOS ==');
+// Semanas 6,7,8 nuevas (nadie las ha tocado): un pronóstico de U1 en cada
+// una, y DESPUÉS se les mueve el kickoff al pasado -- en ese orden, porque
+// el trigger ya bloquea escribir picks de una semana que arrancó.
+for (const w of [6,7,8]) {
+  await q(`insert into picks(user_id,game_id,ganador)
+           select $1, id, 'A' from games where week=$2 limit 1`, [U1, w]);
+}
+await q(`update games set kickoff = now() - interval '3 days' where week=6`);
+await q(`update games set kickoff = now() - interval '2 days' where week=7`);
+await q(`update games set kickoff = now() - interval '1 days' where week=8`);
+// La semana 3 también está "arrancada" (se movió arriba) y ahí U1 NO tiene
+// pronóstico: por diseño, la racha para en la primera semana ya arrancada
+// sin pronóstico, así que 6-7-8 cuentan como 3 seguidas y ahí se corta.
+chk('racha_semanas_de(U1) = 3', (await one(`select racha_semanas_de($1) r`,[U1])).r, 3);
+
+await asUser(U1);
+const rc1 = await one(`select reclamar_racha() r`);
+chk('reclamar_racha detecta 3 semanas', [rc1.r.ok, rc1.r.racha, rc1.r.nivel], [true, 3, 1]);
+chk('otorga exactamente 1 código nuevo', rc1.r.nuevos.length, 1);
+chk('el código es del nivel 1 con su premio', [rc1.r.nuevos[0].nivel, rc1.r.nuevos[0].premio],
+  [1, 'Promo 3x2 de cortesía']);
+const rc2 = await one(`select reclamar_racha() r`);
+chk('llamarla otra vez no duplica códigos', rc2.r.nuevos.length, 0);
+chk('sigue habiendo solo 1 fila para U1',
+  (await one(`select count(*)::int c from racha_premios where user_id=$1`,[U1])).c, 1);
+
+console.log('\n== CANJEAR UN CÓDIGO DE RACHA ==');
+const codigo = rc1.r.nuevos[0].codigo;
+await asUser(U2); // Beto es jugador normal, no admin/manager
+chk('un jugador normal NO puede canjear',
+  (await one(`select canjear_codigo_racha($1) r`,[codigo])).r.msg, 'Sin permiso');
+await asUser(U1); // U1 se volvió admin en la sección de FOLIOS
+const canje = await one(`select canjear_codigo_racha($1) r`,[codigo]);
+chk('admin sí puede canjear', [canje.r.ok, canje.r.premio], [true, 'Promo 3x2 de cortesía']);
+const otraVez = await one(`select canjear_codigo_racha($1) r`,[codigo]);
+chk('el mismo código no se puede volver a canjear', otraVez.r.ok, false);
+chk('  con el aviso de ya canjeado', otraVez.r.msg.includes('Ya se canjeó'), true);
+chk('código que no existe', (await one(`select canjear_codigo_racha('RACHA-NOPE') r`)).r.msg,
+  'Código no encontrado');
 
 console.log('\n' + '='.repeat(50));
 console.log(`  RESULTADO: ${pass} ok  ·  ${fail} fallas`);

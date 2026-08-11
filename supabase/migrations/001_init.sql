@@ -607,6 +607,164 @@ END $$;
 GRANT EXECUTE ON FUNCTION otorgar_bono_instalacion() TO authenticated;
 
 -- =====================================================================
+-- 8b. RACHA DE SEMANAS Y SUS PREMIOS
+--
+-- "Mejor racha" antes contaba partidos ganadores seguidos. Ahora cuenta
+-- WEEKS SEGUIDAS jugando (guardaste tu pronóstico antes de que cerrara) y
+-- cada cierto número de semanas desbloquea un premio real para canjear en
+-- La Corte: se premia la constancia, no solo el acierto.
+--
+-- Los primeros 4 niveles son fijos (Week 3, 8, 13, 18); de ahí en adelante
+-- se repite el nivel 4 cada 5 semanas, para que la escalera nunca se acabe
+-- sin tener que inventar un nivel nuevo cada temporada.
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS racha_premios (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  nivel        INT  NOT NULL,          -- 1,2,3,4,5... (5 en adelante repiten el premio del 4)
+  racha        INT  NOT NULL,          -- semanas seguidas que tenía al ganarlo
+  premio       TEXT NOT NULL,          -- snapshot del premio: si luego cambia la escalera, esto no se reescribe
+  codigo       TEXT NOT NULL UNIQUE,
+  canjeado     BOOL NOT NULL DEFAULT FALSE,
+  canjeado_at  TIMESTAMPTZ,
+  canjeado_por UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, nivel)
+);
+CREATE INDEX IF NOT EXISTS idx_racha_premios_user ON racha_premios(user_id);
+
+-- Semanas SEGUIDAS que lleva jugando p_user, contando hacia atrás desde la
+-- semana ya arrancada más reciente. En cuanto encuentra una semana arrancada
+-- sin pronóstico guardado, deja de contar — eso es "romper la racha". Las
+-- semanas que todavía no arrancan no cuentan ni rompen nada.
+CREATE OR REPLACE FUNCTION racha_semanas_de(p_user UUID)
+RETURNS INT LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  w INT;
+  v_racha INT := 0;
+BEGIN
+  FOR w IN
+    SELECT DISTINCT week FROM games WHERE week > 0 AND semana_arrancada(week)
+    ORDER BY week DESC
+  LOOP
+    IF EXISTS (SELECT 1 FROM picks WHERE user_id = p_user AND week = w) THEN
+      v_racha := v_racha + 1;
+    ELSE
+      EXIT;
+    END IF;
+  END LOOP;
+  RETURN v_racha;
+END $$;
+
+-- A qué nivel de la escalera llega una racha de N semanas (0 = a ninguno
+-- todavía).
+CREATE OR REPLACE FUNCTION racha_nivel_de(p_racha INT)
+RETURNS INT LANGUAGE sql IMMUTABLE AS $$
+  SELECT CASE
+    WHEN p_racha < 3  THEN 0
+    WHEN p_racha < 8  THEN 1
+    WHEN p_racha < 13 THEN 2
+    WHEN p_racha < 18 THEN 3
+    ELSE 4 + ((p_racha - 18) / 5)
+  END
+$$;
+
+-- El texto del premio de cada nivel. Del nivel 4 en adelante se repite
+-- siempre el mismo (Descuento 25%): es lo que hace que la escalera nunca
+-- se acabe.
+CREATE OR REPLACE FUNCTION racha_premio_de(p_nivel INT)
+RETURNS TEXT LANGUAGE sql IMMUTABLE AS $$
+  SELECT CASE
+    WHEN p_nivel = 1 THEN 'Promo 3x2 de cortesía'
+    WHEN p_nivel = 2 THEN 'Entrada + Promo 3x2 de cortesía'
+    WHEN p_nivel = 3 THEN 'Descuento 15%'
+    WHEN p_nivel >= 4 THEN 'Descuento 25%'
+    ELSE NULL
+  END
+$$;
+
+-- Revisa la racha REAL (recalculada aquí, nunca la manda el cliente) y
+-- otorga los códigos de los niveles que todavía no tenía. Se puede llamar
+-- cuantas veces se quiera: el UNIQUE (user_id, nivel) + ON CONFLICT evita
+-- que se dupliquen. Devuelve solo los niveles NUEVOS que acaba de otorgar,
+-- para que el front avise nada más de eso.
+--
+-- SECURITY DEFINER porque el jugador no tiene permiso de escribir en
+-- `racha_premios` directo (si lo tuviera, se otorgaría el nivel que
+-- quisiera). Aquí la racha se recalcula del lado del servidor con
+-- racha_semanas_de(), así que no hay forma de inflarla desde el cliente.
+CREATE OR REPLACE FUNCTION reclamar_racha()
+RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  uid UUID := auth.uid();
+  v_racha INT;
+  v_nivel_max INT;
+  n INT;
+  v_codigo TEXT;
+  v_insertado RECORD;
+  nuevos JSONB := '[]'::JSONB;
+BEGIN
+  IF uid IS NULL THEN
+    RETURN json_build_object('ok', false, 'msg', 'No autenticado');
+  END IF;
+
+  v_racha := racha_semanas_de(uid);
+  v_nivel_max := racha_nivel_de(v_racha);
+
+  FOR n IN 1..v_nivel_max LOOP
+    v_codigo := 'RACHA-' || UPPER(SUBSTR(MD5(gen_random_uuid()::TEXT), 1, 6));
+
+    INSERT INTO racha_premios (user_id, nivel, racha, premio, codigo)
+    VALUES (uid, n, v_racha, racha_premio_de(n), v_codigo)
+    ON CONFLICT (user_id, nivel) DO NOTHING
+    RETURNING nivel, racha, premio, codigo INTO v_insertado;
+
+    IF FOUND THEN
+      nuevos := nuevos || jsonb_build_object(
+        'nivel', v_insertado.nivel, 'racha', v_insertado.racha,
+        'premio', v_insertado.premio, 'codigo', v_insertado.codigo
+      );
+    END IF;
+  END LOOP;
+
+  RETURN json_build_object('ok', true, 'racha', v_racha, 'nivel', v_nivel_max, 'nuevos', nuevos);
+END $$;
+GRANT EXECUTE ON FUNCTION reclamar_racha() TO authenticated;
+
+-- Canjea un código en el restaurante. Solo admin/manager (lo captura tu
+-- gente cuando el cliente se lo enseña), igual que un folio pero al revés:
+-- el folio lo canjea el jugador con SU código; este lo canjea tu gente con
+-- el código QUE YA ES del jugador.
+CREATE OR REPLACE FUNCTION canjear_codigo_racha(p_codigo TEXT)
+RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_role TEXT;
+  r      racha_premios;
+BEGIN
+  SELECT role INTO v_role FROM profiles WHERE id = auth.uid();
+  IF v_role NOT IN ('admin','manager') THEN
+    RETURN json_build_object('ok', false, 'msg', 'Sin permiso');
+  END IF;
+
+  SELECT * INTO r FROM racha_premios WHERE codigo = UPPER(TRIM(p_codigo)) FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN json_build_object('ok', false, 'msg', 'Código no encontrado');
+  END IF;
+  IF r.canjeado THEN
+    RETURN json_build_object('ok', false, 'msg',
+      'Ya se canjeó el ' || TO_CHAR(r.canjeado_at, 'DD/MM/YYYY HH24:MI'));
+  END IF;
+
+  UPDATE racha_premios
+     SET canjeado = TRUE, canjeado_at = NOW(), canjeado_por = auth.uid()
+   WHERE id = r.id;
+
+  RETURN json_build_object('ok', true, 'premio', r.premio,
+    'nombre', (SELECT nombre FROM profiles WHERE id = r.user_id));
+END $$;
+GRANT EXECUTE ON FUNCTION canjear_codigo_racha(TEXT) TO authenticated;
+
+-- =====================================================================
 -- 9. VISTA DE RANKING
 -- =====================================================================
 CREATE OR REPLACE VIEW ranking AS
@@ -755,6 +913,7 @@ ALTER TABLE week_snapshots  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE historial       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE config          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bonos           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE racha_premios   ENABLE ROW LEVEL SECURITY;
 
 -- Helper de rol sin recursión de políticas
 CREATE OR REPLACE FUNCTION mi_rol()
@@ -917,6 +1076,19 @@ CREATE POLICY "bonos read" ON bonos FOR SELECT TO authenticated
 CREATE POLICY "bonos ins"  ON bonos FOR INSERT TO authenticated
   WITH CHECK (mi_rol() IN ('admin','manager'));
 CREATE POLICY "bonos del"  ON bonos FOR DELETE TO authenticated
+  USING (mi_rol() = 'admin');
+
+-- racha_premios: cada quien ve SOLO los suyos (sus códigos, si ya los
+-- canjeó); admin y manager ven todos porque son quienes los validan en el
+-- restaurante. Sin política de INSERT/UPDATE/DELETE a propósito: todo pasa
+-- por reclamar_racha() y canjear_codigo_racha(), que son SECURITY DEFINER.
+-- Si un jugador pudiera escribir aquí directo, se otorgaría el nivel que
+-- quisiera o marcaría sus propios códigos como ya canjeados.
+DROP POLICY IF EXISTS "racha premios propia" ON racha_premios;
+DROP POLICY IF EXISTS "racha premios admin del" ON racha_premios;
+CREATE POLICY "racha premios propia" ON racha_premios FOR SELECT TO authenticated
+  USING (user_id = auth.uid() OR mi_rol() IN ('admin','manager'));
+CREATE POLICY "racha premios admin del" ON racha_premios FOR DELETE TO authenticated
   USING (mi_rol() = 'admin');
 
 -- =====================================================================
@@ -1114,6 +1286,14 @@ GRANT SELECT, INSERT, DELETE         ON bonos          TO authenticated;
 -- tabla se crea despues del ALTER DEFAULT PRIVILEGES de mas abajo.
 REVOKE UPDATE                        ON bonos          FROM authenticated;
 REVOKE ALL                           ON bonos          FROM anon;
+-- Nada de INSERT/UPDATE directo: otorgar un nivel o marcar "canjeado" pasa
+-- SIEMPRE por reclamar_racha() / canjear_codigo_racha() (SECURITY DEFINER).
+-- DELETE sí queda a nivel de tabla porque admin necesita poder limpiarla en
+-- un reset general; la política "racha premios admin del" (sección 10) es
+-- la que de verdad decide que solo admin puede usarlo.
+GRANT SELECT, DELETE                 ON racha_premios  TO authenticated;
+REVOKE INSERT, UPDATE                ON racha_premios  FROM authenticated;
+REVOKE ALL                           ON racha_premios  FROM anon;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   GRANT SELECT ON TABLES TO anon;

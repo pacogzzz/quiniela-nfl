@@ -544,6 +544,27 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 .ph-pos-n{font-family:'Bebas Neue','Oswald',sans-serif;font-size:2.4rem;line-height:1;color:var(--oro2)}
 .ph-pos-l{font-size:.58rem;letter-spacing:.16em;color:var(--gris);font-weight:700;text-transform:uppercase}
 
+/* --- Tarjeta de racha (semanas seguidas jugando + premios) --- */
+.racha-card{border-color:var(--oro)}
+.racha-actual{font-size:1.05rem;margin:.3rem 0 .1rem}
+.racha-actual b{font-family:'Bebas Neue','Oswald',sans-serif;font-size:1.6rem;color:var(--oro2);margin-right:.3rem}
+.racha-premios-lista{display:flex;flex-direction:column;gap:.6rem;margin-top:1rem}
+.racha-premio{
+  display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+  background:rgba(255,255,255,.03);border:1px solid var(--linea);border-radius:var(--r-sm);
+  padding:.7rem .9rem;
+}
+.racha-premio.canjeado{opacity:.55}
+.rp-txt{min-width:0}
+.rp-txt b{display:block;font-size:.85rem}
+.rp-txt span{font-size:.65rem;color:var(--gris)}
+.rp-estado{flex:none;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:.15rem}
+.rp-codigo{
+  background:#080A0E;border:1px dashed var(--oro);color:var(--oro2);
+  font-weight:800;letter-spacing:.04em;padding:.25rem .55rem;border-radius:var(--r-sm);font-size:.78rem;
+}
+.rp-hint{font-size:.6rem;color:var(--gris)}
+
 /* --- El Capi: el guía de la quiniela ---
    Las láminas son PNG recortados al personaje, así que van SIN marco: se
    paran sobre la tarjeta con un halo dorado detrás. Cada pose tiene una
@@ -1648,6 +1669,11 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
     <div class="card capi capi-coach" id="capi-coach"></div>
 
     <div class="stat-row perfil-cifras" id="perfil-stats"></div>
+
+    <!-- Semanas seguidas jugando + los premios que va desbloqueando.
+         reclamarRacha() la llena al entrar a la app y al guardar una week;
+         renderMiRacha() solo pinta lo que ya está en memoria. -->
+    <div class="card racha-card" id="mi-racha"></div>
   </section>
 
   <!-- ========== RANKING ========== -->
@@ -1720,6 +1746,16 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
         </div>
         <div id="codes-out" style="display:none"></div>
         <div id="folios-stats" class="small muted" style="margin-top:.5rem"></div>
+      </div>
+
+      <div class="admin-section">
+        <h3>🔥 CANJEAR CÓDIGO DE RACHA</h3>
+        <p class="small muted" style="margin-bottom:.5rem">El cliente te enseña su código (RACHA-XXXXXX) en el celular; captúralo aquí para marcarlo como canjeado.</p>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin:.5rem 0">
+          <input type="text" id="racha-codigo" placeholder="RACHA-XXXXXX" style="width:180px;text-transform:uppercase" />
+          <button class="btn-ok" onclick="canjearCodigoRachaAdmin()">Canjear</button>
+        </div>
+        <div id="racha-canje-resultado" class="small" style="margin-top:.5rem"></div>
       </div>
 
       <div class="admin-section">
@@ -1930,6 +1966,7 @@ let myPicks = {};               // game_id → {ganador,confianza,primero}
 let udWeeks = {};               // week → fila underdog_weeks
 let myUD = {};                  // week → opcion
 let misFolios = [];
+let misRachaPremios = []; // codigos de racha ya otorgados (los mios)
 let rankRows = [];
 let currentWeek = 1;
 let bonoInstalYa = null;        // ¿ya cobró los 25 por instalar? null = no sabemos
@@ -2095,6 +2132,11 @@ async function loadMisFolios(){
   if(!sbUser) return;
   const {data} = await sb.from('folios').select('*').eq('por_user_id', sbUser.id).order('fecha');
   misFolios = data||[];
+}
+async function loadMisRachaPremios(){
+  if(!sbUser) return;
+  const {data} = await sb.from('racha_premios').select('*').eq('user_id', sbUser.id).order('nivel');
+  misRachaPremios = data||[];
 }
 async function loadProfile(){
   if(!sbUser) return;
@@ -2619,7 +2661,7 @@ document.getElementById('perfil-btn').onclick = async ()=>{
 };
 
 async function entrarALaApp(){
-  await Promise.all([loadMyPicks(), loadUnderdog(), loadMisFolios(), loadElegibilidad()]);
+  await Promise.all([loadMyPicks(), loadUnderdog(), loadMisFolios(), loadMisRachaPremios(), loadElegibilidad()]);
   mostrarApp();
   initRealtime();
 }
@@ -2640,6 +2682,10 @@ function mostrarApp(){
     esc(sbProfile?.nombre || sbUser?.email || '') + badge;
   renderAll();
   actualizarBotonInstalar();
+  // Revisa si la racha de semanas ya cruzó un nivel nuevo. Va sin await:
+  // no hay por qué detener la pantalla a esperar esto, el toast llega solo
+  // cuando la RPC responda.
+  reclamarRacha();
   // Si ya la trae instalada, que cobre su bono sin tener que hacer nada.
   revisarBonoInstalacion();
   // Y si no, que lo vea pendiente en su perfil en vez de enterarse por azar.
@@ -2880,10 +2926,8 @@ document.getElementById('modal-reserva').addEventListener('click',e=>{
    ===================================================== */
 function misPuntos(){
   let confianza=0, anotador=0, aciertos=0, jugados=0;
-  let anotadorHits=0, racha=0, rachaMax=0;
+  let anotadorHits=0;
   const detalle={};
-  // `games` viene ordenado por kickoff, así que recorrerlo en orden da la
-  // racha real de aciertos seguidos.
   games.forEach(g=>{
     const real = ganadorReal(g);
     if(real===null) return;
@@ -2893,9 +2937,6 @@ function misPuntos(){
     let pts=0;
     if(p.ganador && real!=='E' && p.ganador===real){
       pts += ptsDeAcierto(g,p); aciertos++;
-      racha++; if(racha>rachaMax) rachaMax=racha;
-    } else {
-      racha=0;
     }
     confianza += pts;
     let ap=0;
@@ -2924,8 +2965,52 @@ function misPuntos(){
   const yo = rankRows.find(r=> sbProfile && r.id===sbProfile.id);
   const bono = yo ? (yo.pts_bono || 0) : 0;
   return {confianza, anotador, consumo, underdog, bono,
-          aciertos, jugados, anotadorHits, underdogHits, rachaMax,
+          aciertos, jugados, anotadorHits, underdogHits,
           total: confianza+anotador+consumo+underdog+bono, detalle};
+}
+
+/* ---------- Racha de semanas ----------
+   Cuántas weeks SEGUIDAS lleva jugando: contando hacia atrás desde la
+   semana ya cerrada más reciente, mientras haya pronóstico guardado. Es un
+   ESTIMADO para pintar en pantalla al instante (usa lo que ya está cargado
+   en el navegador); lo que de verdad otorga los premios es
+   racha_semanas_de() del lado del servidor, recalculada desde cero en cada
+   reclamarRacha() — así nadie puede inflar su racha editando el cliente.
+   Espejo de racha_nivel_de()/racha_premio_de() en 001_init.sql: si se toca
+   la escalera aquí, hay que tocarla allá también. */
+function rachaSemanas(){
+  const weeks = [...new Set(games.map(g=>g.week))].filter(w=>w>0).sort((a,b)=>b-a);
+  let racha = 0;
+  for(const w of weeks){
+    if(!semanaCerrada(w)) continue;
+    const gs = gamesOf(w);
+    const jugoEsaWeek = gs.some(g=>myPicks[g.id]?.ganador || myPicks[g.id]?.confianza);
+    if(jugoEsaWeek) racha++; else break;
+  }
+  return racha;
+}
+function rachaNivelDe(racha){
+  if(racha<3) return 0;
+  if(racha<8) return 1;
+  if(racha<13) return 2;
+  if(racha<18) return 3;
+  return 4 + Math.floor((racha-18)/5);
+}
+function rachaPremioDe(nivel){
+  if(nivel===1) return 'Promo 3x2 de cortesía';
+  if(nivel===2) return 'Entrada + Promo 3x2 de cortesía';
+  if(nivel===3) return 'Descuento 15%';
+  if(nivel>=4) return 'Descuento 25%';
+  return null;
+}
+// Semanas que le faltan para el SIGUIENTE nivel (para el "te faltan N" en
+// Mi Perfil). Recorre los umbrales 3,8,13,18,23,28... hasta pasar la racha.
+function rachaSiguienteUmbral(racha){
+  const fijos = [3,8,13,18];
+  for(const u of fijos) if(racha<u) return u;
+  let u = 18;
+  while(u<=racha) u += 5;
+  return u;
 }
 
 /* =====================================================
@@ -3015,6 +3100,7 @@ function renderStats(){
   const p = misPuntos();
   renderResumen();
   renderPerfil(p);
+  renderMiRacha();
   renderCapi(p);
   renderEstratega(p);
 }
@@ -3092,7 +3178,7 @@ function renderPerfil(p){
     cuadro('🍔', p.consumo, `Folios · ${misFolios.length} canjeados`) +
     cuadro('🐶', p.underdog, `Underdog · ${p.underdogHits}`) +
     cuadro('✅', pct+'%', `Efectividad · ${p.aciertos}/${p.jugados}`) +
-    cuadro('🔥', p.rachaMax, 'Mejor racha') +
+    cuadro('🔥', rachaSemanas(), 'Racha actual · semanas') +
     (bonoInstalYa===false
       ? `<div class="stat nudge" onclick="abrirInstalacion()">
            <div class="e">📲</div>
@@ -3100,6 +3186,42 @@ function renderPerfil(p){
            <div class="l">Instala la app</div>
          </div>`
       : '');
+}
+
+/* La tarjeta de "TU RACHA": semanas seguidas, cuánto falta para el
+   siguiente premio, y la lista de códigos ya ganados (pendientes o ya
+   canjeados en La Corte). Los códigos vienen de racha_premios, cargados
+   por loadMisRachaPremios() — esta función solo pinta lo que ya está en
+   memoria, nunca decide por sí sola si alguien ganó algo. */
+function renderMiRacha(){
+  const cont = document.getElementById('mi-racha');
+  if(!cont || !sbProfile) return;
+  const racha = rachaSemanas();
+  const siguiente = rachaSiguienteUmbral(racha);
+  const faltan = siguiente - racha;
+  const premioSiguiente = rachaPremioDe(rachaNivelDe(siguiente));
+
+  const filaPremio = p => `
+    <div class="racha-premio ${p.canjeado?'canjeado':''}">
+      <div class="rp-txt">
+        <b>${esc(p.premio)}</b>
+        <span>${p.racha} semanas seguidas</span>
+      </div>
+      <div class="rp-estado">
+        ${p.canjeado
+          ? `<span class="chip">✅ Canjeado</span>`
+          : `<code class="rp-codigo">${esc(p.codigo)}</code><span class="rp-hint">enséñalo en La Corte</span>`}
+      </div>
+    </div>`;
+
+  cont.innerHTML = `
+    <h3 class="display">🔥 TU RACHA</h3>
+    <p class="racha-actual"><b>${racha}</b> ${racha===1?'semana seguida':'semanas seguidas'} jugando</p>
+    <p class="small muted">Te ${faltan===1?'falta 1 semana más':'faltan '+faltan+' semanas más'} para: <b>${esc(premioSiguiente)}</b></p>
+    ${misRachaPremios.length
+      ? `<div class="racha-premios-lista">${misRachaPremios.slice().reverse().map(filaPremio).join('')}</div>`
+      : `<p class="small muted">Todavía no desbloqueas ningún premio — arranca tu racha guardando tu pronóstico cada week.</p>`}
+  `;
 }
 
 /* =====================================================
@@ -4217,6 +4339,7 @@ async function guardarSemana(){
   await loadMyPicks();
   renderQuiniela();
   await renderRanking();
+  reclamarRacha();
   // Segunda oportunidad: la principal es al entrar (ver mostrarApp). Esta
   // agarra a quien la ignoro sin cerrarla. Si le dio "Ahora no", el candado
   // de 7 dias de mostrarInstalacion() evita que lo volvamos a molestar.
@@ -4566,6 +4689,24 @@ async function generarFolios(){
   renderFoliosStats();
 }
 
+async function canjearCodigoRachaAdmin(){
+  if(!isAdminOrManager()){ toast('Sin permiso','err'); return; }
+  const input = document.getElementById('racha-codigo');
+  const cod = input.value.trim();
+  const out = document.getElementById('racha-canje-resultado');
+  if(!cod){ toast('Escribe el código','err'); return; }
+  const {data,error} = await sb.rpc('canjear_codigo_racha',{p_codigo:cod});
+  if(error){ toast(error.message,'err'); return; }
+  if(!data.ok){
+    out.innerHTML = `<span style="color:var(--rojo)">❌ ${esc(data.msg)}</span>`;
+    toast(data.msg,'err');
+    return;
+  }
+  out.innerHTML = `<span style="color:var(--oro2)">✅ ${esc(data.premio)} — ${esc(data.nombre||'jugador')}</span>`;
+  toast(`✅ Canjeado: ${data.premio}`);
+  input.value='';
+}
+
 async function renderFoliosStats(){
   const {data} = await sb.from('folios').select('fecha,usado');
   const cont = document.getElementById('folios-stats');
@@ -4720,14 +4861,15 @@ async function borrarHistorial(id){
 
 async function resetGeneral(){
   if(!isAdmin()){ toast('Solo admin puede hacer reset','err'); return; }
-  if(!confirm('⚠️ ESTO BORRARÁ: pronósticos, underdogs, folios canjeados, cortes de week y resultados.\n\n¿Continuar?')) return;
+  if(!confirm('⚠️ ESTO BORRARÁ: pronósticos, underdogs, folios canjeados, cortes de week, códigos de racha y resultados.\n\n¿Continuar?')) return;
   if(!confirm('¿Estás completamente seguro? Esta acción es irreversible.')) return;
   await sb.from('picks').delete().neq('id','00000000-0000-0000-0000-000000000000');
   await sb.from('underdog_picks').delete().neq('week',-1);
   await sb.from('week_snapshots').delete().neq('week',-1);
   await sb.from('folios').delete().neq('code','__nunca__');
+  await sb.from('racha_premios').delete().neq('id','00000000-0000-0000-0000-000000000000');
   await sb.from('games').update({score_a:null,score_b:null,first_scorer:null}).neq('id','__nunca__');
-  myPicks={}; myUD={}; misFolios=[]; dirty=false;
+  myPicks={}; myUD={}; misFolios=[]; misRachaPremios=[]; dirty=false;
   await Promise.all([loadGames(), loadUnderdog(), loadElegibilidad()]);
   toast('🔥 Reset completado');
   renderAll();
@@ -4964,6 +5106,22 @@ async function bonoInstalacionCobrado(){
   const {data} = await sb.from('bonos')
     .select('id').eq('user_id', sbUser.id).eq('motivo','instalacion').limit(1);
   return !!(data && data.length);
+}
+
+/* Revisa la racha de semanas y otorga los códigos nuevos que corresponda.
+   La racha la vuelve a calcular el servidor desde cero (racha_semanas_de),
+   así que llamar esto seguido es gratis: si no hay nada nuevo, no pasa
+   nada. Se llama al entrar a la app y cada vez que se guarda una week. */
+async function reclamarRacha(){
+  if(!sbUser) return;
+  const {data,error} = await sb.rpc('reclamar_racha');
+  if(error){ console.warn('reclamar racha:', error.message); return; }
+  if(!data?.ok) return;
+  await loadMisRachaPremios();
+  (data.nuevos||[]).forEach(n=>{
+    toast(`🔥 ¡${n.racha} semanas seguidas! Desbloqueaste: ${n.premio}`);
+  });
+  renderMiRacha();
 }
 
 /* =====================================================
