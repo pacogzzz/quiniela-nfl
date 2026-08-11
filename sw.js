@@ -21,10 +21,12 @@
    numero de CACHE. El `activate` borra los caches viejos.
    ===================================================================== */
 
-// v4: board-calendario.webp cambio de contenido (pizarron del telefono en
-// vez de "elige tu partido"). Mismo caso que v2/v3: sin subir este numero,
-// quien ya abrio ese pizarron se queda con la version vieja cacheada.
-const CACHE = 'quiniela-nfl-v4';
+// v5: board-confianza.webp y varios iconos de /icons/cierre y /icons/capi
+// cambiaron de contenido despues de que algunos telefonos ya los habian
+// cacheado. Mismo caso que v2/v3/v4: sin subir este numero, quien ya los
+// vio se queda con la version vieja para siempre (el cache-first de abajo
+// nunca vuelve a preguntarle a la red).
+const CACHE = 'quiniela-nfl-v5';
 
 // Lo minimo para que la app abra sin senal.
 const BASICOS = [

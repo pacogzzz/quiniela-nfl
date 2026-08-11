@@ -666,33 +666,19 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 .perfil-avatar .ic{width:34px;height:34px;color:var(--oro)}
 .btn-save .ic,.btn-primary .ic{width:19px;height:19px;display:inline-block;vertical-align:-3px;margin-right:.4rem}
 
-/* --- Encabezado de la quiniela + dos tarjetas de resumen --- */
+/* --- Encabezado de la quiniela --- */
 .q-head{display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:1.3rem}
 .q-head-txt{flex:1;min-width:200px}
 .q-head h1{margin-bottom:.35rem}
-/* Ahora es una sola tarjeta (Confianza disponible); Folios se quitó de aquí. */
-.resumen{display:grid;grid-template-columns:1fr;gap:.8rem;flex:none;width:100%}
-.resumen-card{
-  background:linear-gradient(160deg,var(--card2),var(--card));
-  border:1px solid var(--linea);border-radius:var(--r);
-  padding:1rem 1.1rem;box-shadow:0 8px 28px rgba(0,0,0,.35);
+/* Manda a Mi Perfil en vez de repetir aquí las mismas cifras (puntos,
+   aciertos, confianza disponible): esas ya viven en el panel de fichas de
+   la izquierda y en Mi Perfil, no hace falta decirlas tres veces. */
+.ir-perfil-card{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  flex-wrap:wrap;border-color:var(--oro);
 }
-.resumen-card .rc-l{
-  font-size:.58rem;letter-spacing:.14em;color:var(--gris);
-  font-weight:700;text-transform:uppercase;display:flex;align-items:center;gap:.35rem;
-}
-.resumen-card .rc-n{
-  font-family:'Bebas Neue','Oswald',sans-serif;font-size:2rem;line-height:1.05;margin-top:.3rem;
-}
-.resumen-card .rc-p{font-size:.66rem;color:var(--gris);margin-top:.1rem}
-/* La de confianza es accionable: se destaca con borde y halo dorado */
-.resumen-card.destacada{
-  border-color:var(--oro);
-  box-shadow:0 0 0 1px rgba(212,175,55,.25), 0 10px 32px rgba(212,175,55,.15);
-  background:linear-gradient(160deg,#201B0C,var(--card));
-}
-.resumen-card.destacada .rc-n{color:var(--oro2)}
-.resumen-card.destacada .rc-l{color:var(--oro2)}
+.ir-perfil-card p{margin:0;font-size:.85rem;color:var(--txt)}
+.ir-perfil-card b{color:var(--oro2)}
 
 /* --- Fila de 6 estadísticas (con aire, no apretadas) --- */
 .stat-row{
@@ -1250,7 +1236,6 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 /* ========= ESCRITORIO ========= */
 @media (min-width:720px){
   .stat-row{grid-template-columns:repeat(4,1fr)}
-  .resumen{width:auto;min-width:270px}
   /* En tableta la columna todavía va a ancho completo: las dos caben en fila. */
   .extras-row{grid-template-columns:repeat(2,1fr)}
   .metas{grid-template-columns:repeat(3,1fr)}
@@ -1548,19 +1533,17 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
               <h1 class="display">MI QUINIELA</h1>
               <p class="lead-sub" style="margin-bottom:0">Reparte tu confianza y confirma tus ganadores antes del primer kickoff.</p>
             </div>
-            <!-- Solo Confianza disponible junto al título: es la que exige
-                 una acción (repartir los valores antes del kickoff). Folios
-                 se sigue viendo en su propia tarjeta de canjear, más abajo. -->
-            <div class="resumen">
-              <div class="resumen-card destacada">
-                <div class="rc-l">🎯 Confianza disponible</div>
-                <div class="rc-n" id="rc-confianza">0</div>
-                <div class="rc-p" id="rc-confianza-p">valores por asignar</div>
-              </div>
-            </div>
           </div>
 
-          <div class="stat-row" id="mis-stats"></div>
+          <!-- Antes aquí iban las 4 tarjetas de puntos/aciertos y la de
+               "Confianza disponible": se repetían con Mi Perfil (que ya trae
+               esas mismas cifras, completas) y con el panel de fichas de la
+               izquierda (que ya avisa cuántos números quedan). Se deja solo
+               un aviso corto que manda para allá. -->
+          <div class="card ir-perfil-card">
+            <p>Revisa tus puntos, estadísticas y comentarios en <b>PERFIL</b>.</p>
+            <button class="btn-auto" onclick="irA('perfil')">👤 IR A PERFIL</button>
+          </div>
 
           <!-- La ayuda: el desplegable de puntos y, pegado a él, el Capi en
                chico. Antes el Capi era una tarjeta entera arriba de todo; se
@@ -3011,45 +2994,20 @@ function renderTablaPuntos(){
    Aciertos queda destacado (misma clase que Puntos totales) porque es la
    cifra que mejor resume qué tan bien vas en la temporada. */
 function renderStats(){
-  const cont = document.getElementById('mis-stats');
-  if(!cont) return;
+  // Ya no hay tarjetas propias en QUINIELA (se repetían con Mi Perfil): esta
+  // función solo calcula los puntos una vez y reparte el resultado a quien
+  // sí los pinta.
   const p = misPuntos();
-  const pct = p.jugados ? Math.round(p.aciertos*100/p.jugados) : 0;
-
-  const html = `
-    <div class="stat"><div class="e">🏆</div><div class="v oro">${p.total}</div><div class="l">Puntos totales</div></div>
-    <div class="stat"><div class="e">⚡</div><div class="v">${p.anotador}</div><div class="l">Primer anotador</div></div>
-    <div class="stat"><div class="e">🐶</div><div class="v">${p.underdog}</div><div class="l">Underdog</div></div>
-    <div class="stat destacado"><div class="e">✅</div><div class="v oro">${pct}%</div><div class="l">Aciertos ${p.aciertos}/${p.jugados}</div></div>`;
-
-  cont.innerHTML = html;
-  const espejo = document.getElementById('perfil-stats');
-  if(espejo) espejo.innerHTML = html;
-
   renderResumen();
   renderPerfil(p);
   renderCapi(p);
   renderEstratega(p);
 }
 
-/* La tarjeta de arriba a la derecha: confianza disponible. Folios se
-   quitó de aquí; se sigue viendo en su propia tarjeta de canjear. */
+/* Cuánta confianza queda por repartir: ya no tiene tarjeta propia (se
+   repetía con el panel de fichas de la izquierda), pero ese panel sigue
+   viviendo de esta función. */
 function renderResumen(){
-  const gs = gamesOf(currentWeek);
-  const asignados = gs.filter(g=>myPicks[g.id]?.confianza).length;
-  const libres = Math.max(0, gs.length - asignados);
-  const cerrada = semanaCerrada(currentWeek);
-
-  const c = document.getElementById('rc-confianza');
-  if(c){
-    c.textContent = cerrada ? '—' : libres;
-    // Se dice el tope de la week (136 con 16 partidos) porque es lo único que
-    // deja ver de un vistazo cuánto hay sobre la mesa.
-    document.getElementById('rc-confianza-p').innerHTML = cerrada
-      ? 'la week ya cerró'
-      : (libres ? `de ${gs.length} por repartir · hasta <b>${topeConfianza(currentWeek)}</b> pts`
-                : `¡ya los repartiste! · hasta <b>${topeConfianza(currentWeek)}</b> pts`);
-  }
   renderConfianzaFlotante();
 }
 
