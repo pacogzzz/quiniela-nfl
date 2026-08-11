@@ -1453,9 +1453,9 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 <!-- ========== NAV ========== -->
 <nav id="nav">
   <div id="nav-inner">
-    <button class="tab" data-tab="grupos"><span class="ico">🏟️</span>GRUPOS</button>
+    <button class="tab active" data-tab="grupos"><span class="ico">🏟️</span>GRUPOS</button>
     <button class="tab" data-tab="calendario"><span class="ico">📅</span>CALENDARIO</button>
-    <button class="tab active" data-tab="quiniela"><span class="ico">🏈</span>QUINIELA</button>
+    <button class="tab" data-tab="quiniela"><span class="ico">🏈</span>QUINIELA</button>
     <button class="tab" data-tab="ranking"><span class="ico">🏆</span>RANKING</button>
     <button class="tab" data-tab="premios"><span class="ico">🎁</span>PREMIOS</button>
     <button class="tab" data-tab="historial"><span class="ico">📜</span>HISTORIAL</button>
@@ -1470,7 +1470,8 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 <main>
 
   <!-- ========== GRUPOS ========== -->
-  <section class="module" id="m-grupos">
+  <!-- Es la pestaña con la que abre la app: es la pantalla principal. -->
+  <section class="module active" id="m-grupos">
     <h1 class="display">CONFERENCIAS Y DIVISIONES</h1>
     <p class="lead-sub">32 equipos · 2 conferencias · 8 divisiones. El récord se actualiza solo conforme se cargan los resultados.</p>
     <div class="card capi capi-tip" data-capi="bienvenida"
@@ -1513,9 +1514,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   </section>
 
   <!-- ========== QUINIELA ========== -->
-  <!-- Es la pestaña con la que abre la app: a lo que entra la gente es a poner
-       sus pronósticos, no a mirar la tabla de divisiones. -->
-  <section class="module active" id="m-quiniela">
+  <section class="module" id="m-quiniela">
     <div id="quiniela">
       <div class="q-layout">
 
