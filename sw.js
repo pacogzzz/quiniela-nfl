@@ -21,10 +21,10 @@
    numero de CACHE. El `activate` borra los caches viejos.
    ===================================================================== */
 
-// v3: iconos nuevos (icon-192, icon-512, apple-touch-icon). Mismo caso que
-// el v2: si no sube este numero, quien ya visito la app se queda con los
-// iconos viejos cacheados para siempre.
-const CACHE = 'quiniela-nfl-v3';
+// v4: board-calendario.webp cambio de contenido (pizarron del telefono en
+// vez de "elige tu partido"). Mismo caso que v2/v3: sin subir este numero,
+// quien ya abrio ese pizarron se queda con la version vieja cacheada.
+const CACHE = 'quiniela-nfl-v4';
 
 // Lo minimo para que la app abra sin senal.
 const BASICOS = [
