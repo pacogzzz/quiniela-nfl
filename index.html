@@ -3107,6 +3107,17 @@ const CAPI_POSES = ['bienvenida','registrate','datos','calendario','ganador',
 // completo se abre en grande con el botón "¿Cómo funciona?".
 const CAPI_BOARDS = ['calendarioV2','confianza','ranking','underdog'];
 
+// Los pizarrones son justo las imágenes que más se han corregido en este
+// proyecto (calendario, confianza...), y celulares que ya las habían visto
+// se quedaban con la copia vieja pegada pase lo que pase con el service
+// worker. Un ?v= nuevo es una URL nueva: ningún caché —ni el del navegador,
+// ni el nuestro, ni el de Vercel— tiene una entrada vieja que le haga match,
+// así que se descarga de la red sí o sí, sin importar qué tan atorado esté
+// el caché de ese teléfono en particular. Sube este número cuando cambie el
+// CONTENIDO de cualquier board-*.webp (no hace falta si solo se agrega uno
+// nuevo).
+const BOARD_V = 2;
+
 function capiSrc(pose){
   return '/icons/capi/' + (CAPI_POSES.includes(pose) ? pose : 'bienvenida') + '.webp';
 }
@@ -3123,7 +3134,7 @@ const CAPI_BOARD_CAPTIONS = {
 
 function abrirCapiBoard(pose){
   if(!CAPI_BOARDS.includes(pose)) return;
-  document.getElementById('capi-board-img').src = '/icons/capi/board-'+pose+'.webp';
+  document.getElementById('capi-board-img').src = '/icons/capi/board-'+pose+'.webp?v='+BOARD_V;
   document.getElementById('capi-board-caption').textContent = CAPI_BOARD_CAPTIONS[pose] || '';
   document.getElementById('modal-capi').classList.remove('hidden');
 }
