@@ -7,26 +7,25 @@
         worker con manejador de fetch para ofrecer "Instalar").
      2. Deja la app usable sin senal, mostrando la ultima version vista.
 
-   ⚠️ LA REGLA QUE NO SE PUEDE ROMPER: el HTML va SIEMPRE por red primero.
+   ⚠️ LA REGLA QUE NO SE PUEDE ROMPER: el HTML y los iconos van SIEMPRE
+   por red primero.
 
-   Esta app es un solo index.html que se actualiza con cada `git push`. Si
-   el HTML se sirviera desde cache primero, la gente se quedaria con una
-   version vieja durante dias sin enterarse: cambias el puntaje, arreglas
-   un bug, y a nadie le llega. Por eso:
+   Esta app es un solo index.html que se actualiza con cada `git push`, y
+   sus iconos (el Capi, los pizarrones de "cómo funciona", etc.) cambian
+   de contenido de vez en cuando SIN cambiar de nombre de archivo. Si algo
+   se sirviera de la cache primero, quien ya lo hubiera visto se quedaria
+   con la version vieja para siempre —pasó ya varias veces con distintas
+   imagenes antes de este cambio. Por eso todo va igual:
 
-     HTML   -> red primero, cache solo si no hay senal
-     iconos -> cache primero (nunca cambian, y si cambian, cambia CACHE)
+     HTML e iconos -> red primero, cache SOLO si no hay señal
 
-   Para publicar una version nueva de los archivos cacheados, sube el
-   numero de CACHE. El `activate` borra los caches viejos.
+   La cache deja de ser la fuente de verdad; es nada más el respaldo para
+   cuando el celular no tiene internet. Ya no hace falta acordarse de subir
+   CACHE cada vez que una imagen cambia de contenido —eso es justo lo que
+   fallaba antes.
    ===================================================================== */
 
-// v5: board-confianza.webp y varios iconos de /icons/cierre y /icons/capi
-// cambiaron de contenido despues de que algunos telefonos ya los habian
-// cacheado. Mismo caso que v2/v3/v4: sin subir este numero, quien ya los
-// vio se queda con la version vieja para siempre (el cache-first de abajo
-// nunca vuelve a preguntarle a la red).
-const CACHE = 'quiniela-nfl-v5';
+const CACHE = 'quiniela-nfl-v6';
 
 // Lo minimo para que la app abra sin senal.
 const BASICOS = [
@@ -98,7 +97,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // --- Iconos y manifest: cache primero ---
+  // --- Iconos y manifest: red primero, cache solo de respaldo ---
   // Lista explicita a proposito. Antes esta rama agarraba TODO lo del mismo
   // dominio, asi que cualquier archivo nuevo que se agregara al proyecto se
   // quedaba pegado en la cache vieja para siempre. Mejor que lo desconocido
@@ -107,15 +106,22 @@ self.addEventListener('fetch', (e) => {
                      url.pathname === '/manifest.json';
   if (!esEstatico) return;
 
+  // Iban por cache primero, y esa fue justo la causa de que varias imagenes
+  // (el pizarron del calendario, el de confianza, el Capi del cierre de
+  // semana...) se quedaran viejas en celulares que ya las habian visto,
+  // aunque el archivo en el servidor ya fuera el correcto. La cache normal
+  // del navegador (Cache-Control en vercel.json) ya evita descargar de más
+  // cuando nada cambió; esta cache aparte solo entra si de plano no hay
+  // señal.
   e.respondWith(
-    caches.match(req).then((hit) =>
-      hit || fetch(req).then((res) => {
+    fetch(req)
+      .then((res) => {
         if (res.ok) {
           const copia = res.clone();
           caches.open(CACHE).then((c) => c.put(req, copia));
         }
         return res;
       })
-    )
+      .catch(() => caches.match(req))
   );
 });
