@@ -217,6 +217,7 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
   font-size:.68rem;font-weight:800;letter-spacing:.02em;color:#fff;
 }
 .tlogo img{position:absolute;inset:8%;width:84%;height:84%;object-fit:contain}
+.tlogo:has(img) .tcode{display:none}
 .tlogo.tbd{color:var(--gris);border-style:dashed}
 .tlogo.sm{width:32px;height:32px;font-size:.55rem}
 .tlogo.xs{width:26px;height:26px;font-size:.5rem}
@@ -2005,9 +2006,12 @@ function teamLogo(code, extra){
   const t = TEAMS[code];
   const cls = 'tlogo'+(extra?' '+extra:'');
   if(!code || !t) return `<span class="${cls} tbd">?</span>`;
+  // Las iniciales van en su propio span (.tcode), no sueltas: así el CSS
+  // las esconde en cuanto hay logo y solo se ven si la imagen de plano no
+  // carga (onerror la quita del DOM, y con ella la excusa para taparlas).
   return `<span class="${cls}" style="--tc:${esc(t.color)}">`
        + `<img src="${logoURL(code)}" alt="${esc(t.nombre)}" loading="lazy" onerror="this.remove()" />`
-       + `${esc(code)}</span>`;
+       + `<span class="tcode">${esc(code)}</span></span>`;
 }
 
 /* Cambiar de pestaña por código (lo usan las tarjetas con "ver más") */
