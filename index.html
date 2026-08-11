@@ -805,6 +805,15 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 .qg-team .qt-nom{min-width:0;line-height:1.2}
 .qg-team .qt-nom b{display:block;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qg-team .qt-nom span{font-size:.63rem;color:var(--gris)}
+/* Un jugador real pidió esto: sin saber quién juega en su cancha, cuesta
+   trabajo leer el partido. Insignia aparte (no pegada a la ciudad/récord)
+   para que no se pierda entre el resto del texto chico. */
+.qt-sede{
+  display:inline-block;margin-top:.25rem;font-size:.6rem;font-weight:800;
+  letter-spacing:.04em;padding:.12rem .45rem;border-radius:999px;
+  background:rgba(255,255,255,.06);color:var(--gris);
+}
+.qt-sede.local{background:var(--oro-tenue);color:var(--oro2)}
 .qg-versus .vs{
   flex:none;font-family:'Bebas Neue','Oswald',sans-serif;font-size:.8rem;
   color:var(--gris);letter-spacing:.1em;padding:0 .2rem;
@@ -1516,6 +1525,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
               <div class="ex-capi"><img src="/icons/capi/consumo.webp" alt="El Capi" loading="lazy" onerror="this.remove()" /></div>
               <h3 class="display">FOLIO DE CONSUMO</h3>
               <p>Ven a la corte y llega a la cima. Cada visita suma.</p>
+              <p class="small muted">Puntos validos en consumos mayores $500 pesos</p>
               <div class="folio-row">
                 <input type="text" id="folio-input" placeholder="LC0913-A1B2C" maxlength="16" />
                 <button onclick="canjearFolio()">CANJEAR</button>
@@ -1847,6 +1857,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
       <div class="ex-ico">🍔</div>
       <h3 class="display">FOLIO DE PRÁCTICA</h3>
       <p>Escribe cualquier texto para simular cómo se canjea un folio de consumo — por ejemplo, copia y pega <b>LC0913-PRACTICA</b>.</p>
+      <p class="small muted">Puntos validos en consumos mayores $500 pesos</p>
       <div class="folio-row">
         <input type="text" id="practica-folio-input" placeholder="LC0913-PRACTICA" maxlength="20" />
         <button id="practica-btn-canjear" onclick="canjearPractica()">CANJEAR</button>
@@ -2965,19 +2976,19 @@ function renderTablaPuntos(){
 
   t.innerHTML =
     fila('🔢','Puntos de confianza',
-         'Repartes del 1 al 16 sin opción a repetir. Si aciertas el ganador, esos serán tus puntos en el partido. El máximo de puntos cambia conforme a los partidos en las weeks.',
+         'Confianza = Seguridad de que un equipo ganara. Tendrás 16 números para repartir, entre los partidos, del 1 al 16. Siendo 16 tu mayor confianza y 1 tu menor confianza. De acertar el ganador, tus puntos será la confianza que depositaste en el encuentro. Estos números no se podrán repetir y cambiaran conforme a los números de partidos en las weeks.',
          `Máximo ${topeConfianza(currentWeek)} pts`) +
     fila('⚡','Primer equipo en anotar',
          'Exclusivo Partidos Estelares. Thursday Night, Sunday Night, Monday Night y partidos especiales.',
          `${cfgInt('pts_anotador',3)} pts`) +
     fila('🐶','Underdog',
-         'Exclusivo Jugadores fuera del top 10. Tendrás 3 candidatos a underdog de la semana, sus puntos cambian conforme a posibilidades de ganar.',
+         'PUNTOS EXTRA. Exclusivo jugadores fuera del top 10. Tendrás 3 candidatos a underdog de la semana, sus puntos cambian conforme a posibilidades de ganar (No pierdes puntos por jugar el underdog).',
          `${udVals.join(' · ')} pts`) +
-    fila('🍔','Lunes - Folio por consumo','',`${cfgInt('pts_folio_lunes',10)} pts`) +
-    fila('🍔','Jueves - Folio por consumo','',`${cfgInt('pts_folio_jueves',5)} pts`) +
-    fila('🍔','Domingo - Folio por consumo','',`${cfgInt('pts_folio_domingo',5)} pts`) +
+    fila('🍔','Lunes - Folio por consumo','Puntos validos en consumos mayores $500 pesos',`${cfgInt('pts_folio_lunes',10)} pts`) +
+    fila('🍔','Jueves - Folio por consumo','Puntos validos en consumos mayores $500 pesos',`${cfgInt('pts_folio_jueves',5)} pts`) +
+    fila('🍔','Domingo - Folio por consumo','Puntos validos en consumos mayores $500 pesos',`${cfgInt('pts_folio_domingo',5)} pts`) +
     fila('🍔','Especial - Folio por consumo',
-         'Partidos en Miércoles, Viernes o Sábado.',
+         'Partidos en Miércoles, Viernes o Sábado. Puntos validos en consumos mayores $500 pesos',
          `${cfgInt('pts_folio_especial',15)} pts`);
 }
 
@@ -3654,7 +3665,11 @@ function renderPracticaJuego(g, N){
   const lado = (code, der)=>`
     <div class="qg-team${der?' der':''}">
       ${teamLogo(code)}
-      <div class="qt-nom"><b>${esc(tshort(code))}</b><span>${esc(TEAMS[code]?TEAMS[code].ciudad:code)}</span></div>
+      <div class="qt-nom">
+        <b>${esc(tshort(code))}</b>
+        <span>${esc(TEAMS[code]?TEAMS[code].ciudad:code)}</span>
+        <span class="qt-sede ${der?'local':'visita'}">${der?'🏠 LOCAL':'✈️ VISITA'}</span>
+      </div>
     </div>`;
 
   const res = practicaResultado?.porGame[g.id];
@@ -3976,7 +3991,8 @@ function renderGamePick(g, N, det){
        ${teamLogo(code)}
        <div class="qt-nom">
          <b>${esc(tshort(code))}</b>
-         <span>${esc(TEAMS[code]?TEAMS[code].ciudad:'Por definir')}${recordTxt(code)?' · '+recordTxt(code):''} · ${quien}</span>
+         <span>${esc(TEAMS[code]?TEAMS[code].ciudad:'Por definir')}${recordTxt(code)?' · '+recordTxt(code):''}</span>
+         <span class="qt-sede ${quien==='local'?'local':'visita'}">${quien==='local'?'🏠 LOCAL':'✈️ VISITA'}</span>
        </div>
      </div>`;
 
@@ -4046,18 +4062,33 @@ function pickConfianza(gid, val){
   refrescarConfianza();
 }
 
+// Proyección de victorias de la temporada 2026 según casas de apuestas
+// (SI.com, julio 2026: https://www.si.com/betting/2026-nfl-win-total-projections-for-every-team-ahead-of-training-camp-rams-and-ravens-have-highest-win-totals-01kxrzrgema1).
+// Es una FOTO FIJA de antes de que arrancara la temporada — no se actualiza
+// sola semana a semana —, pero le da a "Llenar por mí" un criterio real
+// desde la Week 1, en vez de repartir a ciegas porque todos están en 0-0.
+const WIN_TOTALS_2026 = {
+  ARI:3.5, ATL:6.5, BAL:11.5, BUF:10.5, CAR:7.5, CHI:9.5, CIN:10.5, CLE:5.5,
+  DAL:9.5, DEN:9.5, DET:10.5, GB:9.5, HOU:9.5, IND:7.5, JAX:8.5, KC:10.5,
+  LV:5.5, LAC:9.5, LAR:11.5, MIA:4.5, MIN:8.5, NE:10.5, NO:7.5, NYG:7.5,
+  NYJ:5.5, PHI:10.5, PIT:8.5, SF:9.5, SEA:10.5, TB:8.5, TEN:6.5, WAS:7.5,
+};
+
 /* ---------- Llenar por mí ----------
 
    Existe por una razón muy concreta: repartir 16 números uno por uno espanta
    a media banca, y el que no llena no juega. Esto deja la week completa en un
    clic para que después nomás le muevan a lo que no les late.
 
-   NO adivina el futuro ni compra momios. Ordena los partidos por la
-   diferencia de récord entre los dos equipos —lo único objetivo y público que
-   tenemos— y le da el número más alto al que se ve más parejo... más
-   disparejo, es decir: al que tiene el favorito más claro. En la Week 1 nadie
-   tiene récord y el aviso lo dice con todas sus letras, en vez de fingir que
-   sabe algo. */
+   No inventa nada: combina dos datos reales.
+     1. La proyección de victorias de la casa de apuestas para TODA la
+        temporada (WIN_TOTALS_2026) — es lo que da criterio desde la Week 1,
+        cuando todavía no se ha jugado ni un partido de esta temporada.
+     2. El récord REAL de esta temporada (RECORDS), que pesa cada vez más
+        partido a partido y termina mandando sobre la proyección de
+        preseason conforme avanzan las weeks.
+   El número más alto de confianza va al partido con el favorito más claro
+   entre los dos; el más bajo, al más parejo. */
 function autollenar(){
   const todos = gamesOf(currentWeek);
   const gs = todos.filter(g=>!partidoCerrado(g) && g.team_a && g.team_b);
@@ -4066,14 +4097,19 @@ function autollenar(){
   const yaTiene = gs.some(g=>myPicks[g.id]?.ganador || myPicks[g.id]?.confianza);
   if(yaTiene && !confirm('Esto reemplaza los pronósticos que ya tienes en esta week.\n\n¿Le seguimos?')) return;
 
-  // Fuerza = victorias menos derrotas. Si nadie ha jugado, todos valen 0 y el
-  // desempate queda en el orden del calendario: por eso el aviso de abajo.
-  const fuerza = c => { const r = RECORDS[c]; return r ? (r.g - r.p) : 0; };
+  // Proyección de preseason + 2 pts por cada partido de diferencia en el
+  // récord real de esta temporada. 2 pts porque el rango de las proyecciones
+  // (3.5 a 11.5) es angosto: sin ese peso, un par de partidos jugados no
+  // alcanzarían a mover la aguja frente a la proyección de agosto.
+  const fuerza = c => {
+    const r = RECORDS[c];
+    const base = WIN_TOTALS_2026[c] ?? 8.5; // 8.5: promedio de la liga, por si faltara algún código
+    return base + (r ? (r.g - r.p) * 2 : 0);
+  };
   const plan = gs.map(g=>{
     const fa = fuerza(g.team_a), fb = fuerza(g.team_b);
     return { g, favorito: fa >= fb ? 'A' : 'B', margen: Math.abs(fa - fb) };
   });
-  const hayRecords = plan.some(x=>x.margen > 0);
   plan.sort((a,b)=> b.margen - a.margen);
 
   // Los números gastados en partidos YA CERRADOS no se pueden volver a usar.
@@ -4093,9 +4129,7 @@ function autollenar(){
 
   dirty = true;
   renderQuiniela();
-  toast(hayRecords
-    ? '✨ Ya quedó. Revísala y cámbiale lo que no te lata, luego guarda.'
-    : '✨ Ya quedó, pero sin partidos jugados todavía no hay récords: esto es un volado. Revísala bien.');
+  toast('✨ Ya quedó, repartida según qué tan favorito es cada equipo (proyección de la temporada + tu récord real hasta ahora). Revísala y cámbiale lo que no te lata, luego guarda.');
 }
 
 /* Pinta el estado de TODAS las fichas de confianza de la semana y devuelve
