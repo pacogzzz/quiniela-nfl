@@ -33,8 +33,8 @@ INSERT INTO config (clave, valor, etiqueta) VALUES
   ('pts_folio_especial','15',        'Puntos de consumo · días extraordinarios (mié/vie/sáb)'),
   ('lock_mode',         'semana',    'Cuándo se cierran los pronósticos: semana | partido'),
   ('underdog_top_n',    '10',        'Solo participan en underdog los jugadores fuera del top N'),
-  ('whatsapp',          '528343144848', 'WhatsApp del restaurante (con lada país, sin +)'),
-  ('telefono',          '8343144848',   'Teléfono del restaurante'),
+  ('whatsapp',          '528342463025', 'WhatsApp del restaurante (con lada país, sin +)'),
+  ('telefono',          '8342463025',   'Teléfono del restaurante'),
   ('pts_bono_instalacion','25',       'Puntos de regalo por instalar la app en el teléfono')
 ON CONFLICT (clave) DO NOTHING;
 

@@ -1859,7 +1859,7 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
     <h2 class="display">¡RESERVA TU MESA!</h2>
     <p id="modal-match" style="margin:.6rem 0;font-weight:600"></p>
     <p class="small muted">Vive este partido con el mejor ambiente en La Corte. Aparta tu lugar:</p>
-    <a href="#" id="tel-link" class="phone-big">834 314 4848</a>
+    <a href="#" id="tel-link" class="phone-big">834 246 3025</a>
     <a href="#" id="wa-link" target="_blank" rel="noopener" class="btn-primary btn-gold" style="display:block;margin-bottom:.6rem">💬 RESERVAR POR WHATSAPP</a>
     <a href="#" id="tel-btn" class="btn-primary" style="display:block">📞 LLAMAR AHORA</a>
   </div>
@@ -2944,8 +2944,8 @@ function abrirReserva(gid){
   const cuando = fechaLarga(g.kickoff)+' · '+hora(g.kickoff)+' hrs';
   document.getElementById('modal-match').innerHTML =
     `${esc(a)} <span style="opacity:.5">@</span> ${esc(b)}<br><small class="muted">${esc(weekLabel(g.week))} · ${esc(cuando)}</small>`;
-  const wa  = cfgText('whatsapp','528343144848');
-  const tel = cfgText('telefono','8343144848');
+  const wa  = cfgText('whatsapp','528342463025');
+  const tel = cfgText('telefono','8342463025');
   const msg = encodeURIComponent(`¡Hola La Corte! Quiero reservar mesa para ver ${a} vs ${b} (${cuando}).`);
   document.getElementById('wa-link').href  = `https://wa.me/${wa}?text=${msg}`;
   document.getElementById('tel-link').href = 'tel:'+tel;
