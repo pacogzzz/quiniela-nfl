@@ -2946,7 +2946,18 @@ function abrirReserva(gid){
     `${esc(a)} <span style="opacity:.5">@</span> ${esc(b)}<br><small class="muted">${esc(weekLabel(g.week))} · ${esc(cuando)}</small>`;
   const wa  = cfgText('whatsapp','528342463025');
   const tel = cfgText('telefono','8342463025');
-  const msg = encodeURIComponent(`¡Hola La Corte! Quiero reservar mesa para ver ${a} vs ${b} (${cuando}).`);
+  // "Modo fan": la idea es que suene a alguien emocionado por ir a alentar,
+  // no a un trámite. Los tres renglones en blanco (nombre, personas, zona)
+  // van con la etiqueta puesta para que la persona solo tenga que llenarlos
+  // antes de enviar — WhatsApp no tiene campos de formulario de verdad, así
+  // que esto es lo más cerca que se puede llegar a uno.
+  const msg = encodeURIComponent(
+    `🏈🔥 ¡Aguanta La Corte! Voy con toda la actitud de afición a ver ${a} vs ${b} el ${cuando} y quiero apartar mi mesa para vivirlo en grande.\n\n` +
+    `📋 Mis datos para la reserva:\n` +
+    `👤 Nombre: \n` +
+    `👥 Número de personas: \n` +
+    `📍 Zona del restaurante donde nos gustaría sentarnos: `
+  );
   document.getElementById('wa-link').href  = `https://wa.me/${wa}?text=${msg}`;
   document.getElementById('tel-link').href = 'tel:'+tel;
   document.getElementById('tel-btn').href  = 'tel:'+tel;
