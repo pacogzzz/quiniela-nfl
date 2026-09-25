@@ -25,7 +25,11 @@
    fallaba antes.
    ===================================================================== */
 
-const CACHE = 'quiniela-nfl-v6';
+// v7: agrega los manejadores de notificaciones push (evento 'push' y
+// 'notificationclick'). No cambia nada de lo que ya estaba cacheado, pero
+// el service worker viejo no sabe mostrar avisos hasta que este lo
+// reemplace.
+const CACHE = 'quiniela-nfl-v7';
 
 // Lo minimo para que la app abra sin senal.
 const BASICOS = [
@@ -123,5 +127,37 @@ self.addEventListener('fetch', (e) => {
         return res;
       })
       .catch(() => caches.match(req))
+  );
+});
+
+/* ---------- Notificaciones push ----------
+   La función send-push (supabase/functions/send-push) manda un JSON con
+   {title, body, url}. Si por lo que sea no llega como JSON, se muestra el
+   texto plano tal cual en vez de tronar. */
+self.addEventListener('push', (e) => {
+  let datos = {};
+  try { datos = e.data ? e.data.json() : {}; }
+  catch { datos = { title: 'Quiniela NFL La Corte', body: e.data ? e.data.text() : '' }; }
+
+  e.waitUntil(
+    self.registration.showNotification(datos.title || 'Quiniela NFL La Corte', {
+      body: datos.body || '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      data: { url: datos.url || '/' },
+    })
+  );
+});
+
+// Tocar el aviso abre la app si ya está abierta (nada de duplicar
+// pestañas) o abre una nueva si no.
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const url = e.notification.data && e.notification.data.url ? e.notification.data.url : '/';
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((lista) => {
+      for (const c of lista) if ('focus' in c) return c.focus();
+      if (clients.openWindow) return clients.openWindow(url);
+    })
   );
 });

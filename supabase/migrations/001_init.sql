@@ -35,7 +35,8 @@ INSERT INTO config (clave, valor, etiqueta) VALUES
   ('underdog_top_n',    '10',        'Solo participan en underdog los jugadores fuera del top N'),
   ('whatsapp',          '528342463025', 'WhatsApp del restaurante (con lada país, sin +)'),
   ('telefono',          '8342463025',   'Teléfono del restaurante'),
-  ('pts_bono_instalacion','25',       'Puntos de regalo por instalar la app en el teléfono')
+  ('pts_bono_instalacion','25',       'Puntos de regalo por instalar la app en el teléfono'),
+  ('racha_vigencia_dias', '15',        'Días que tiene el jugador para canjear un premio de racha desde que lo desbloquea')
 ON CONFLICT (clave) DO NOTHING;
 
 CREATE OR REPLACE FUNCTION cfg_int(p_clave TEXT, p_default INT)
@@ -356,21 +357,35 @@ GRANT EXECUTE ON FUNCTION guardar_semana(INT, JSONB) TO authenticated;
 -- =====================================================================
 -- 6. FOLIOS DE CONSUMO
 -- =====================================================================
+-- `folios` es el CATÁLOGO de códigos por día -- típicamente uno solo, el
+-- "código del día" que se anuncia o se pone en las mesas. Quién lo canjeó
+-- ya NO vive aquí (antes cada código era de un solo uso total, marcado con
+-- `usado`/`por_user_id`; eso impedía que un mismo código sirviera para
+-- TODOS los clientes de ese día). Cada canje individual queda en
+-- `folio_canjes`, abajo.
 CREATE TABLE IF NOT EXISTS folios (
   code        TEXT PRIMARY KEY,
   fecha       DATE NOT NULL,               -- día de juego al que aplica
   puntos      INT  NOT NULL,
-  usado       BOOL NOT NULL DEFAULT FALSE,
-  por_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  usado_at    TIMESTAMPTZ,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Un solo folio canjeado por persona por día
-CREATE UNIQUE INDEX IF NOT EXISTS idx_folios_uno_por_dia
-  ON folios(por_user_id, fecha) WHERE por_user_id IS NOT NULL;
-
 CREATE INDEX IF NOT EXISTS idx_folios_fecha ON folios(fecha);
+
+-- Un canje por persona por día, SIN IMPORTAR cuál código haya usado (por si
+-- alguna vez hay más de uno el mismo día). UNIQUE(user_id, fecha) es la
+-- regla de negocio completa: nadie se puede llevar el consumo dos veces en
+-- el mismo día.
+CREATE TABLE IF NOT EXISTS folio_canjes (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code       TEXT NOT NULL REFERENCES folios(code) ON DELETE CASCADE,
+  user_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  fecha      DATE NOT NULL,
+  puntos     INT  NOT NULL,     -- snapshot al momento del canje
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, fecha)
+);
+CREATE INDEX IF NOT EXISTS idx_folio_canjes_user ON folio_canjes(user_id);
 
 -- Puntos que corresponden a una fecha según el día de la semana
 CREATE OR REPLACE FUNCTION puntos_por_fecha(p_fecha DATE)
@@ -386,6 +401,11 @@ BEGIN
   END;
 END $$;
 
+-- El código YA NO se marca "usado": es el código del día, y lo puede
+-- canjear cualquier cliente que lo traiga -- cada quien una sola vez por
+-- día (UNIQUE(user_id,fecha) en folio_canjes se encarga; el EXCEPTION de
+-- abajo es el respaldo de verdad contra dos clics a la vez, la validación
+-- de antes es solo para el mensaje amable).
 CREATE OR REPLACE FUNCTION canjear_folio(p_code TEXT)
 RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
@@ -396,22 +416,22 @@ BEGIN
     RETURN json_build_object('ok', false, 'msg', 'No autenticado');
   END IF;
 
-  SELECT * INTO f FROM folios WHERE code = UPPER(TRIM(p_code)) FOR UPDATE;
+  SELECT * INTO f FROM folios WHERE code = UPPER(TRIM(p_code));
   IF NOT FOUND THEN
     RETURN json_build_object('ok', false, 'msg', 'Folio inválido');
   END IF;
-  IF f.usado THEN
-    RETURN json_build_object('ok', false, 'msg', 'Ese folio ya fue canjeado');
-  END IF;
 
-  IF EXISTS (SELECT 1 FROM folios WHERE por_user_id = uid AND fecha = f.fecha) THEN
+  IF EXISTS (SELECT 1 FROM folio_canjes WHERE user_id = uid AND fecha = f.fecha) THEN
     RETURN json_build_object('ok', false, 'msg',
       'Ya canjeaste un folio del ' || TO_CHAR(f.fecha,'DD/MM/YYYY') || '. Es uno por día.');
   END IF;
 
-  UPDATE folios
-     SET usado = TRUE, por_user_id = uid, usado_at = NOW()
-   WHERE code = f.code;
+  BEGIN
+    INSERT INTO folio_canjes (code, user_id, fecha, puntos) VALUES (f.code, uid, f.fecha, f.puntos);
+  EXCEPTION WHEN unique_violation THEN
+    RETURN json_build_object('ok', false, 'msg',
+      'Ya canjeaste un folio del ' || TO_CHAR(f.fecha,'DD/MM/YYYY') || '. Es uno por día.');
+  END;
 
   RETURN json_build_object('ok', true, 'puntos', f.puntos,
                            'msg', '+' || f.puntos || ' puntos de consumo');
@@ -420,8 +440,14 @@ END $$;
 GRANT EXECUTE ON FUNCTION canjear_folio(TEXT) TO authenticated;
 
 -- Generar folios en lote para una fecha (solo admin/manager)
+-- SET search_path incluye "extensions" a propósito: en un Supabase real
+-- (no en las pruebas locales, donde pgcrypto queda en public) las
+-- funciones de pgcrypto como gen_random_bytes() viven en el esquema
+-- "extensions", no en "public". Sin esto, la función truena con
+-- "function gen_random_bytes(integer) does not exist" en producción
+-- aunque en las pruebas pase perfecto.
 CREATE OR REPLACE FUNCTION generar_folios(p_fecha DATE, p_cantidad INT)
-RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions AS $$
 DECLARE
   v_role  TEXT;
   v_pts   INT;
@@ -629,6 +655,10 @@ CREATE TABLE IF NOT EXISTS racha_premios (
   canjeado_at  TIMESTAMPTZ,
   canjeado_por UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  -- Último instante en que se puede canjear (23:59:59 hora de Tampico del
+  -- día que vence). NULL = sin vencimiento (códigos viejos anteriores a la
+  -- vigencia). Lo fija reclamar_racha() con config `racha_vigencia_dias`.
+  expira_at    TIMESTAMPTZ,
   UNIQUE (user_id, nivel)
 );
 CREATE INDEX IF NOT EXISTS idx_racha_premios_user ON racha_premios(user_id);
@@ -693,8 +723,10 @@ $$;
 -- `racha_premios` directo (si lo tuviera, se otorgaría el nivel que
 -- quisiera). Aquí la racha se recalcula del lado del servidor con
 -- racha_semanas_de(), así que no hay forma de inflarla desde el cliente.
+-- search_path incluye "extensions" por la misma razón que generar_folios:
+-- gen_random_uuid() vive ahí en un Supabase real, no en "public".
 CREATE OR REPLACE FUNCTION reclamar_racha()
-RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions AS $$
 DECLARE
   uid UUID := auth.uid();
   v_racha INT;
@@ -702,6 +734,7 @@ DECLARE
   n INT;
   v_codigo TEXT;
   v_insertado RECORD;
+  v_expira TIMESTAMPTZ;
   nuevos JSONB := '[]'::JSONB;
 BEGIN
   IF uid IS NULL THEN
@@ -711,18 +744,26 @@ BEGIN
   v_racha := racha_semanas_de(uid);
   v_nivel_max := racha_nivel_de(v_racha);
 
+  -- Vence a las 23:59:59 (hora de Tampico) del día número N desde hoy, con N
+  -- de la config `racha_vigencia_dias`. Se calcula una sola vez por llamada:
+  -- si se desbloquean dos niveles juntos, vencen a la vez.
+  v_expira := ((NOW() AT TIME ZONE 'America/Mexico_City')::DATE
+               + cfg_int('racha_vigencia_dias', 15) + TIME '23:59:59')
+              AT TIME ZONE 'America/Mexico_City';
+
   FOR n IN 1..v_nivel_max LOOP
     v_codigo := 'RACHA-' || UPPER(SUBSTR(MD5(gen_random_uuid()::TEXT), 1, 6));
 
-    INSERT INTO racha_premios (user_id, nivel, racha, premio, codigo)
-    VALUES (uid, n, v_racha, racha_premio_de(n), v_codigo)
+    INSERT INTO racha_premios (user_id, nivel, racha, premio, codigo, expira_at)
+    VALUES (uid, n, v_racha, racha_premio_de(n), v_codigo, v_expira)
     ON CONFLICT (user_id, nivel) DO NOTHING
-    RETURNING nivel, racha, premio, codigo INTO v_insertado;
+    RETURNING nivel, racha, premio, codigo, expira_at INTO v_insertado;
 
     IF FOUND THEN
       nuevos := nuevos || jsonb_build_object(
         'nivel', v_insertado.nivel, 'racha', v_insertado.racha,
-        'premio', v_insertado.premio, 'codigo', v_insertado.codigo
+        'premio', v_insertado.premio, 'codigo', v_insertado.codigo,
+        'expira_at', v_insertado.expira_at
       );
     END IF;
   END LOOP;
@@ -754,6 +795,12 @@ BEGIN
     RETURN json_build_object('ok', false, 'msg',
       'Ya se canjeó el ' || TO_CHAR(r.canjeado_at, 'DD/MM/YYYY HH24:MI'));
   END IF;
+  -- Un premio vencido ya no se entrega: por eso el aviso del jugador muestra
+  -- la fecha, para que no llegue al restaurante con algo que ya no vale.
+  IF r.expira_at IS NOT NULL AND r.expira_at < NOW() THEN
+    RETURN json_build_object('ok', false, 'msg',
+      'Este código venció el ' || TO_CHAR(r.expira_at AT TIME ZONE 'America/Mexico_City', 'DD/MM/YYYY'));
+  END IF;
 
   UPDATE racha_premios
      SET canjeado = TRUE, canjeado_at = NOW(), canjeado_por = auth.uid()
@@ -763,6 +810,26 @@ BEGIN
     'nombre', (SELECT nombre FROM profiles WHERE id = r.user_id));
 END $$;
 GRANT EXECUTE ON FUNCTION canjear_codigo_racha(TEXT) TO authenticated;
+
+-- =====================================================================
+-- 8c. NOTIFICACIONES PUSH
+--
+-- Cada suscripción es el "buzón" de un dispositivo (endpoint + llaves de
+-- cifrado) que el navegador entrega cuando alguien acepta el permiso de
+-- notificaciones. El envío de verdad lo hace la función de Supabase
+-- send-push (fuera de este archivo: vive en supabase/functions/send-push),
+-- que usa la llave privada VAPID y por eso corre con el service_role, sin
+-- pasar por RLS. Aquí solo se guarda quién quiere recibirlas.
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  endpoint   TEXT NOT NULL UNIQUE,
+  p256dh     TEXT NOT NULL,
+  auth       TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_push_subs_user ON push_subscriptions(user_id);
 
 -- =====================================================================
 -- 9. VISTA DE RANKING
@@ -807,9 +874,9 @@ WITH conf AS (
   GROUP BY pk.user_id
 ),
 cons AS (
-  SELECT por_user_id AS user_id, COALESCE(SUM(puntos),0) AS pts_consumo
-  FROM folios WHERE usado AND por_user_id IS NOT NULL
-  GROUP BY por_user_id
+  SELECT user_id, COALESCE(SUM(puntos),0) AS pts_consumo
+  FROM folio_canjes
+  GROUP BY user_id
 ),
 und AS (
   SELECT
@@ -907,6 +974,7 @@ ALTER TABLE teams           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE games           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE picks           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE folios          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE folio_canjes    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE underdog_weeks  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE underdog_picks  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE week_snapshots  ENABLE ROW LEVEL SECURITY;
@@ -914,6 +982,7 @@ ALTER TABLE historial       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE config          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bonos           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE racha_premios   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- Helper de rol sin recursión de políticas
 CREATE OR REPLACE FUNCTION mi_rol()
@@ -1012,12 +1081,27 @@ CREATE POLICY "picks insert" ON picks FOR INSERT TO authenticated WITH CHECK (us
 CREATE POLICY "picks update" ON picks FOR UPDATE TO authenticated USING (user_id = auth.uid());
 CREATE POLICY "picks delete" ON picks FOR DELETE TO authenticated USING (user_id = auth.uid());
 
--- folios: lectura solo admin/manager o del propio usuario; el canje va por RPC
+-- folios ya es solo el catálogo de códigos (sin quién los usó), así que ya
+-- no hay razón para que un jugador la lea directo: el canje entra ciego,
+-- por canjear_folio(), que sí puede ver el código aunque RLS se lo niegue
+-- al jugador (SECURITY DEFINER).
 DROP POLICY IF EXISTS "folios read" ON folios;
 DROP POLICY IF EXISTS "folios del"  ON folios;
 CREATE POLICY "folios read" ON folios FOR SELECT TO authenticated
-  USING (por_user_id = auth.uid() OR mi_rol() IN ('admin','manager'));
+  USING (mi_rol() IN ('admin','manager'));
 CREATE POLICY "folios del"  ON folios FOR DELETE TO authenticated
+  USING (mi_rol() = 'admin');
+
+-- folio_canjes: cada quien ve SOLO sus propios canjes (su historial de
+-- consumo); admin/manager los ven todos. Sin política de INSERT/UPDATE a
+-- propósito: el canje SIEMPRE pasa por canjear_folio(), que es SECURITY
+-- DEFINER -- si un jugador pudiera insertar aquí directo, se acreditaría
+-- los puntos que quisiera.
+DROP POLICY IF EXISTS "folio canjes propia"     ON folio_canjes;
+DROP POLICY IF EXISTS "folio canjes admin del"  ON folio_canjes;
+CREATE POLICY "folio canjes propia" ON folio_canjes FOR SELECT TO authenticated
+  USING (user_id = auth.uid() OR mi_rol() IN ('admin','manager'));
+CREATE POLICY "folio canjes admin del" ON folio_canjes FOR DELETE TO authenticated
   USING (mi_rol() = 'admin');
 
 -- underdog
@@ -1090,6 +1174,21 @@ CREATE POLICY "racha premios propia" ON racha_premios FOR SELECT TO authenticate
   USING (user_id = auth.uid() OR mi_rol() IN ('admin','manager'));
 CREATE POLICY "racha premios admin del" ON racha_premios FOR DELETE TO authenticated
   USING (mi_rol() = 'admin');
+
+-- push_subscriptions: cada quien administra SU propio dispositivo (activar
+-- o desactivar notificaciones); admin/manager pueden verlas todas (para
+-- saber a cuántos les va a llegar el envío) y borrar cualquiera. La función
+-- send-push corre con service_role y no pasa por aquí -- estas políticas
+-- son solo para lo que hace el jugador desde la app.
+DROP POLICY IF EXISTS "push subs propia"  ON push_subscriptions;
+DROP POLICY IF EXISTS "push subs insert"  ON push_subscriptions;
+DROP POLICY IF EXISTS "push subs delete"  ON push_subscriptions;
+CREATE POLICY "push subs propia" ON push_subscriptions FOR SELECT TO authenticated
+  USING (user_id = auth.uid() OR mi_rol() IN ('admin','manager'));
+CREATE POLICY "push subs insert" ON push_subscriptions FOR INSERT TO authenticated
+  WITH CHECK (user_id = auth.uid());
+CREATE POLICY "push subs delete" ON push_subscriptions FOR DELETE TO authenticated
+  USING (user_id = auth.uid() OR mi_rol() = 'admin');
 
 -- =====================================================================
 -- 11. CALENDARIO 2026-27 (estructura oficial de fechas · equipos por definir)
@@ -1275,6 +1374,13 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON profiles       TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON picks          TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON underdog_picks TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON folios         TO authenticated;
+-- folio_canjes: nada de INSERT/UPDATE directo, todo pasa por
+-- canjear_folio() (SECURITY DEFINER). DELETE queda a nivel de tabla para
+-- que admin pueda limpiarla en un reset general; la política de RLS de
+-- arriba es la que de verdad restringe a solo admin.
+GRANT SELECT, DELETE                 ON folio_canjes    TO authenticated;
+REVOKE INSERT, UPDATE                ON folio_canjes    FROM authenticated;
+REVOKE ALL                           ON folio_canjes    FROM anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON games          TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON underdog_weeks TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON historial      TO authenticated;
@@ -1294,6 +1400,9 @@ REVOKE ALL                           ON bonos          FROM anon;
 GRANT SELECT, DELETE                 ON racha_premios  TO authenticated;
 REVOKE INSERT, UPDATE                ON racha_premios  FROM authenticated;
 REVOKE ALL                           ON racha_premios  FROM anon;
+GRANT SELECT, INSERT, DELETE         ON push_subscriptions TO authenticated;
+REVOKE UPDATE                        ON push_subscriptions FROM authenticated;
+REVOKE ALL                           ON push_subscriptions FROM anon;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   GRANT SELECT ON TABLES TO anon;
@@ -1310,6 +1419,7 @@ BEGIN
   BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE games;          EXCEPTION WHEN OTHERS THEN NULL; END;
   BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE picks;          EXCEPTION WHEN OTHERS THEN NULL; END;
   BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE folios;         EXCEPTION WHEN OTHERS THEN NULL; END;
+  BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE folio_canjes;   EXCEPTION WHEN OTHERS THEN NULL; END;
   BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE underdog_picks; EXCEPTION WHEN OTHERS THEN NULL; END;
   BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE underdog_weeks; EXCEPTION WHEN OTHERS THEN NULL; END;
   BEGIN ALTER PUBLICATION supabase_realtime ADD TABLE bonos;          EXCEPTION WHEN OTHERS THEN NULL; END;

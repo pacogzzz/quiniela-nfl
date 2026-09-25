@@ -27,7 +27,11 @@ supabase/migrations/007_puntaje_temporada.sql puntaje final antes de arrancar
 supabase/migrations/008_ganadores_historial.sql delta de ganadores/historial
 supabase/migrations/009_cierre_semana.sql      delta del cierre de semana
 supabase/migrations/010_racha_premios.sql      delta de racha de semanas y premios
-test/                           170 pruebas contra Postgres real (PGlite)
+supabase/migrations/011_push_subscriptions.sql delta de notificaciones push (aún sin aplicar)
+supabase/migrations/012_fix_search_path_extensions.sql  arregla gen_random_bytes en generar_folios
+supabase/migrations/013_folio_diario_compartido.sql     un código del día para todos (folio_canjes)
+supabase/migrations/014_racha_vigencia.sql     los premios de racha vencen a los 15 días
+test/                           192 pruebas (113 lógica + 79 seguridad) contra Postgres real (PGlite)
 EMPIEZA-AQUI.md                 guía para quien opera (no técnico)
 README.md                       referencia técnica
 ```

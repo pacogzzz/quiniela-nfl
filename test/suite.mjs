@@ -40,9 +40,9 @@ chk('301 partidos',           (await one('select count(*)::int c from games')).c
 chk('288 de temporada regular',(await one('select count(*)::int c from games where week<=18')).c, 288);
 chk('13 de playoffs',         (await one('select count(*)::int c from games where week>=19')).c, 13);
 chk('22 semanas de underdog', (await one('select count(*)::int c from underdog_weeks')).c, 22);
-chk('12 llaves de config',    (await one('select count(*)::int c from config')).c, 12);
-chk('32 politicas RLS',       (await one("select count(*)::int c from pg_policies where schemaname='public'")).c, 32);
-chk('RLS activo en 12 tablas',(await one("select count(*)::int c from pg_tables t join pg_class k on k.relname=t.tablename where t.schemaname='public' and k.relrowsecurity")).c, 12);
+chk('13 llaves de config',    (await one('select count(*)::int c from config')).c, 13);
+chk('37 politicas RLS',       (await one("select count(*)::int c from pg_policies where schemaname='public'")).c, 37);
+chk('RLS activo en 14 tablas',(await one("select count(*)::int c from pg_tables t join pg_class k on k.relname=t.tablename where t.schemaname='public' and k.relrowsecurity")).c, 14);
 
 console.log('\n== FECHAS SEMBRADAS ==');
 const w1=await dow('W01-TNF'),  tg=await dow('W12-TG1'), bf=await dow('W12-BF1');
@@ -53,6 +53,11 @@ chk('Black Friday = viernes 27-nov-2026', [bf.d,bf.f],   ['Friday','2026-11-27']
 chk('Navidad = viernes 25-dic-2026',      [nv.d,nv.f],   ['Friday','2026-12-25']);
 chk('Semana 18 = domingo 10-ene-2027',    [w18.d,w18.f], ['Sunday','2027-01-10']);
 chk('Super Bowl = domingo 14-feb-2027',   [sbw.d,sbw.f], ['Sunday','2027-02-14']);
+
+// Las pruebas usan el reloj REAL. Para que no dependan del dia en que se corran,
+// se corre TODO el calendario un numero entero de semanas hacia el futuro (asi
+// conserva el dia de la semana) hasta que la Semana 1 quede abierta.
+await q(`update games set kickoff = kickoff + make_interval(days => 7*ceil((extract(epoch from (now() - (select min(kickoff) from games)))/86400 + 2)/7)::int)`);
 
 console.log('\n== AUTO-FLAGS (mie/vie/sab = 15 pts) ==');
 chk('Black Friday especial',      (await one("select is_special s from games where id='W12-BF1'")).s, true);
@@ -141,10 +146,16 @@ chk('valen 10 c/u',      gen.r.puntos, 10);
 const [f1,f2] = gen.r.codes;
 await asUser(U2);
 chk('canje ok',              (await one(`select canjear_folio($1) r`,[f1])).r.ok, true);
-chk('mismo folio 2a vez',    (await one(`select canjear_folio($1) r`,[f1])).r.msg, 'Ese folio ya fue canjeado');
+// El código del día NO se agota: lo puede canjear cualquier otra persona.
+await asUser(U1);
+chk('OTRA persona SÍ puede canjear el MISMO código ese día', (await one(`select canjear_folio($1) r`,[f1])).r.ok, true);
+await asUser(U2);
+const repiteU2 = await one(`select canjear_folio($1) r`,[f1]);
+chk('pero la MISMA persona no lo puede volver a canjear', repiteU2.r.ok, false);
+chk('  con mensaje de uno-por-dia', repiteU2.r.msg.includes('uno por'), true);
 const dos = await one(`select canjear_folio($1) r`,[f2]);
-chk('2o folio el mismo dia se rechaza', dos.r.ok, false);
-chk('  con mensaje de uno-por-dia', dos.r.msg.includes('uno por'), true);
+chk('ni con OTRO código del mismo día', dos.r.ok, false);
+chk('  mismo mensaje de uno-por-dia', dos.r.msg.includes('uno por'), true);
 chk('folio inexistente',     (await one(`select canjear_folio('NOPE') r`)).r.msg, 'Folio inválido');
 chk('Beto: 10 pts de consumo',(await one(`select pts_consumo from ranking where id=$1`,[U2])).pts_consumo, 10);
 
@@ -289,6 +300,33 @@ chk('el mismo código no se puede volver a canjear', otraVez.r.ok, false);
 chk('  con el aviso de ya canjeado', otraVez.r.msg.includes('Ya se canjeó'), true);
 chk('código que no existe', (await one(`select canjear_codigo_racha('RACHA-NOPE') r`)).r.msg,
   'Código no encontrado');
+
+console.log('\n== LOS PREMIOS DE RACHA VENCEN ==');
+// El premio que acaba de otorgar reclamar_racha() ya trae su fecha límite:
+// 15 días (config racha_vigencia_dias) hasta las 23:59 de Tampico, o sea
+// entre 14 y 16 días desde ahora según la hora a la que corra la prueba.
+const dias = (await one(
+  `select extract(epoch from (expira_at - now()))/86400 d from racha_premios where codigo=$1`,[codigo])).d;
+chk('reclamar_racha fija un vencimiento a ~15 días', dias > 14 && dias < 16, true);
+chk('y lo devuelve en el aviso de "nuevos"', typeof rc1.r.nuevos[0].expira_at, 'string');
+// Un código vencido NO se canjea aunque exista y no esté usado.
+await q(`insert into racha_premios(user_id,nivel,racha,premio,codigo,expira_at)
+         values($1,98,3,'Prueba vencida','RACHA-VENCE1', now() - interval '1 day')`,[U2]);
+await q(`insert into racha_premios(user_id,nivel,racha,premio,codigo,expira_at)
+         values($1,99,3,'Prueba vigente','RACHA-VIVE01', now() + interval '1 day')`,[U2]);
+await asUser(U1);
+const venc = await one(`select canjear_codigo_racha('RACHA-VENCE1') r`);
+chk('un código vencido se rechaza', venc.r.ok, false);
+chk('  con el aviso de que venció y la fecha', venc.r.msg.includes('venció el'), true);
+chk('  y NO quedó marcado como canjeado',
+  (await one(`select canjeado from racha_premios where codigo='RACHA-VENCE1'`)).canjeado, false);
+chk('uno todavía vigente sí se canjea',
+  (await one(`select canjear_codigo_racha('RACHA-VIVE01') r`)).r.ok, true);
+// Los códigos viejos, de antes de que existiera la vigencia, no vencen.
+await q(`insert into racha_premios(user_id,nivel,racha,premio,codigo)
+         values($1,97,3,'Prueba sin fecha','RACHA-VIEJO1')`,[U2]);
+chk('un código sin fecha (anterior a la vigencia) sigue sirviendo',
+  (await one(`select canjear_codigo_racha('RACHA-VIEJO1') r`)).r.ok, true);
 
 console.log('\n' + '='.repeat(50));
 console.log(`  RESULTADO: ${pass} ok  ·  ${fail} fallas`);

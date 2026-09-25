@@ -83,8 +83,11 @@ RETURNS TEXT LANGUAGE sql IMMUTABLE AS $$
   END
 $$;
 
+-- search_path incluye "extensions": gen_random_uuid() vive ahi en un
+-- Supabase real, no en "public" (en las pruebas locales si queda en
+-- public, por eso esto no se nota hasta producción).
 CREATE OR REPLACE FUNCTION reclamar_racha()
-RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions AS $$
 DECLARE
   uid UUID := auth.uid();
   v_racha INT;

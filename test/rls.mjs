@@ -10,6 +10,11 @@ const db = await new PGlite({ extensions: { pgcrypto } });
 await db.exec(SHIM);
 await db.exec(SQL);
 
+// Las pruebas usan el reloj REAL: se corre todo el calendario un numero entero
+// de semanas al futuro (conserva el dia de la semana) para que la Semana 1
+// siempre quede abierta sin importar cuando se corran.
+await db.exec(`update games set kickoff = kickoff + make_interval(days => 7*ceil((extract(epoch from (now() - (select min(kickoff) from games)))/86400 + 2)/7)::int)`);
+
 // NO se conceden privilegios aqui a proposito.
 //
 // Antes este arnes hacia GRANT ALL "porque Supabase lo hace por default".
@@ -74,9 +79,9 @@ await blocked('borrar partidos',
   `delete from games where id='W01-D01'`);
 await blocked('crear folios de la nada',
   `insert into folios(code,fecha,puntos) values('TRAMPA','2026-09-14',999)`);
-await blocked('marcarse un folio como usado a mano',
-  `update folios set usado=true, por_user_id=$1 where code=$2`,[ANA,folio]);
-await blocked('leer los folios de otros',
+await blocked('acreditarse un canje directo (sin pasar por canjear_folio)',
+  `insert into folio_canjes(code,user_id,fecha,puntos) values($1,$2,'2026-09-14',9999)`,[folio,ANA]);
+await blocked('leer el catálogo de folios directo (el canje entra ciego, por RPC)',
   `select * from folios where code=$1`,[folio]);
 await blocked('publicar/editar el underdog de la semana',
   `update underdog_weeks set puntos=9999 where week=1`);
@@ -142,6 +147,22 @@ await login(ADMIN);
 chk('el admin SI ve los de todos (los otorga y responde los reclamos)',
   (await one(`select count(*)::int c from bonos where user_id=$1`,[ANA])).c, 1);
 
+console.log('\n== LOS CANJES DE FOLIO TAMBIÉN SON PRIVADOS ==');
+// Ana ya canjeó 'TEST01' arriba (== ...PERO SI PUEDE HACER LO SUYO ==).
+await login(BETO);
+chk('Beto NO ve el canje de Ana',
+  (await one(`select count(*)::int c from folio_canjes where user_id=$1`,[ANA])).c, 0);
+await blocked('Beto no puede borrar el canje de Ana',
+  `delete from folio_canjes where user_id=$1`,[ANA]);
+await login(ANA);
+chk('Ana sí ve el suyo',
+  (await one(`select count(*)::int c from folio_canjes where user_id=$1`,[ANA])).c, 1);
+await login(ADMIN);
+chk('el admin SÍ ve los canjes de todos',
+  (await one(`select count(*)::int c from folio_canjes where user_id=$1`,[ANA])).c, 1);
+await allowed('el admin puede borrar cualquier canje (reset general)',
+  `delete from folio_canjes where user_id=$1`,[ANA]);
+
 console.log('\n== LA RACHA DE SEMANAS SOLO LA OTORGA EL SERVIDOR ==');
 // Pronostico de Ana en 3 semanas nuevas (9,10,11): primero el pronostico
 // (la semana todavia no arranca), y DESPUES se le mueve el kickoff al
@@ -191,6 +212,32 @@ await allowed('el admin sí puede borrarlos (reset general)',
 // exactos de las pruebas de privacidad de picks que vienen más abajo.
 await db.exec(`RESET ROLE`);
 await q(`delete from picks where user_id=$1 and week in (9,10,11)`,[ANA]);
+
+console.log('\n== NOTIFICACIONES PUSH: CADA QUIEN SU DISPOSITIVO ==');
+await login(ANA);
+await allowed('Ana registra su propia suscripción',
+  `insert into push_subscriptions(user_id,endpoint,p256dh,auth) values($1,'https://fcm.googleapis.com/ana','p256dh-ana','auth-ana')`,[ANA]);
+await blocked('Ana NO puede registrar una suscripción a nombre de Beto',
+  `insert into push_subscriptions(user_id,endpoint,p256dh,auth) values($1,'https://fcm.googleapis.com/beto-trampa','x','y')`,[BETO]);
+await login(BETO);
+chk('Beto NO ve la suscripción de Ana',
+  (await one(`select count(*)::int c from push_subscriptions where user_id=$1`,[ANA])).c, 0);
+await blocked('Beto no puede borrar la suscripción de Ana',
+  `delete from push_subscriptions where user_id=$1`,[ANA]);
+await login(ANA);
+chk('Ana sí ve la suya',
+  (await one(`select count(*)::int c from push_subscriptions where user_id=$1`,[ANA])).c, 1);
+await allowed('Ana puede desactivar sus propias notificaciones (borrar la suya)',
+  `delete from push_subscriptions where user_id=$1`,[ANA]);
+// Se reactiva como superusuario (equivale a que Ana vuelva a aceptar el
+// permiso) para probar qué puede hacer el admin con ella.
+await db.exec(`RESET ROLE`);
+await q(`insert into push_subscriptions(user_id,endpoint,p256dh,auth) values($1,'https://fcm.googleapis.com/ana2','p256dh-ana2','auth-ana2')`,[ANA]);
+await login(ADMIN);
+chk('el admin SÍ ve las suscripciones de todos (para saber a cuántos les llega)',
+  (await one(`select count(*)::int c from push_subscriptions where user_id=$1`,[ANA])).c, 1);
+await allowed('el admin puede borrar cualquier suscripción',
+  `delete from push_subscriptions where user_id=$1`,[ANA]);
 
 console.log('\n== EL UNDERDOG RESPETA EL TOP 10 ==');
 await db.exec(`RESET ROLE`);
