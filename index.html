@@ -598,6 +598,11 @@ h3{font-size:1.05rem;color:var(--txt);letter-spacing:.1em}
 }
 .aviso-premio.hidden{display:none}
 .aviso-premio.urgente{background:linear-gradient(160deg,#FF9F8F,#E5533D)}
+/* Mismo componente, pintado de verde: el aviso de "te faltó consumo". Vive
+   junto al de racha (los dos dentro de #header) — pueden verse los dos a
+   la vez, uno debajo del otro. */
+.aviso-premio.consumo{background:linear-gradient(160deg,#6FE3AE,var(--verde));color:#042417}
+.aviso-premio.consumo .ap-ver{color:var(--verde)}
 .ap-ico{font-size:1.3rem;line-height:1;flex:none}
 .ap-txt{flex:1 1 auto;min-width:0;line-height:1.25}
 .ap-txt b{display:block;font-size:.8rem;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1521,6 +1526,9 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
   <!-- Premio de racha por canjear (fijo, sin cerrar). Lo pinta renderAvisoPremio(). -->
   <div class="aviso-premio hidden" id="aviso-premio" role="button" tabindex="0"
        onclick="irAPremioRacha()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();irAPremioRacha()}"></div>
+  <!-- "Te faltó consumo" del cierre de la última week. Lo pinta renderAvisoConsumo(). -->
+  <div class="aviso-premio consumo hidden" id="aviso-consumo" role="button" tabindex="0"
+       onclick="abrirReservaGeneral()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirReservaGeneral()}"></div>
 </header>
 
 <!-- ========== NAV ========== -->
@@ -2159,6 +2167,16 @@ function semanaCerrada(w){
   const ini = inicioSemana(w);
   return ini ? Date.now() >= ini.getTime() : false;
 }
+// "Ya arrancó" (para la racha) NO es lo mismo que "ya cerró" (para editar
+// picks): arranca en cuanto su primer partido pita el inicio, sin importar
+// el lock_mode. Espeja a semana_arrancada() en 001_init.sql — es justo la
+// función que racha_semanas_de() usa del lado del servidor. Antes rachaSemanas()
+// reusaba semanaCerrada(), que en modo "partido" siempre da false y por eso
+// la barra de "TU RACHA" nunca se veía avanzar en producción.
+function semanaArrancada(w){
+  const ini = inicioSemana(w);
+  return ini ? Date.now() >= ini.getTime() : false;
+}
 function partidoCerrado(g){
   if(cfgText('lock_mode','semana')==='partido') return Date.now() >= new Date(g.kickoff).getTime();
   return semanaCerrada(g.week);
@@ -2414,6 +2432,17 @@ async function renderResumenSemana(w){
       <div class="rs-mensaje-grande">RECUERDA SEGUIR LOS CONSEJOS DEL CAPI</div>`;
   }
 
+  // ---- Bloque 3: lo que dejó sobre la mesa en consumo (si aplica) ----
+  const oportunidad = await calcularOportunidadConsumo(w);
+  const bloqueConsumo = oportunidad ? `
+      <div class="rs-bloque aviso-premio consumo" style="margin-top:1rem" onclick="abrirReservaGeneral()" role="button" tabindex="0">
+        <div class="ap-txt" style="text-align:left">
+          <b>Con tus ${oportunidad.faltan} pts de consumo disponibles estarías en el puesto #${oportunidad.nuevaPos}</b>
+          <span>El hubiera no existe. Haz tu reservación.</span>
+        </div>
+        <span class="ap-ver" style="flex:none">📞</span>
+      </div>` : '';
+
   cont.innerHTML = `
     <div class="resumen-semana">
       <h2 class="sec-t">RESUMEN ${esc(weekLabel(w)).toUpperCase()}</h2>
@@ -2435,6 +2464,7 @@ async function renderResumenSemana(w){
         <h3>Movimiento en el ranking</h3>
         ${bloqueRanking}
       </div>
+      ${bloqueConsumo}
     </div>`;
 }
 
@@ -2777,6 +2807,8 @@ function mostrarApp(){
   // no hay por qué detener la pantalla a esperar esto, el toast llega solo
   // cuando la RPC responda.
   reclamarRacha();
+  // Mismo criterio: no bloquea la pantalla, se pinta cuando responda.
+  renderAvisoConsumo();
   // Si ya la trae instalada, que cobre su bono sin tener que hacer nada.
   revisarBonoInstalacion();
   // Y si no, que lo vea pendiente en su perfil en vez de enterarse por azar.
@@ -2796,8 +2828,9 @@ async function cerrarSesion(sinPreguntar){
     if(!confirm('¿Cerrar sesión?')) return;
   }
   await sb.auth.signOut();
-  sbUser=null; sbProfile=null; misRachaPremios=[];
+  sbUser=null; sbProfile=null; misRachaPremios=[]; misFolios=[]; misCortes={}; semanasCerradas=new Set();
   renderAvisoPremio();
+  renderAvisoConsumo();
   document.getElementById('registro').classList.remove('hidden');
   volverRegistro();
   setModo('login');
@@ -3085,7 +3118,7 @@ function rachaSemanas(){
   const weeks = [...new Set(games.map(g=>g.week))].filter(w=>w>0).sort((a,b)=>b-a);
   let racha = 0;
   for(const w of weeks){
-    if(!semanaCerrada(w)) continue;
+    if(!semanaArrancada(w)) continue;
     const gs = gamesOf(w);
     const jugoEsaWeek = gs.some(g=>myPicks[g.id]?.ganador || myPicks[g.id]?.confianza);
     if(jugoEsaWeek) racha++; else break;
@@ -3408,11 +3441,85 @@ function renderAvisoPremio(){
   ajustarAlturaAviso();
 }
 // Los elementos que se pegan debajo del header (pestañas de escritorio,
-// confianza flotante) se corren lo que mida el aviso: --aviso-h.
+// confianza flotante) se corren lo que mida el aviso: --aviso-h. Suma los
+// dos avisos (racha + consumo): pueden estar los dos a la vez, uno debajo
+// del otro.
 function ajustarAlturaAviso(){
-  const el = document.getElementById('aviso-premio');
-  const h = (el && !el.classList.contains('hidden')) ? el.offsetHeight + parseFloat(getComputedStyle(el).marginTop||0) : 0;
+  const h = ['aviso-premio','aviso-consumo'].reduce((acc,id)=>{
+    const el = document.getElementById(id);
+    return acc + ((el && !el.classList.contains('hidden')) ? el.offsetHeight + parseFloat(getComputedStyle(el).marginTop||0) : 0);
+  }, 0);
   document.documentElement.style.setProperty('--aviso-h', h+'px');
+}
+
+/* ---------- Aviso de "te faltó consumo" ----------
+   Se calcula sobre el cierre de la ÚLTIMA week ya cerrada (misCortes /
+   semanasCerradas, cargados por loadElegibilidad()): cuánto de los pts de
+   consumo disponibles esa semana (folios de lunes/jueves/domingo, ver
+   ptsFolioDe) le quedaron sin canjear, y en qué lugar habría quedado si
+   los hubiera canjeado todos. Si ya los canjeó todos, o si de cualquier
+   forma no lo habría movido de lugar, no hay nada que avisar. */
+function maxConsumoSemana(w){
+  const dias = new Set(gamesOf(w).map(g=>isoDay(g.kickoff)));
+  return [...dias].reduce((s,d)=>s+ptsFolioDe(d), 0);
+}
+async function calcularOportunidadConsumo(w){
+  if(!sbUser || w==null || misCortes[w]==null) return null;
+  const max = maxConsumoSemana(w);
+  if(!max) return null;
+  const dias = new Set(gamesOf(w).map(g=>isoDay(g.kickoff)));
+  const usado = misFolios.filter(f=>dias.has(f.fecha)).reduce((s,f)=>s+(f.puntos||0), 0);
+  const faltan = Math.max(0, max-usado);
+  if(!faltan) return null;
+  const {data, error} = await sb.from('week_snapshots').select('user_id,total').eq('week', w);
+  if(error || !data) return null;
+  const mio = data.find(r=>r.user_id===sbUser.id);
+  if(!mio) return null;
+  const nuevoTotal = mio.total + faltan;
+  const nuevaPos = data.filter(r=>r.user_id!==sbUser.id && r.total>nuevoTotal).length + 1;
+  if(nuevaPos >= misCortes[w]) return null; // no lo hubiera movido de lugar
+  return {faltan, nuevaPos};
+}
+async function renderAvisoConsumo(){
+  const el = document.getElementById('aviso-consumo');
+  if(!el) return;
+  const w = semanasCerradas && semanasCerradas.size ? Math.max(...semanasCerradas) : null;
+  const op = sbUser ? await calcularOportunidadConsumo(w) : null;
+  if(!op){
+    el.classList.add('hidden');
+    el.innerHTML = '';
+  } else {
+    el.classList.remove('hidden');
+    el.innerHTML = `
+      <span class="ap-ico">🍔</span>
+      <div class="ap-txt">
+        <b>Con tus ${op.faltan} pts de consumo disponibles estarías en el puesto #${op.nuevaPos}</b>
+        <span>El hubiera no existe. Haz tu reservación.</span>
+      </div>
+      <span class="ap-ver">📞</span>`;
+  }
+  ajustarAlturaAviso();
+}
+// Reservación genérica (no atada a un partido) para el aviso de consumo:
+// mismo modal y mismos botones de abrirReserva(), solo con un mensaje que
+// no supone que vienen a ver un juego en particular.
+function abrirReservaGeneral(){
+  document.getElementById('modal-match').innerHTML =
+    `Ven a consumir a La Corte<br><small class="muted">Suma tus puntos de la quiniela</small>`;
+  const wa  = cfgText('whatsapp','528342463025');
+  const tel = cfgText('telefono','8342463025');
+  const msg = encodeURIComponent(
+    `🍔🔥 ¡Quiero venir a La Corte a consumir y sumar mis puntos de la quiniela!\n\n` +
+    `📋 Mis datos para la reserva:\n` +
+    `👤 Nombre: \n` +
+    `👥 Número de personas: \n` +
+    `📍 Zona del restaurante donde nos gustaría sentarnos: `
+  );
+  document.getElementById('wa-link').href  = `https://wa.me/${wa}?text=${msg}`;
+  document.getElementById('tel-link').href = 'tel:'+tel;
+  document.getElementById('tel-btn').href  = 'tel:'+tel;
+  document.getElementById('tel-link').textContent = tel.replace(/(\d{3})(\d{3})(\d{4})/,'$1 $2 $3');
+  document.getElementById('modal-reserva').classList.remove('hidden');
 }
 function irAPremioRacha(){
   irA('perfil');
@@ -3427,7 +3534,8 @@ function irAPremioRacha(){
 window.addEventListener('resize', ajustarAlturaAviso);
 // Para que un premio que vence mientras la app está abierta se apague solo.
 setInterval(renderAvisoPremio, 60000);
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) renderAvisoPremio(); });
+setInterval(renderAvisoConsumo, 60000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ renderAvisoPremio(); renderAvisoConsumo(); } });
 
 // Muestra la escalera completa de premios (los 4 niveles fijos + cómo sigue
 // después). Es contenido estático: se genera a partir de rachaPremioDe(),
@@ -5272,6 +5380,7 @@ async function resetGeneral(){
   await sb.from('games').update({score_a:null,score_b:null,first_scorer:null}).neq('id','__nunca__');
   myPicks={}; myUD={}; misFolios=[]; misRachaPremios=[]; dirty=false; renderAvisoPremio();
   await Promise.all([loadGames(), loadUnderdog(), loadElegibilidad()]);
+  renderAvisoConsumo();
   toast('🔥 Reset completado');
   renderAll();
 }
