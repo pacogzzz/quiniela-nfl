@@ -1185,6 +1185,8 @@ button.ex-cta{margin-top:.9rem;padding:.62rem 1.1rem}
 .rank-mov.sube{color:var(--verde)}
 .rank-mov.baja{color:var(--rojo)}
 .rank-mov.igual{color:var(--gris);font-weight:600}
+/* El del cierre de semana: más chico y dorado, convive con el en vivo. */
+.rank-mov.cierre{color:var(--oro2);font-size:.6rem;margin-left:.4rem}
 .cutline{
   display:flex;align-items:center;gap:.8rem;margin:1.2rem 0;
   color:var(--lila);font-size:.62rem;letter-spacing:.2em;font-weight:700;text-transform:uppercase;
@@ -4884,13 +4886,19 @@ async function canjearFolio(){
 // contra el ranking EN VIVO de ahorita. No depende de haber iniciado
 // sesión (week_snapshots se puede leer sin cuenta): así el movimiento se
 // ve igual para todos en la pestaña de Ranking.
+// Devuelve {semana, previas, anteriores}: las posiciones del último cierre
+// (previas) y las del cierre de la semana anterior a ese (anteriores), para
+// poder mostrar también cuánto se movió cada quien EN el último cierre.
 async function posicionesUltimoCierre(){
   const {data:semanas} = await sb.from('week_snapshots').select('week');
   if(!semanas || !semanas.length) return null;
   const w = Math.max(...semanas.map(s=>s.week));
-  const {data:filas} = await sb.from('week_snapshots').select('user_id,posicion').eq('week', w);
-  if(!filas) return null;
-  return Object.fromEntries(filas.map(f=>[f.user_id, f.posicion]));
+  const pedir = async sem => {
+    const {data:filas} = await sb.from('week_snapshots').select('user_id,posicion').eq('week', sem);
+    return filas ? Object.fromEntries(filas.map(f=>[f.user_id, f.posicion])) : {};
+  };
+  const [previas, anteriores] = await Promise.all([pedir(w), pedir(w-1)]);
+  return {semana:w, previas, anteriores};
 }
 function filaMovimiento(posAnterior, posActual){
   if(posAnterior==null) return ''; // jugador nuevo desde el último cierre: nada que comparar
@@ -4899,13 +4907,29 @@ function filaMovimiento(posAnterior, posActual){
   if(delta<0)  return `<div class="rank-mov baja">▼ ${-delta}</div>`;
   return `<div class="rank-mov igual">―</div>`;
 }
+// Lo que se movió en el CIERRE mismo (posición de la semana anterior vs la
+// de este cierre): chico y dorado. Se queda fijo hasta que se capture el
+// resultado del primer partido de la semana siguiente; entonces lo toma
+// el movimiento en vivo (verde/rojo).
+function filaMovimientoCierre(posAntes, posCierre){
+  if(posAntes==null || posCierre==null) return '';
+  const delta = posAntes - posCierre;
+  if(delta>0) return `<div class="rank-mov cierre">▲ ${delta}</div>`;
+  if(delta<0) return `<div class="rank-mov cierre">▼ ${-delta}</div>`;
+  return `<div class="rank-mov cierre">―</div>`;
+}
+function arrancoSiguienteSemana(w){
+  return games.some(g=>g.week===w+1 && g.score_a!=null);
+}
 async function renderRanking(){
   const list = document.getElementById('rank-list');
   if(!list) return;
-  const [{data:rows,error}, posPrevias] = await Promise.all([
+  const [{data:rows,error}, cierre] = await Promise.all([
     sb.from('ranking').select('*'),
     posicionesUltimoCierre()
   ]);
+  const posPrevias = cierre?.previas;
+  const mostrarCierre = !!cierre && !arrancoSiguienteSemana(cierre.semana);
   if(error){ list.innerHTML='<p class="muted" style="text-align:center;padding:2rem">Error cargando ranking</p>'; return; }
   rankRows = rows||[];
   list.innerHTML='';
@@ -4933,7 +4957,8 @@ async function renderRanking(){
         <div class="rank-breakdown">🎯 ${r.pts_confianza} confianza · ⚡ ${r.pts_anotador} anotador · 🍔 ${r.pts_consumo} consumo · 🐶 ${r.pts_underdog} underdog · 📲 ${r.pts_bono??0} app</div>
       </div>
       <div class="rank-points">${r.total_puntos}</div>
-      ${filaMovimiento(posPrevias?.[r.id], i+1)}`;
+      ${mostrarCierre ? filaMovimientoCierre(cierre.anteriores[r.id], posPrevias?.[r.id]) : ''}
+      ${mostrarCierre && posPrevias?.[r.id]===i+1 ? '' : filaMovimiento(posPrevias?.[r.id], i+1)}`;
     list.appendChild(row);
   });
 
